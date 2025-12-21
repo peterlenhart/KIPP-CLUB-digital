@@ -112,14 +112,6 @@
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
-
-      /* ✅ Slot-Ausrichtung (Defaults für q0) */
-      --h-edge: 0;   /* 0=oben, 2=unten (in step) */
-      --v-edge: 0;   /* 0=links, 2=rechts (in step) */
-      --h-x1: 1;     /* horizontale Slot X-Position 1 */
-      --h-x2: 2;     /* horizontale Slot X-Position 2 */
-      --v-y1: 1;     /* vertikale Slot Y-Position 1 */
-      --v-y2: 2;     /* vertikale Slot Y-Position 2 */
     }
 
     /* Quadranten:
@@ -128,30 +120,10 @@
        q2 = unten rechts(5E–7G)
        q3 = unten links (5B–7D)
     */
-    .board.q0{
-      --cast-x: 18px;  --cast-y: 18px;
-      --h-edge: 0; --v-edge: 0;
-      --h-x1: 1; --h-x2: 2;
-      --v-y1: 1; --v-y2: 2;
-    }
-    .board.q1{
-      --cast-x: -18px; --cast-y: 18px;
-      --h-edge: 0; --v-edge: 2;
-      --h-x1: 0; --h-x2: 1;
-      --v-y1: 1; --v-y2: 2;
-    }
-    .board.q2{
-      --cast-x: -18px; --cast-y: -18px;
-      --h-edge: 2; --v-edge: 2;
-      --h-x1: 0; --h-x2: 1;
-      --v-y1: 0; --v-y2: 1;
-    }
-    .board.q3{
-      --cast-x: 18px;  --cast-y: -18px;
-      --h-edge: 2; --v-edge: 0;
-      --h-x1: 1; --h-x2: 2;
-      --v-y1: 0; --v-y2: 1;
-    }
+    .board.q0{ --cast-x: 18px;  --cast-y: 18px;  }
+    .board.q1{ --cast-x: -18px; --cast-y: 18px;  }
+    .board.q2{ --cast-x: -18px; --cast-y: -18px; }
+    .board.q3{ --cast-x: 18px;  --cast-y: -18px; }
 
     .grid{
       position:absolute;
@@ -250,6 +222,9 @@
     }
 
     .cube{
+      /* ✅ FIX: Border bleibt im Rastermaß (sonst +8px rechts/unten Überstand) */
+      box-sizing: border-box;
+
       position:absolute;
       left: var(--cube-x);
       top:  var(--cube-y);
@@ -304,11 +279,11 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* ✅ Slots relativ zur Würfel-Position + je Quadrant richtig ausgerichtet */
-    .slot-2c{ left: calc(var(--cube-x) + var(--h-x1) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
-    .slot-2d{ left: calc(var(--cube-x) + var(--h-x2) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
-    .slot-3b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y1) * var(--step)); }
-    .slot-4b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y2) * var(--step)); }
+    /* Slots relativ zur Würfel-Position */
+    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
+    .slot-2d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
+    .slot-3b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
+    .slot-4b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
 
     .controls{
       width: 100%;
