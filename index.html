@@ -30,6 +30,11 @@
 
       /* Steckfelder-Outline */
       --slot-border: rgba(0,0,0,0.55);
+
+      /* Board-Rahmen */
+      --board-border: 4px;
+      --board-border-color: #000;
+      --board-radius: clamp(14px, 2.2vmin, 22px);
     }
 
     html, body { height: 100%; }
@@ -59,11 +64,16 @@
     .board{
       position:relative;
       width: 100%;
-      height: 0;           /* wird per JS gesetzt */
-      aspect-ratio: 1 / 1; /* Backup */
+      height: 0;             /* wird per JS gesetzt */
+      aspect-ratio: 1 / 1;   /* Backup */
+      box-sizing: border-box;
 
-      /* >>> FIX: schwarzer Untergrund hinter den Grid-Gaps <<< */
+      /* Fugen-Untergrund (damit nix Braun durchscheint) */
       background: #0b0b0b;
+
+      /* >>> NEU: außen 4px schwarzer Rahmen + Radius <<< */
+      border: var(--board-border) solid var(--board-border-color);
+      border-radius: var(--board-radius);
 
       overflow: visible;
     }
@@ -93,14 +103,19 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    /* FLOOR: dunkler + Innenschatten */
+    /* Für exakte Fluchtung: Zellmaß als Variable */
+    .board{
+      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
+    }
+
+    /* FLOOR */
     .floor{
       position:absolute;
 
-      left: calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
-      top:  calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
-      width: calc(6 * (100% - 7 * var(--cell-gap)) / 8 + 5 * var(--cell-gap));
-      height: calc(6 * (100% - 7 * var(--cell-gap)) / 8 + 5 * var(--cell-gap));
+      left: calc(var(--cell) + var(--cell-gap));
+      top:  calc(var(--cell) + var(--cell-gap));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(6 * var(--cell) + 5 * var(--cell-gap));
 
       background:
         linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
@@ -121,11 +136,11 @@
       position:absolute;
       z-index: 5;
 
-      left: calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
-      top:  calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
+      left: calc(var(--cell) + var(--cell-gap));
+      top:  calc(var(--cell) + var(--cell-gap));
 
-      width: calc(3 * (100% - 7 * var(--cell-gap)) / 8 + 2 * var(--cell-gap));
-      height: calc(3 * (100% - 7 * var(--cell-gap)) / 8 + 2 * var(--cell-gap));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
 
       background:
         linear-gradient(135deg, rgba(255,255,255,0.22), rgba(0,0,0,0.06)),
@@ -137,29 +152,47 @@
       box-shadow:
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
+
+      pointer-events: none;
     }
 
-    .slots{
-      position:absolute;
-      inset: 0;
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: var(--cell-gap);
-      padding: var(--cell-gap);
-      box-sizing: border-box;
-    }
-
+    /* >>> NEU: Platzhalter NICHT mehr im 3x3-Innenraster,
+       sondern exakt auf Grid-Koordinaten (fluchtet + gleiche Größe wie Randzellen) <<< */
     .slot{
+      position:absolute;
+      z-index: 6; /* über dem Cube */
+
+      width: var(--cell);
+      height: var(--cell);
+
+      box-sizing: border-box;
       background: transparent;
       border: 2px solid var(--slot-border);
-      border-radius: 10px;
+      border-radius: var(--cell-radius);
+      pointer-events: none;
     }
 
-    .s-2c{ grid-row:1; grid-column:2; }
-    .s-2d{ grid-row:1; grid-column:3; }
-    .s-3b{ grid-row:2; grid-column:1; }
-    .s-4b{ grid-row:3; grid-column:1; }
+    /* Koordinaten: left = col*(cell+gap), top = (row-1)*(cell+gap) */
+    /* 2C: row 2, col C(2) => left: 2*(cell+gap), top: 1*(cell+gap) */
+    .slot-2c{
+      left: calc(2 * (var(--cell) + var(--cell-gap)));
+      top:  calc(1 * (var(--cell) + var(--cell-gap)));
+    }
+    /* 2D: row 2, col D(3) */
+    .slot-2d{
+      left: calc(3 * (var(--cell) + var(--cell-gap)));
+      top:  calc(1 * (var(--cell) + var(--cell-gap)));
+    }
+    /* 3B: row 3, col B(1) */
+    .slot-3b{
+      left: calc(1 * (var(--cell) + var(--cell-gap)));
+      top:  calc(2 * (var(--cell) + var(--cell-gap)));
+    }
+    /* 4B: row 4, col B(1) */
+    .slot-4b{
+      left: calc(1 * (var(--cell) + var(--cell-gap)));
+      top:  calc(3 * (var(--cell) + var(--cell-gap)));
+    }
   </style>
 </head>
 
@@ -167,16 +200,16 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
+
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div class="cube" aria-label="Würfel">
-        <div class="slots" aria-hidden="true">
-          <div class="slot s-2c"></div>
-          <div class="slot s-2d"></div>
-          <div class="slot s-3b"></div>
-          <div class="slot s-4b"></div>
-        </div>
-      </div>
+      <div class="cube" aria-label="Würfel"></div>
+
+      <!-- Platzhalter exakt auf Raster -->
+      <div class="slot slot-2c" aria-hidden="true"></div>
+      <div class="slot slot-2d" aria-hidden="true"></div>
+      <div class="slot slot-3b" aria-hidden="true"></div>
+      <div class="slot slot-4b" aria-hidden="true"></div>
     </div>
   </div>
 
