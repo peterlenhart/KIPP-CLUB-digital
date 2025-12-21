@@ -1,5 +1,449 @@
 <!DOCTYPE html>
+<html lang="de"><!DOCTYPE html>
 <html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIPP – 8×8 Raster</title>
+
+  <style>
+    :root{
+      --violett: rgb(164, 27, 133);
+      --blau:    rgb(0, 107, 179);
+      --gruen:   rgb(0, 166, 82);
+      --orange:  rgb(249, 150, 30);
+
+      --cell-gap: clamp(5px, 1.1vmin, 10px);
+      --cell-radius: clamp(6px, 1.1vmin, 12px);
+
+      --floor: #7a4a34;
+      --cube-border: #7a4a34;
+
+      --cube-wood-base: #d7c2a4;
+      --cube-wood-deep: #c9b08f;
+      --cube-wood-warm: rgba(155, 70, 110, 0.10);
+      --cube-wood-gold: rgba(249, 150, 30, 0.10);
+
+      --slot-border: rgba(0,0,0,0.55);
+      --slot-border-w: 2px;
+      --slot-fill: #ead7be;
+
+      --board-border: 4px;
+      --board-border-color: #000;
+      --board-radius: clamp(14px, 2.2vmin, 22px);
+
+      --btn-bg: #ead7be;
+      --btn-text: #2a160c;
+      --btn-border: rgba(0,0,0,0.35);
+    }
+
+    html, body { height: 100%; }
+
+    body{
+      margin:0;
+      display:flex;
+      justify-content:center;
+      background:
+        radial-gradient(ellipse at center, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.38) 100%),
+        linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.00) 18%, rgba(0,0,0,0.00) 82%, rgba(0,0,0,0.22)),
+        repeating-linear-gradient(
+          90deg,
+          rgba(0,0,0,0.10) 0px,
+          rgba(0,0,0,0.10) 2px,
+          rgba(255,255,255,0.04) 2px,
+          rgba(255,255,255,0.04) 56px
+        ),
+        repeating-linear-gradient(
+          12deg,
+          rgba(0,0,0,0.05) 0px,
+          rgba(0,0,0,0.05) 8px,
+          rgba(255,255,255,0.03) 8px,
+          rgba(255,255,255,0.03) 16px
+        ),
+        linear-gradient(180deg, #e0b47c, #c89259);
+
+      background-attachment: fixed;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .stage{
+      width: min(94vw, 680px);
+      margin-top: 14vh;
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+      justify-content:flex-start;
+      align-items:center;
+    }
+
+    .board{
+      position:relative;
+      width: 100%;
+      height: 0;
+      aspect-ratio: 1 / 1;
+      box-sizing: border-box;
+
+      background: #0b0b0b;
+
+      border: var(--board-border) solid var(--board-border-color);
+      border-radius: var(--board-radius);
+
+      overflow: visible;
+
+      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
+
+      /* Würfel-Position */
+      --cube-x: calc(var(--cell) + var(--cell-gap));
+      --cube-y: calc(var(--cell) + var(--cell-gap));
+
+      /* Cast-Shadow Offset (wird je Quadrant gesetzt) */
+      --cast-x: 18px;
+      --cast-y: 18px;
+
+      box-shadow:
+        10px 18px 42px rgba(0,0,0,0.55),
+        3px 6px 16px rgba(0,0,0,0.35);
+    }
+
+    /* Quadranten nach deiner Logik:
+       oben links:  2B–4D  (Q0)
+       oben rechts: 2E–4G  (Q1)
+       unten rechts:5E–7G  (Q2)
+       unten links: 5B–7D  (Q3)
+    */
+    .board.q0{ --cast-x: 18px;  --cast-y: 18px;  }  /* Schatten nach innen: rechts+unten */
+    .board.q1{ --cast-x: -18px; --cast-y: 18px;  }  /* links+unten */
+    .board.q2{ --cast-x: -18px; --cast-y: -18px; }  /* links+oben */
+    .board.q3{ --cast-x: 18px;  --cast-y: -18px; }  /* rechts+oben */
+
+    .grid{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: var(--cell-gap);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .cell{
+      background:#0b0b0b;
+      border-radius: var(--cell-radius);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.035) inset,
+        0 10px 18px rgba(0,0,0,0.32);
+    }
+
+    .c-orange{ background: var(--orange); }
+    .c-gruen { background: var(--gruen);  }
+    .c-violett{ background: var(--violett); }
+    .c-blau  { background: var(--blau);   }
+
+    .floor{
+      position:absolute;
+      left: calc(var(--cell) + var(--cell-gap));
+      top:  calc(var(--cell) + var(--cell-gap));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(6 * var(--cell) + 5 * var(--cell-gap));
+
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
+        var(--floor);
+
+      border-radius: 0;
+      z-index: 2;
+      pointer-events: none;
+
+      box-shadow:
+        inset 14px 14px 26px rgba(255,255,255,0.14),
+        inset -18px -18px 34px rgba(0,0,0,0.22),
+        inset 0 0 0 1px rgba(0,0,0,0.12),
+        inset -22px 0 34px rgba(0,0,0,0.30),
+        inset  22px 0 34px rgba(0,0,0,0.30),
+        inset  0 -22px 34px rgba(0,0,0,0.34),
+        inset  0  22px 34px rgba(0,0,0,0.34);
+    }
+
+    /* ✅ Schatten-Layer: geclippt auf den Innenboden (6×6),
+       damit der Schlagschatten nicht auf den Rahmen läuft */
+    .shadowLayer{
+      position:absolute;
+      inset:0;
+      z-index: 3;
+      pointer-events:none;
+      clip-path: inset(
+        calc(var(--cell) + var(--cell-gap))
+        calc(var(--cell) + var(--cell-gap))
+        calc(var(--cell) + var(--cell-gap))
+        calc(var(--cell) + var(--cell-gap))
+      );
+    }
+
+    .cubeShadow{
+      position:absolute;
+      left: var(--cube-x);
+      top:  var(--cube-y);
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      border-radius: clamp(10px, 2.2vmin, 18px);
+
+      background: transparent;
+
+      /* ✅ Cast Shadow auf den Boden (außerhalb des Würfels),
+         Offset je Quadrant Richtung Box-Innenraum */
+      box-shadow:
+        var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
+        calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
+
+      filter: blur(1px);
+      opacity: 1;
+    }
+
+    .ball{
+      position:absolute;
+      left: calc(
+        (var(--cell) + var(--cell-gap)) +
+        ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 )
+      );
+      top: calc(
+        (var(--cell) + var(--cell-gap)) +
+        ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 )
+      );
+
+      width: calc(var(--cell) * 0.55);
+      height: calc(var(--cell) * 0.55);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0.0) 45%),
+        radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
+        radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
+
+      box-shadow:
+        0 3px 6px rgba(0,0,0,0.28);
+
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .cube{
+      position:absolute;
+      left: var(--cube-x);
+      top:  var(--cube-y);
+
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+
+      background:
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
+        repeating-linear-gradient(
+          20deg,
+          rgba(0,0,0,0.02) 0px,
+          rgba(0,0,0,0.02) 10px,
+          rgba(255,255,255,0.02) 10px,
+          rgba(255,255,255,0.02) 18px
+        ),
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
+        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
+
+      border: 4px solid var(--cube-border);
+      border-radius: clamp(10px, 2.2vmin, 18px);
+
+      box-shadow:
+        0 12px 22px rgba(0,0,0,0.28),
+        0 0 0 1px rgba(255,255,255,0.10) inset;
+
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .slot{
+      position:absolute;
+      width: var(--cell);
+      height: var(--cell);
+      box-sizing: border-box;
+
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
+        var(--slot-fill);
+
+      border: var(--slot-border-w) solid var(--slot-border);
+      border-radius: var(--cell-radius);
+
+      z-index: 7;
+      pointer-events: none;
+
+      box-shadow:
+        1px 1px 0 rgba(255,255,255,0.18) inset,
+        -1px -1px 0 rgba(0,0,0,0.08) inset,
+        0 3px 5px rgba(0,0,0,0.22),
+        2px 2px 3px -1px rgba(0,0,0,0.20);
+    }
+
+    /* Slots relativ zur Würfel-Position */
+    .slot-2c{ left: calc(var(--cube-x) + 1 * (var(--cell) + var(--cell-gap))); top:  calc(var(--cube-y) + 0 * (var(--cell) + var(--cell-gap))); }
+    .slot-2d{ left: calc(var(--cube-x) + 2 * (var(--cell) + var(--cell-gap))); top:  calc(var(--cube-y) + 0 * (var(--cell) + var(--cell-gap))); }
+    .slot-3b{ left: calc(var(--cube-x) + 0 * (var(--cell) + var(--cell-gap))); top:  calc(var(--cube-y) + 1 * (var(--cell) + var(--cell-gap))); }
+    .slot-4b{ left: calc(var(--cube-x) + 0 * (var(--cell) + var(--cell-gap))); top:  calc(var(--cube-y) + 2 * (var(--cell) + var(--cell-gap))); }
+
+    .controls{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      padding: 0 6px;
+    }
+    .btn{
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(255,255,255,0.15) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{
+      transform: translateY(1px) scale(0.99);
+      filter: brightness(0.97);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="board q0" id="board">
+      <div class="floor" aria-hidden="true"></div>
+
+      <!-- ✅ neuer Schatten auf dem Boden -->
+      <div class="shadowLayer" aria-hidden="true">
+        <div class="cubeShadow"></div>
+      </div>
+
+      <div class="ball" aria-label="Kugel"></div>
+
+      <div id="grid" class="grid" aria-label="8×8 Raster"></div>
+
+      <div class="cube" aria-label="Würfel"></div>
+
+      <div class="slot slot-2c" aria-label="Slot 2C"></div>
+      <div class="slot slot-2d" aria-label="Slot 2D"></div>
+      <div class="slot slot-3b" aria-label="Slot 3B"></div>
+      <div class="slot slot-4b" aria-label="Slot 4B"></div>
+    </div>
+
+    <div class="controls">
+      <button id="btnBestuecken" class="btn">Würfel bestücken</button>
+    </div>
+  </div>
+
+  <script>
+    const boardEl = document.getElementById("board");
+
+    function setBoardSquare(){
+      const w = Math.round(boardEl.getBoundingClientRect().width);
+      boardEl.style.height = w + "px";
+    }
+
+    const cols = ["A","B","C","D","E","F","G","H"];
+    const grid = document.getElementById("grid");
+
+    function key(r, cLetter){ return `${r}${cLetter}`; }
+
+    const colorMap = new Map([
+      [key(3,"A"), "c-orange"],
+      [key(4,"A"), "c-gruen"],
+      [key(5,"A"), "c-violett"],
+      [key(6,"A"), "c-blau"],
+
+      [key(8,"C"), "c-gruen"],
+      [key(8,"D"), "c-orange"],
+      [key(8,"E"), "c-gruen"],
+      [key(8,"F"), "c-orange"],
+
+      [key(6,"H"), "c-violett"],
+      [key(5,"H"), "c-blau"],
+      [key(4,"H"), "c-orange"],
+      [key(3,"H"), "c-gruen"],
+
+      [key(1,"F"), "c-blau"],
+      [key(1,"E"), "c-violett"],
+      [key(1,"D"), "c-blau"],
+      [key(1,"C"), "c-violett"],
+    ]);
+
+    function buildGridOnce(){
+      if (grid.dataset.built === "1") return;
+      for(let r=1; r<=8; r++){
+        for(let c=0; c<8; c++){
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const coord = key(r, cols[c]);
+          if(colorMap.has(coord)){
+            cell.classList.add(colorMap.get(coord));
+          }
+          grid.appendChild(cell);
+        }
+      }
+      grid.dataset.built = "1";
+    }
+
+    let currentQ = 0;
+
+    function applyQuadrant(q){
+      currentQ = q;
+
+      boardEl.classList.remove("q0","q1","q2","q3");
+      boardEl.classList.add("q"+q);
+
+      const cs = getComputedStyle(boardEl);
+      const cellPx = parseFloat(cs.getPropertyValue("--cell")) || 0;
+      const gapPx  = parseFloat(cs.getPropertyValue("--cell-gap")) || 0;
+      const step = cellPx + gapPx;
+
+      // Deine 4 erlaubten Positionen:
+      // q0: oben links  -> 2B..4D => (B=1, Row2=1)
+      // q1: oben rechts -> 2E..4G => (E=4, Row2=1)
+      // q2: unten rechts-> 5E..7G => (E=4, Row5=4)
+      // q3: unten links -> 5B..7D => (B=1, Row5=4)
+      const left = (q === 0 || q === 3) ? 1 * step : 4 * step;
+      const top  = (q === 0 || q === 1) ? 1 * step : 4 * step;
+
+      boardEl.style.setProperty("--cube-x", left + "px");
+      boardEl.style.setProperty("--cube-y", top  + "px");
+    }
+
+    const btn = document.getElementById("btnBestuecken");
+    btn.addEventListener("click", () => {
+      const q = Math.floor(Math.random() * 4);
+      applyQuadrant(q);
+    });
+
+    window.addEventListener("load", () => {
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+      setTimeout(setBoardSquare, 80);
+
+      buildGridOnce();
+      applyQuadrant(0);
+    });
+
+    window.addEventListener("resize", () => {
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+      applyQuadrant(currentQ);
+    });
+  </script>
+</body>
+</html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
