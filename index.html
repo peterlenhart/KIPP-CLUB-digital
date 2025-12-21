@@ -1,160 +1,222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KIPP – 8×8 Raster</title>
+  <style>
+    :root{
+      /* Deine Farben */
+      --violett: rgb(164, 27, 133);
+      --blau:    rgb(0, 107, 179);
+      --gruen:   rgb(0, 166, 82);
+      --gelb:    rgb(249, 150, 30);
 
-<title>KIPP – Spielfeld Prototyp</title>
+      /* Optik */
+      --black:   #161616;
+      --gridline:#1f1f1f;
 
-<style>
-  :root {
-    --bg-dark: #3a3a3a;
-    --orange: #d58a3a;
-    --pink: #9a3f6b;
-    --blue: #3b7fb1;
-    --green: #4a8f5a;
-    --inner: #efe4cf;
-  }
+      --inner-bg:#E7D5BC;      /* “schönes Beige drinnen” */
+      --beige-3x3:#E2C9AD;     /* das 3×3 Beige-Feld 2B–4D */
+      --brown:   #5B3A29;      /* Dunkelbraun */
 
-  body {
-    margin: 0;
-    background: #2a1a12;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-  }
+      --cell-gap: 3px;         /* Raster-Linien */
+      --color-inset: 4px;      /* schwarzer Rand innerhalb Farbflächen */
+    }
 
-  /* Spielfeld-Container */
-  .board-wrapper {
-    position: absolute;
-    top: 42vh;                 /* 👈 über der Mitte */
-    transform: translateY(-50%);
-    width: min(92vw, 92vh);    /* Breite ausnutzen, bleibt quadratisch */
-    aspect-ratio: 1 / 1;
-  }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      background: radial-gradient(1200px 800px at 50% 10%, #3a251b 0%, #1b120e 60%, #120b08 100%);
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:#fff;
+    }
 
-  /* 8×8 Raster */
-  .board {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
-    background: var(--bg-dark);
-  }
+    /* Platzierung: über der Mitte (nicht oben kleben, nicht mittig) */
+    .stage{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      padding-top: 10vh; /* Schwerpunkt über der Mitte */
+      padding-bottom: 6vh;
+    }
 
-  .cell {
-    box-sizing: border-box;
-  }
+    /* Das Quadrat nutzt die Displaybreite schön aus */
+    .board{
+      width: min(94vw, 680px);
+      aspect-ratio: 1 / 1;
+      background: var(--gridline); /* “Linien” entstehen über gap */
+      padding: var(--cell-gap);
+      border-radius: 14px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.35);
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: var(--cell-gap);
+      user-select:none;
+      touch-action: manipulation;
+    }
 
-  /* Rahmenfarben */
-  .top.orange { background: var(--orange); }
-  .top.pink   { background: var(--pink); }
+    .cell{
+      background: var(--inner-bg);
+      border-radius: 6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: clamp(10px, 1.8vw, 16px);
+      color: rgba(0,0,0,.35);
+      position: relative;
+    }
 
-  .left.orange { background: var(--orange); }
-  .left.blue   { background: var(--blue); }
+    /* Außenrand (Zeile 1/8 + Spalte A/H) komplett schwarz */
+    .cell.border{
+      background: var(--black);
+      color: rgba(255,255,255,.18);
+    }
 
-  .right.pink  { background: var(--pink); }
-  .right.green { background: var(--green); }
+    /* Farbflächen am Rand: Farbe + schwarzer Innenrand (nicht vollflächig) */
+    .cell.colored{
+      color: rgba(255,255,255,.0);
+      box-shadow: inset 0 0 0 var(--color-inset) var(--black);
+    }
 
-  .bottom.blue  { background: var(--blue); }
-  .bottom.green{ background: var(--green); }
+    /* Das 3×3 Beige-Feld 2B–4D */
+    .cell.beige3{
+      background: var(--beige-3x3);
+    }
 
-  /* Innenfläche */
-  .inner {
-    background: var(--inner);
-  }
+    /* 4px Dunkelbraun-Rahmen um 2B–4D (nach innen) */
+    .bt { box-shadow: inset 0 4px 0 0 var(--brown); }
+    .bb { box-shadow: inset 0 -4px 0 0 var(--brown); }
+    .bl { box-shadow: inset 4px 0 0 0 var(--brown); }
+    .br { box-shadow: inset -4px 0 0 0 var(--brown); }
 
-</style>
+    /* Wenn ein Feld schon colored ist, brauchen wir beides:
+       - farbiger Innenrand schwarz
+       - zusätzlicher brauner Rahmen (überlagern via multiple shadows) */
+    .cell.colored.bt{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset 0 4px 0 0 var(--brown); }
+    .cell.colored.bb{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset 0 -4px 0 0 var(--brown); }
+    .cell.colored.bl{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset 4px 0 0 0 var(--brown); }
+    .cell.colored.br{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset -4px 0 0 0 var(--brown); }
+
+    /* 2px Rahmen um 4B, 3B, 2C, 2D */
+    .cell.fine{
+      box-shadow: inset 0 0 0 2px var(--brown);
+    }
+    /* kombiniert mit Beige3 */
+    .cell.beige3.fine{
+      box-shadow: inset 0 0 0 2px var(--brown);
+    }
+  </style>
 </head>
-
 <body>
-
-<div class="board-wrapper">
-  <div class="board">
-
-    <!-- Zeile 1 -->
-    <div class="cell"></div>
-    <div class="cell top orange"></div>
-    <div class="cell top orange"></div>
-    <div class="cell top pink"></div>
-    <div class="cell top pink"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 2 -->
-    <div class="cell"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 3 -->
-    <div class="cell left orange"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell right pink"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 4 -->
-    <div class="cell left orange"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell right pink"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 5 -->
-    <div class="cell left blue"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell right green"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 6 -->
-    <div class="cell left blue"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell inner"></div>
-    <div class="cell right green"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 7 -->
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
-    <!-- Zeile 8 -->
-    <div class="cell"></div>
-    <div class="cell bottom blue"></div>
-    <div class="cell bottom blue"></div>
-    <div class="cell bottom green"></div>
-    <div class="cell bottom green"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-
+  <div class="stage">
+    <div id="board" class="board" aria-label="8x8 Raster"></div>
   </div>
-</div>
 
+  <script>
+    const board = document.getElementById("board");
+
+    const cols = ["A","B","C","D","E","F","G","H"];
+    const rows = [1,2,3,4,5,6,7,8];
+
+    // Farbzuordnung aus deiner Liste
+    // Format: "ROWCOL": "colorName"
+    const colored = new Map([
+      ["3A","gelb"],
+      ["4A","gruen"],
+      ["5A","violett"],
+      ["6A","blau"],
+
+      ["8C","gruen"],
+      ["8D","gelb"],
+      ["8E","gruen"],
+      ["8F","gelb"],
+
+      ["6H","violett"],
+      ["5H","blau"],
+      ["4H","gelb"],
+      ["3H","gruen"],
+
+      ["1F","blau"],
+      ["1E","violett"],
+      ["1D","blau"],
+      ["1C","violett"],
+    ]);
+
+    // 3×3 beige: 2B bis 4D
+    function isBeige3(r, c){
+      return (r >= 2 && r <= 4) && (c >= "B" && c <= "D");
+    }
+
+    // Außenrand schwarz: Reihe 1/8 und Spalte A/H
+    function isBorder(r, c){
+      return r === 1 || r === 8 || c === "A" || c === "H";
+    }
+
+    // 4px brauner Rahmen um 2B–4D (per Zellkante)
+    function brownFrameClasses(r, c){
+      const cls = [];
+      const in3 = isBeige3(r, c);
+      if(!in3) return cls;
+
+      if(r === 2) cls.push("bt");
+      if(r === 4) cls.push("bb");
+      if(c === "B") cls.push("bl");
+      if(c === "D") cls.push("br");
+      return cls;
+    }
+
+    // 2px brauner Rahmen um: 4B, 3B, 2C, 2D
+    const fineSet = new Set(["4B","3B","2C","2D"]);
+
+    // Helper: CSS Variable Farbe setzen
+    function colorToCss(name){
+      switch(name){
+        case "violett": return "var(--violett)";
+        case "blau":    return "var(--blau)";
+        case "gruen":   return "var(--gruen)";
+        case "gelb":    return "var(--gelb)";
+        default:        return "var(--inner-bg)";
+      }
+    }
+
+    // Grid bauen (Row 1 oben, Row 8 unten; Col A links -> H rechts)
+    for(const r of rows){
+      for(const c of cols){
+        const key = `${r}${c}`;
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.coord = key;
+
+        // Außenrand schwarz
+        if(isBorder(r, c)) cell.classList.add("border");
+
+        // Innenfläche: standard beige
+        // Spezielles 3×3 Feld 2B–4D (leicht anders)
+        if(!isBorder(r, c) && isBeige3(r, c)) cell.classList.add("beige3");
+
+        // Farbflächen (mit schwarzem Innenrand)
+        if(colored.has(key)){
+          cell.classList.add("colored");
+          cell.style.background = colorToCss(colored.get(key));
+        }
+
+        // 4px brauner Rahmen um 2B–4D
+        for(const cl of brownFrameClasses(r, c)) cell.classList.add(cl);
+
+        // 2px Rahmen um die vier Steckfelder
+        if(fineSet.has(key)) cell.classList.add("fine");
+
+        // optional: Koordinaten als “Debug” ausblendbar
+        // cell.textContent = key;
+
+        board.appendChild(cell);
+      }
+    }
+  </script>
 </body>
 </html>
