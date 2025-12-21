@@ -1,217 +1,246 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KIPP – 8×8 Raster</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIPP – 8×8 Raster</title>
 
-<style>
-  :root{
-    --bg1:#3a2418;
-    --bg2:#24140e;
+  <style>
+    :root{
+      /* Farben (deine Palette) */
+      --violett: rgb(164, 27, 133);
+      --blau:    rgb(0, 107, 179);
+      --gruen:   rgb(0, 166, 82);
+      --orange:  rgb(249, 150, 30);
 
-    --black:#101010;
+      /* Grundlook (Fairy KIPP) */
+      --bg1: #2a1710;
+      --bg2: #120907;
 
-    /* deine Farben (Platzhalter – wenn du mir die exakten RGB nochmal gibst, tausch ich sie 1:1) */
-    --orange: rgb(249,150,30);
-    --green:  rgb(0,166,82);
-    --violet: rgb(164,27,133);
-    --blue:   rgb(0,107,179);
+      /* Raster/Board */
+      --cell-gap: clamp(5px, 1.1vmin, 10px);      /* Abstand zwischen den 8×8 Feldern */
+      --cell-radius: clamp(6px, 1.1vmin, 12px);   /* Rundung der einzelnen Rand-Kacheln */
 
-    --beigeLight:#efe0c6; /* Boxboden */
-    --beigeDark:#e6d3b5;  /* Würfel-/Innenbeige */
+      /* Boxboden (große Innenfläche) */
+      --floor: #e8dcc6;         /* etwas dunkler als vorher, “Tiefe” */
+      --floor-edge: #5a3a2a;    /* dunkler Brauneinfassung (für Würfel-Rahmen etc.) */
 
-    --woodDark:#8a5b35;
-    --lineDark: rgba(0,0,0,.28);
-  }
+      /* Würfel (symbolisiert) */
+      --cube-fill: #ead7be;     /* leicht anders als Boden */
+      --cube-border: #7a4a34;
 
-  body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    background: radial-gradient(circle at top, var(--bg1), var(--bg2));
-    font-family: system-ui, sans-serif;
-  }
+      /* Steckfelder-Outline */
+      --slot-border: rgba(0,0,0,0.55);
+    }
 
-  /* Schwerpunkt über der Mitte */
-  .stage{
-    width:100%;
-    display:flex;
-    justify-content:center;
-    transform: translateY(10vh);
-  }
+    html, body { height: 100%; }
 
-  /* HART quadratisch */
-  .boardWrap{
-    width: min(94vw, 86vh);
-    aspect-ratio: 1/1;
-    position: relative;
-  }
+    body{
+      margin:0;
+      display:flex;
+      justify-content:center;
+      background: radial-gradient(ellipse at top, rgba(255,255,255,0.06), transparent 45%),
+                  radial-gradient(ellipse at bottom, rgba(0,0,0,0.55), transparent 55%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
 
-  /* 8×8 Raster */
-  .grid{
-    position:absolute;
-    inset:0;
-    display:grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
-    gap: 10px;
-  }
+    /* Board-Zone: Schwerpunkt über der Mitte */
+    .stage{
+      width: min(94vw, 680px);
+      margin-top: 14vh;     /* über der Mitte, nicht “ganz oben” */
+      display:flex;
+      justify-content:center;
+    }
 
-  .cell{
-    background: var(--black);
-    border-radius: 10px;
-    box-shadow: 0 10px 18px rgba(0,0,0,.25);
-  }
+    /* ===========================
+       FIX: Board IMMER quadratisch
+       =========================== */
+    .board{
+      position:relative;
+      width: 100%;
+      max-width: 100%;
+      aspect-ratio: 1 / 1; /* moderne Browser */
+    }
 
-  /* Farbfelder */
-  .orange{ background: var(--orange); }
-  .green{  background: var(--green);  }
-  .violet{ background: var(--violet); }
-  .blue{   background: var(--blue);   }
+    /* Fallback, falls aspect-ratio nicht greift */
+    @supports not (aspect-ratio: 1 / 1){
+      .board{
+        height:auto;
+      }
+      .board::before{
+        content:"";
+        display:block;
+        padding-top:100%; /* Höhe = Breite => Quadrat */
+      }
+      .board > *{
+        position:absolute;
+        inset:0;
+      }
+    }
 
-  /* ===== Overlays (Boxboden / Würfel) ===== */
+    /* 8×8 Raster als Basis */
+    .grid{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: var(--cell-gap);
+    }
 
-  /* Boxboden: eine durchgehende Fläche (scharfkantig!) */
-  .boxFloor{
-    position:absolute;
-    /* entspricht deiner großen Fläche (innere "Box") */
-    left: calc((100% / 8) * 1 + 10px);
-    top:  calc((100% / 8) * 1 + 10px);
-    width: calc((100% / 8) * 6 - 20px);
-    height: calc((100% / 8) * 6 - 20px);
+    .cell{
+      background:#0b0b0b;                 /* “schwarz” */
+      border-radius: var(--cell-radius);  /* Randkacheln weich */
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 10px 18px rgba(0,0,0,0.35);
+    }
 
-    background: var(--beigeLight);
-    border-radius: 0; /* WICHTIG: keine Radien */
-    box-shadow: inset 0 0 0 0 rgba(0,0,0,0);
-    z-index: 2;
-  }
+    /* farbige Randfelder */
+    .c-orange{ background: var(--orange); }
+    .c-gruen { background: var(--gruen);  }
+    .c-violett{ background: var(--violett); }
+    .c-blau  { background: var(--blau);   }
 
-  /* leichte Tiefenwirkung: dunkler Rand innen */
-  .boxFloor::before{
-    content:"";
-    position:absolute;
-    inset: 0;
-    background:
-      linear-gradient(135deg, rgba(255,255,255,.12), rgba(0,0,0,.10));
-    pointer-events:none;
-  }
+    /* ===========================================
+       BOXBODEN (große Innenfläche)
+       -> SHARPKANTIG, keine Radien
+       =========================================== */
+    .floor{
+      position:absolute;
+      /* Innenfläche = alles ohne Rand: Reihen 2..7 & Spalten B..G */
+      left: calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
+      top:  calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
+      width: calc(6 * (100% - 7 * var(--cell-gap)) / 8 + 5 * var(--cell-gap));
+      height: calc(6 * (100% - 7 * var(--cell-gap)) / 8 + 5 * var(--cell-gap));
 
-  /* kleines „Innenquadrat“ links oben (2B–4D) */
-  .innerPad{
-    position:absolute;
-    left: calc((100% / 8) * 1 + 10px);
-    top:  calc((100% / 8) * 1 + 10px);
-    width: calc((100% / 8) * 3 - 20px);
-    height: calc((100% / 8) * 3 - 20px);
-    background: var(--beigeDark);
-    border-radius: 18px; /* das darf ruhig weich sein */
-    z-index: 3;
-  }
+      background: var(--floor);
+      border-radius: 0; /* scharfkantig */
+      box-shadow:
+        0 18px 28px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(0,0,0,0.12) inset;
+      z-index: 2;
+    }
 
-  /* Würfel-Overlay (symbolisch) */
-  .cube{
-    position:absolute;
-    /* ungefähr dort, wo er bei dir liegt: Q0 oben links */
-    left: calc((100% / 8) * 2 + 6px);
-    top:  calc((100% / 8) * 2 + 6px);
-    width: calc((100% / 8) * 2 - 12px);
-    height: calc((100% / 8) * 2 - 12px);
+    /* ===========================================
+       WÜRFEL (symbolisiert) – DARF Radien haben
+       -> 3×3 Bereich: 2B..4D
+       =========================================== */
+    .cube{
+      position:absolute;
+      z-index: 5;
 
-    background: var(--beigeDark);
-    border: 4px solid var(--woodDark);
-    border-radius: 16px;
-    box-shadow: 14px 14px 20px rgba(0,0,0,.35);
-    z-index: 4;
+      /* Start bei Zelle B2 */
+      left: calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
+      top:  calc((100% - 7 * var(--cell-gap)) / 8 + var(--cell-gap));
 
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 10px;
-    padding: 10px;
-  }
+      /* Größe = 3 Zellen breit/hoch + 2 gaps */
+      width: calc(3 * (100% - 7 * var(--cell-gap)) / 8 + 2 * var(--cell-gap));
+      height: calc(3 * (100% - 7 * var(--cell-gap)) / 8 + 2 * var(--cell-gap));
 
-  .slot{
-    border: 2px solid var(--lineDark);
-    border-radius: 14px;
-    background: rgba(255,255,255,.08);
-  }
+      background: var(--cube-fill);
+      border: 4px solid var(--cube-border);
+      border-radius: clamp(10px, 2.2vmin, 18px);
+      box-shadow:
+        0 12px 22px rgba(0,0,0,0.30),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
+    }
 
-</style>
+    /* 4 Steckfelder im Würfel (Outline) */
+    .slots{
+      position:absolute;
+      inset: 0;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: var(--cell-gap);
+      padding: var(--cell-gap);
+      box-sizing: border-box;
+    }
+
+    .slot{
+      background: transparent;
+      border: 2px solid var(--slot-border);
+      border-radius: 10px;
+    }
+
+    /* Slot-Positionen */
+    .s-2c{ grid-row:1; grid-column:2; }
+    .s-2d{ grid-row:1; grid-column:3; }
+    .s-3b{ grid-row:2; grid-column:1; }
+    .s-4b{ grid-row:3; grid-column:1; }
+  </style>
 </head>
 
 <body>
   <div class="stage">
-    <div class="boardWrap">
+    <div class="board">
+      <!-- große, scharfkantige Bodenfläche -->
+      <div class="floor" aria-hidden="true"></div>
 
-      <!-- Raster -->
-      <div class="grid" id="grid"></div>
+      <!-- 8×8 Raster (Rand + farbige Felder) -->
+      <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- große Flächen als Overlays (damit das Raster nicht kaputt wird) -->
-      <div class="boxFloor"></div>
-      <div class="innerPad"></div>
-
-      <!-- Würfel -->
-      <div class="cube">
-        <div class="slot"></div><div class="slot"></div>
-        <div class="slot"></div><div class="slot"></div>
+      <!-- symbolisierter Würfel (darf Radien haben) -->
+      <div class="cube" aria-label="Würfel">
+        <div class="slots" aria-hidden="true">
+          <div class="slot s-2c"></div>
+          <div class="slot s-2d"></div>
+          <div class="slot s-3b"></div>
+          <div class="slot s-4b"></div>
+        </div>
       </div>
-
     </div>
   </div>
 
-<script>
-  // 8×8 Zellen erzeugen
-  const grid = document.getElementById("grid");
+  <script>
+    // Hilfsfunktionen
+    const cols = ["A","B","C","D","E","F","G","H"];
 
-  const cols = ["A","B","C","D","E","F","G","H"];
-  const rows = [1,2,3,4,5,6,7,8];
-
-  function key(r,c){ return `${r}${c}`; }
-
-  // Farbfelder laut deiner Liste
-  // (Ich nehme exakt deine Koordinaten, Groß/Klein egal)
-  const colors = {
-    "3A":"orange","4A":"green","5A":"violet","6A":"blue",
-    "8C":"green","8D":"orange","8E":"green","8F":"orange",
-    "6H":"violet","5H":"blue","4H":"orange","3H":"green",
-    "1F":"blue","1E":"violet","1D":"blue","1C":"violet"
-  };
-
-  // kleine beigen Einzelquadranten links oben (1B,1C,1D / 2B,2C / 3B,3C)
-  // 2B soll helles Beige sein (wie Boxboden) – du wolltest das explizit.
-  const beigeCells = {
-    "1B":"beigeDark","1C":"beigeDark","1D":"beigeDark",
-    "2B":"beigeLight","2C":"beigeDark",
-    "3B":"beigeDark","3C":"beigeDark"
-  };
-
-  // Raster rendern
-  for (let r of rows){
-    for (let c of cols){
-      const div = document.createElement("div");
-      div.className = "cell";
-
-      const k = key(r,c);
-
-      // Rand schwarz ist default (cell = black)
-
-      // Farbfelder
-      if (colors[k]) div.classList.add(colors[k]);
-
-      // kleine Beige-Zellen (oben links)
-      if (beigeCells[k]){
-        div.style.background = getComputedStyle(document.documentElement)
-          .getPropertyValue("--" + beigeCells[k].replace(/([A-Z])/g,"$1").trim()) || "";
-        // fallback (wenn oben was nicht greift)
-        if (beigeCells[k] === "beigeLight") div.style.background = "#efe0c6";
-        if (beigeCells[k] === "beigeDark") div.style.background = "#e6d3b5";
-      }
-
-      grid.appendChild(div);
+    function key(r, cLetter){
+      return `${r}${cLetter}`;
     }
-  }
-</script>
+
+    // Deine Farbfelder
+    const colorMap = new Map([
+      [key(3,"A"), "c-orange"],
+      [key(4,"A"), "c-gruen"],
+      [key(5,"A"), "c-violett"],
+      [key(6,"A"), "c-blau"],
+
+      [key(8,"C"), "c-gruen"],
+      [key(8,"D"), "c-orange"],
+      [key(8,"E"), "c-gruen"],
+      [key(8,"F"), "c-orange"],
+
+      [key(6,"H"), "c-violett"],
+      [key(5,"H"), "c-blau"],
+      [key(4,"H"), "c-orange"],
+      [key(3,"H"), "c-gruen"],
+
+      [key(1,"F"), "c-blau"],
+      [key(1,"E"), "c-violett"],
+      [key(1,"D"), "c-blau"],
+      [key(1,"C"), "c-violett"],
+    ]);
+
+    // Raster bauen
+    const grid = document.getElementById("grid");
+
+    for(let r=1; r<=8; r++){
+      for(let c=0; c<8; c++){
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const coord = key(r, cols[c]);
+        if(colorMap.has(coord)){
+          cell.classList.add(colorMap.get(coord));
+        }
+
+        grid.appendChild(cell);
+      }
+    }
+  </script>
 </body>
 </html>
