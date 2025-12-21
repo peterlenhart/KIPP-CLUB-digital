@@ -295,10 +295,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* =========================
-       ✅ ZAHLEN: Drehung = "Boden" Richtung Farbfeld (nach außen)
-       Wir drehen NICHT den Slot (nur die Zahl).
-       ========================= */
+    /* Zahlen: "Boden" Richtung Farbfeld (nach außen) */
     .slot .num{
       position:absolute;
       inset:0;
@@ -315,32 +312,27 @@
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
-      will-change: transform;
     }
 
-    /* q0: oben & links außen */
     .board.q0 .slot-2c .num > span,
-    .board.q0 .slot-2d .num > span { --num-rot: 180deg; }  /* oben -> Boden nach oben */
+    .board.q0 .slot-2d .num > span { --num-rot: 180deg; }
     .board.q0 .slot-3b .num > span,
-    .board.q0 .slot-4b .num > span { --num-rot: -90deg; }  /* links -> Boden nach links */
+    .board.q0 .slot-4b .num > span { --num-rot: -90deg; }
 
-    /* q1: oben & rechts außen */
     .board.q1 .slot-2c .num > span,
-    .board.q1 .slot-2d .num > span { --num-rot: 180deg; }  /* oben -> Boden nach oben */
+    .board.q1 .slot-2d .num > span { --num-rot: 180deg; }
     .board.q1 .slot-3b .num > span,
-    .board.q1 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts -> Boden nach rechts */
+    .board.q1 .slot-4b .num > span { --num-rot: 90deg; }
 
-    /* q2: unten & rechts außen */
     .board.q2 .slot-2c .num > span,
-    .board.q2 .slot-2d .num > span { --num-rot: 0deg; }    /* unten -> Boden nach unten */
+    .board.q2 .slot-2d .num > span { --num-rot: 0deg; }
     .board.q2 .slot-3b .num > span,
-    .board.q2 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts -> Boden nach rechts */
+    .board.q2 .slot-4b .num > span { --num-rot: 90deg; }
 
-    /* q3: unten & links außen */
     .board.q3 .slot-2c .num > span,
-    .board.q3 .slot-2d .num > span { --num-rot: 0deg; }    /* unten -> Boden nach unten */
+    .board.q3 .slot-2d .num > span { --num-rot: 0deg; }
     .board.q3 .slot-3b .num > span,
-    .board.q3 .slot-4b .num > span { --num-rot: -90deg; }  /* links -> Boden nach links */
+    .board.q3 .slot-4b .num > span { --num-rot: -90deg; }
 
     /* Slots relativ zur Würfel-Position + je Quadrant richtig ausgerichtet */
     .slot-2c{ left: calc(var(--cube-x) + var(--h-x1) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
@@ -348,13 +340,13 @@
     .slot-3b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y1) * var(--step)); }
     .slot-4b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y2) * var(--step)); }
 
-    /* Controls: Button weiter runter (nur Abstand) */
+    /* Controls: Button weiter runter */
     .controls{
       width: 100%;
       display:flex;
       justify-content:center;
       padding: 0 6px;
-      margin-top: 18px; /* ✅ weiter weg von der Box */
+      margin-top: 18px;
     }
 
     .btn{
@@ -373,72 +365,31 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
-    .btn[disabled]{
-      opacity: 0.65;
-      cursor: default;
-      transform: none;
-    }
+    .btn[disabled]{ opacity:0.65; cursor: default; }
 
-    /* =========================
-       Kipp-Animation (Zwischenzustand)
-       ========================= */
-    @keyframes kippRight {
-      0%   { transform: translate(0,0) scaleX(1); }
-      45%  { transform: translate(calc(1.5 * var(--step)), 0) scaleX(0.55); }
-      100% { transform: translate(calc(3 * var(--step)), 0) scaleX(1); }
+    /* -------------------------------------------------
+       ✅ Statische Zwischenansicht ("Bild") als Overlay
+       ------------------------------------------------- */
+    .midLayer{
+      position:absolute;
+      inset:0;
+      z-index: 20;
+      pointer-events:none;
+      display:none;
     }
-    @keyframes kippLeft {
-      0%   { transform: translate(0,0) scaleX(1); }
-      45%  { transform: translate(calc(-1.5 * var(--step)), 0) scaleX(0.55); }
-      100% { transform: translate(calc(-3 * var(--step)), 0) scaleX(1); }
+    .midItem{
+      position:absolute;
+      left:0; top:0;
+      width: 0; height: 0; /* wird per JS gesetzt */
     }
-    @keyframes kippDown {
-      0%   { transform: translate(0,0) scaleY(1); }
-      45%  { transform: translate(0, calc(1.5 * var(--step))) scaleY(0.55); }
-      100% { transform: translate(0, calc(3 * var(--step))) scaleY(1); }
+    .midItem .cubeShadow,
+    .midItem .cube,
+    .midItem .slot{
+      position:absolute;
+      left:0; top:0;
     }
-    @keyframes kippUp {
-      0%   { transform: translate(0,0) scaleY(1); }
-      45%  { transform: translate(0, calc(-1.5 * var(--step))) scaleY(0.55); }
-      100% { transform: translate(0, calc(-3 * var(--step))) scaleY(1); }
-    }
-
-    .animRight .cube,
-    .animRight .slot,
-    .animRight .cubeShadow{
-      animation: kippRight 520ms ease-in-out forwards;
-    }
-
-    .animLeft .cube,
-    .animLeft .slot,
-    .animLeft .cubeShadow{
-      animation: kippLeft 520ms ease-in-out forwards;
-    }
-
-    .animDown .cube,
-    .animDown .slot,
-    .animDown .cubeShadow{
-      animation: kippDown 520ms ease-in-out forwards;
-    }
-
-    .animUp .cube,
-    .animUp .slot,
-    .animUp .cubeShadow{
-      animation: kippUp 520ms ease-in-out forwards;
-    }
-
-    /* ✅ Pop ("blup") NUR am inneren Span, damit Rotation erhalten bleibt */
-    @keyframes popIn {
-      0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
-      60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
-      100% { transform: rotate(var(--num-rot, 0deg)) scale(1.00); filter: none; }
-    }
-    .slot.pop .num > span{
-      animation: popIn 220ms ease-out;
+    .midItem .cubeShadow{
+      filter: blur(1px);
     }
   </style>
 </head>
@@ -449,19 +400,22 @@
       <div class="floor" aria-hidden="true"></div>
 
       <div class="shadowLayer" aria-hidden="true">
-        <div class="cubeShadow"></div>
+        <div class="cubeShadow" id="cubeShadow"></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
 
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div class="cube" aria-label="Würfel"></div>
+      <div class="cube" id="cube" aria-label="Würfel"></div>
 
       <div class="slot slot-2c" data-slot="F3" aria-label="Slot 2C"><div class="num"><span></span></div></div>
       <div class="slot slot-2d" data-slot="F4" aria-label="Slot 2D"><div class="num"><span></span></div></div>
       <div class="slot slot-3b" data-slot="F2" aria-label="Slot 3B"><div class="num"><span></span></div></div>
       <div class="slot slot-4b" data-slot="F1" aria-label="Slot 4B"><div class="num"><span></span></div></div>
+
+      <!-- ✅ Zwischenbild-Overlay -->
+      <div class="midLayer" id="midLayer" aria-hidden="true"></div>
     </div>
 
     <div class="controls">
@@ -473,6 +427,10 @@
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
+
+    const cubeEl = document.getElementById("cube");
+    const cubeShadowEl = document.getElementById("cubeShadow");
+    const midLayer = document.getElementById("midLayer");
 
     const slotEls = Array.from(document.querySelectorAll(".slot"));
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
@@ -567,23 +525,14 @@
         const slotKey = order[i];
         const span = slotSpanEls.get(slotKey);
         if(!span) continue;
-
         span.textContent = String(numbers[i]);
-
-        const slotEl = slotEls.find(s => s.dataset.slot === slotKey);
-        if (slotEl){
-          slotEl.classList.remove("pop");
-          void slotEl.offsetWidth;
-          slotEl.classList.add("pop");
-        }
-
         await sleep(tempoMs);
       }
-      slotEls.forEach(s => s.classList.remove("pop"));
     }
 
-    // ---------- Kipp-Animation (clockwise für Bestückung) ----------
+    // ---------- Statische Zwischenansicht ----------
     function directionForMove(fromQ, toQ){
+      // clockwise: 0->1 right, 1->2 down, 2->3 left, 3->0 up
       if (fromQ === 0 && toQ === 1) return "Right";
       if (fromQ === 1 && toQ === 2) return "Down";
       if (fromQ === 2 && toQ === 3) return "Left";
@@ -591,17 +540,176 @@
       return "Right";
     }
 
-    async function animateMoveTo(nextQ){
-      const dir = directionForMove(currentQ, nextQ);
-      const cls = "anim" + dir;
-
-      boardEl.classList.add(cls);
-      await sleep(540);
-
-      boardEl.classList.remove("animRight","animLeft","animDown","animUp");
-      applyQuadrant(nextQ);
+    function px(v){
+      return parseFloat(String(v).replace("px","").trim()) || 0;
     }
 
+    function getMetrics(){
+      const csBoard = getComputedStyle(boardEl);
+      const csRoot  = getComputedStyle(document.documentElement);
+
+      const step = px(csBoard.getPropertyValue("--step"));
+      const cell = px(csBoard.getPropertyValue("--cell"));
+      const gap  = px(csRoot.getPropertyValue("--cell-gap"));
+
+      const cubeSize = (3 * cell) + (2 * gap);
+
+      const xMid = 4 * step; // vertikale Mittelachse (zwischen D/E)
+      const yMid = 4 * step; // horizontale Mittelachse (zwischen 4/5)
+
+      return { step, cell, gap, cubeSize, xMid, yMid };
+    }
+
+    function createMidItem(withNumbers){
+      const wrap = document.createElement("div");
+      wrap.className = "midItem";
+
+      // Shadow
+      const sh = cubeShadowEl.cloneNode(true);
+      sh.removeAttribute("id");
+
+      // Cube
+      const cu = cubeEl.cloneNode(true);
+      cu.removeAttribute("id");
+
+      // Slots (mit oder ohne Zahlen)
+      const slots = slotEls.map(s => {
+        const c = s.cloneNode(true);
+        if (!withNumbers){
+          const span = c.querySelector(".num > span");
+          if (span) span.textContent = "";
+        }
+        return c;
+      });
+
+      // Positionen im Mid-Item müssen "0,0" starten:
+      // -> wir schalten die originalen slot-* Positionen aus, indem wir die inline left/top setzen.
+      // Wir übernehmen die "aktuellen" Pixelpositionen der Elemente relativ zur Board-Null.
+      // Dazu lesen wir die BoundingRects und rechnen um.
+      const boardRect = boardEl.getBoundingClientRect();
+      const cubeRect  = cubeEl.getBoundingClientRect();
+      const shRect    = cubeShadowEl.getBoundingClientRect();
+
+      // cube + shadow im wrapper an 0,0
+      cu.style.left = "0px";
+      cu.style.top  = "0px";
+      sh.style.left = "0px";
+      sh.style.top  = "0px";
+
+      // Slots relativ zum cubeRect
+      for (const c of slots){
+        const slotKey = c.dataset.slot;
+        const orig = slotEls.find(x => x.dataset.slot === slotKey);
+        const r = orig.getBoundingClientRect();
+
+        c.style.left = (r.left - cubeRect.left) + "px";
+        c.style.top  = (r.top  - cubeRect.top)  + "px";
+      }
+
+      // Shadow muss deckungsgleich zum cubeRect sein:
+      // wir setzen im MidItem shadow top/left auf (shadowRect - cubeRect)
+      sh.style.left = (shRect.left - cubeRect.left) + "px";
+      sh.style.top  = (shRect.top  - cubeRect.top)  + "px";
+
+      wrap.appendChild(sh);
+      wrap.appendChild(cu);
+      for (const c of slots) wrap.appendChild(c);
+
+      // Maße
+      const { cubeSize } = getMetrics();
+      wrap.style.width  = cubeSize + "px";
+      wrap.style.height = cubeSize + "px";
+
+      return wrap;
+    }
+
+    async function showMidState(fromQ, toQ, ms=2000){
+      // 1) MidLayer vorbereiten
+      midLayer.innerHTML = "";
+      midLayer.style.display = "block";
+
+      // 2) Aktuelles "Bild" (mit Zahlen) und nächstes "Bild" (leer) erzeugen
+      const rightOrBottomHasCurrent = true; // wir setzen gleich je nach Richtung passend
+      const dir = directionForMove(fromQ, toQ);
+
+      const A = createMidItem(true);  // aktueller Zustand (mit Zahlen)
+      const B = createMidItem(false); // nächster Zustand (leer)
+
+      // 3) Positionierung an Mittellinie + 50% quetschen, KANTE an Mittellinie fix
+      const { cubeSize, xMid, yMid } = getMetrics();
+
+      // wir blenden die echten Elemente aus, damit wirklich nur das "Bild" sichtbar ist
+      cubeEl.style.visibility = "hidden";
+      cubeShadowEl.style.visibility = "hidden";
+      slotEls.forEach(s => s.style.visibility = "hidden");
+
+      if (dir === "Left" || dir === "Right"){
+        const top = Q[fromQ].row * getMetrics().step;
+
+        // Combined width bleibt cubeSize. Jede Seite bekommt cubeSize/2.
+        // LEFT-Teil: rechte Kante fix an xMid
+        // RIGHT-Teil: linke Kante fix an xMid
+        const leftPart  = (dir === "Left")  ? B : A; // bei Left: links ist "nächstes leer"
+        const rightPart = (dir === "Left")  ? A : B;
+
+        leftPart.style.left = (xMid - (cubeSize/2)) + "px";
+        leftPart.style.top  = top + "px";
+        leftPart.style.transformOrigin = "100% 50%";
+        leftPart.style.transform = "scaleX(0.5)";
+
+        rightPart.style.left = xMid + "px";
+        rightPart.style.top  = top + "px";
+        rightPart.style.transformOrigin = "0% 50%";
+        rightPart.style.transform = "scaleX(0.5)";
+
+        midLayer.appendChild(leftPart);
+        midLayer.appendChild(rightPart);
+      } else {
+        const left = Q[fromQ].col * getMetrics().step;
+
+        // UP/DOWN: Combined height bleibt cubeSize. Jede Seite cubeSize/2.
+        // TOP-Teil: untere Kante fix an yMid
+        // BOTTOM-Teil: obere Kante fix an yMid
+        const topPart    = (dir === "Up")   ? B : A; // bei Up: oben ist "nächstes leer"
+        const bottomPart = (dir === "Up")   ? A : B;
+
+        topPart.style.left = left + "px";
+        topPart.style.top  = (yMid - (cubeSize/2)) + "px";
+        topPart.style.transformOrigin = "50% 100%";
+        topPart.style.transform = "scaleY(0.5)";
+
+        bottomPart.style.left = left + "px";
+        bottomPart.style.top  = yMid + "px";
+        bottomPart.style.transformOrigin = "50% 0%";
+        bottomPart.style.transform = "scaleY(0.5)";
+
+        midLayer.appendChild(topPart);
+        midLayer.appendChild(bottomPart);
+      }
+
+      await sleep(ms);
+
+      // 4) MidLayer weg, echte Elemente wieder zeigen
+      midLayer.style.display = "none";
+      midLayer.innerHTML = "";
+
+      cubeEl.style.visibility = "visible";
+      cubeShadowEl.style.visibility = "visible";
+      slotEls.forEach(s => s.style.visibility = "visible");
+    }
+
+    async function moveWithStaticMid(toQ){
+      const fromQ = currentQ;
+      const dir = directionForMove(fromQ, toQ);
+
+      // wir setzen zuerst die Zielposition NICHT – wir zeigen erst das Zwischenbild
+      await showMidState(fromQ, toQ, 2000);
+
+      // dann „springt“ es zum Ziel (statisch)
+      applyQuadrant(toQ);
+    }
+
+    // ---------- Ablauf Bestückung (W1 -> Mid -> W2 leer -> W2 Zahlen -> Mid -> W3 leer -> W3 Zahlen) ----------
     let busy = false;
 
     async function runBestueckung(){
@@ -616,27 +724,25 @@
       const W2 = nums.slice(4,8);
       const W3 = nums.slice(8,12);
 
-      // ✅ etwas langsamer als vorher
       const popTempo = 380;
 
-      // W1 setzen
+      // W1
       await placeFour(W1, popTempo);
 
-      // Kipp zu W2
+      // zu W2: Zwischenbild (statisch) -> dann W2 leer -> Zahlen
       const qW2 = (currentQ + 1) % 4;
-      await animateMoveTo(qW2);
+      await moveWithStaticMid(qW2);
       clearSlots();
-      await sleep(180);
+      await sleep(2000); // leere Fläche 2s
       await placeFour(W2, popTempo);
 
-      // Kipp zu W3
+      // zu W3
       const qW3 = (currentQ + 1) % 4;
-      await animateMoveTo(qW3);
+      await moveWithStaticMid(qW3);
       clearSlots();
-      await sleep(180);
+      await sleep(2000); // leere Fläche 2s
       await placeFour(W3, popTempo);
 
-      // Fertig: W3 liegt oben
       btn.disabled = false;
       busy = false;
     }
@@ -651,7 +757,7 @@
 
       buildGridOnce();
 
-      // Würfel ist beim Start schon random in einer Ecke
+      // Start random Ecke
       applyQuadrant(Math.floor(Math.random() * 4));
       clearSlots();
     });
