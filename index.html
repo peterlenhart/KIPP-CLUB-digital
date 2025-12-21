@@ -44,7 +44,6 @@
       display:flex;
       justify-content:center;
 
-      /* Tisch-Hintergrund */
       background:
         radial-gradient(ellipse at center, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.38) 100%),
         linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.00) 18%, rgba(0,0,0,0.00) 82%, rgba(0,0,0,0.22)),
@@ -97,17 +96,15 @@
       --step: calc(var(--cell) + var(--cell-gap));
       --cube-size: calc(3 * var(--cell) + 2 * var(--cell-gap));
 
-      /* ✅ Pivot-Rotation (0/90/180/270) */
+      /* Rotation 0/90/180/270 */
       --rot: 0deg;
 
-      /* ✅ Kugelzentrum (Pivotpunkt) so, dass Q0 exakt passt:
-         Q0: Würfel liegt oben links am Innenrand -> sein inneres Eck sitzt auf der Kugel
-         => ball = step + cube-size (nicht exakt Bodenmitte, sondern realistisch wie Foto)
-      */
+      /* ✅ Pivot/Kugel: inneres Würfelecke sitzt am Pivot
+         (Basis Q0 oben links) */
       --ball-x: calc(var(--step) + var(--cube-size));
       --ball-y: calc(var(--step) + var(--cube-size));
 
-      /* Cast-Shadow Offset (je Quadrant Richtung Mitte) */
+      /* Schattenrichtung */
       --cast-x: 18px;
       --cast-y: 18px;
 
@@ -116,7 +113,6 @@
         3px 6px 16px rgba(0,0,0,0.35);
     }
 
-    /* Quadranten (nur für Schattenrichtung) */
     .board.q0{ --cast-x: 18px;  --cast-y: 18px;  --rot: 0deg;   }
     .board.q1{ --cast-x: -18px; --cast-y: 18px;  --rot: 90deg;  }
     .board.q2{ --cast-x: -18px; --cast-y: -18px; --rot: 180deg; }
@@ -171,21 +167,14 @@
         inset  0  22px 34px rgba(0,0,0,0.34);
     }
 
-    /* ✅ Schatten-Layer geclippt auf Innenboden */
     .shadowLayer{
       position:absolute;
       inset:0;
       z-index: 3;
       pointer-events:none;
-      clip-path: inset(
-        var(--step)
-        var(--step)
-        var(--step)
-        var(--step)
-      );
+      clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* Pivot-Container sitzt am Kugelzentrum */
     .pivot{
       position:absolute;
       left: var(--ball-x);
@@ -196,7 +185,9 @@
       transform-origin: 0 0;
     }
 
-    /* Würfel + Plättchen sind EINE Einheit, deren inneres Eck am Pivot klebt */
+    /* ✅ FIX: Würfel-Pivot muss über dem Boden liegen */
+    #pivotCube{ z-index: 5; }
+
     .cubeGroup{
       position:absolute;
       left: calc(-1 * var(--cube-size));
@@ -210,9 +201,11 @@
       inset: 0;
       border-radius: clamp(10px, 2.2vmin, 18px);
       background: transparent;
+
       box-shadow:
         var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
         calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
+
       filter: blur(1px);
     }
 
@@ -224,10 +217,12 @@
       height: calc(var(--cell) * 0.55);
       border-radius: 50%;
       transform: translate(-50%, -50%);
+
       background:
         radial-gradient(circle at 30% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0.0) 45%),
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
+
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
       z-index: 6;
       pointer-events: none;
@@ -284,9 +279,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* ✅ Slots (Basislage q0) relativ zum Würfel.
-       Rotieren automatisch mit dem cubeGroup, weil sie darin enthalten sind.
-    */
+    /* Basislage (q0): Plättchen oben und links */
     .slot-top-1 { left: calc(1 * var(--step)); top:  calc(0 * var(--step)); }
     .slot-top-2 { left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
     .slot-left-1{ left: calc(0 * var(--step)); top:  calc(1 * var(--step)); }
@@ -326,7 +319,7 @@
     <div class="board q0" id="board">
       <div class="floor" aria-hidden="true"></div>
 
-      <!-- Schatten geclippt auf Innenboden -->
+      <!-- Schatten (geclippt) -->
       <div class="shadowLayer" aria-hidden="true">
         <div class="pivot" id="pivotShadow">
           <div class="cubeGroup">
@@ -339,7 +332,7 @@
 
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ✅ Würfel + Plättchen rotieren als EIN Block um die Kugel -->
+      <!-- Würfel (über Boden!) -->
       <div class="pivot" id="pivotCube" aria-hidden="true">
         <div class="cubeGroup">
           <div class="cube" aria-label="Würfel"></div>
@@ -407,7 +400,6 @@
       grid.dataset.built = "1";
     }
 
-    // Quadranten: nur Klassenwechsel (Rotation & Schattenrichtung)
     const Q = ["q0","q1","q2","q3"];
     let currentQ = 0;
 
@@ -427,7 +419,7 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      applyQuadrant(0); // Start: oben links
+      applyQuadrant(0);
     });
 
     window.addEventListener("resize", () => {
