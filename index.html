@@ -16,11 +16,11 @@
       --black:   #161616;
       --gridline:#1f1f1f;
 
-      --inner-bg:#E7D5BC;      /* “schönes Beige drinnen” */
-      --beige-3x3:#E2C9AD;     /* das 3×3 Beige-Feld 2B–4D */
-      --brown:   #5B3A29;      /* Dunkelbraun */
+      --inner-bg:#E7D5BC;      /* hellbeige Fläche */
+      --beige-3x3:#E2C9AD;     /* 2B–4D */
+      --brown:   #5B3A29;
 
-      --cell-gap: 3px;         /* Raster-Linien */
+      --g: 3px;                /* Raster-Linien (Gap) */
       --color-inset: 4px;      /* schwarzer Rand innerhalb Farbflächen */
     }
 
@@ -32,30 +32,33 @@
       justify-content:center;
       align-items:flex-start;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:#fff;
     }
 
-    /* Platzierung: über der Mitte (nicht oben kleben, nicht mittig) */
+    /* Platzierung: über der Mitte */
     .stage{
       width: 100%;
       display:flex;
       justify-content:center;
-      padding-top: 10vh; /* Schwerpunkt über der Mitte */
+      padding-top: 10vh;
       padding-bottom: 6vh;
     }
 
-    /* Das Quadrat nutzt die Displaybreite schön aus */
     .board{
       width: min(94vw, 680px);
       aspect-ratio: 1 / 1;
-      background: var(--gridline); /* “Linien” entstehen über gap */
-      padding: var(--cell-gap);
+      background: var(--gridline);
+      padding: var(--g);
       border-radius: 14px;
       box-shadow: 0 18px 45px rgba(0,0,0,.35);
+      position: relative;
+
       display:grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: var(--cell-gap);
+      gap: var(--g);
+
+      /* Zellgröße für Overlays berechenbar */
+      --cell: calc((100% - (7 * var(--g))) / 8);
       user-select:none;
       touch-action: manipulation;
     }
@@ -63,53 +66,55 @@
     .cell{
       background: var(--inner-bg);
       border-radius: 6px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: clamp(10px, 1.8vw, 16px);
-      color: rgba(0,0,0,.35);
       position: relative;
     }
 
-    /* Außenrand (Zeile 1/8 + Spalte A/H) komplett schwarz */
-    .cell.border{
-      background: var(--black);
-      color: rgba(255,255,255,.18);
-    }
+    /* Außenrand schwarz */
+    .cell.border{ background: var(--black); }
 
-    /* Farbflächen am Rand: Farbe + schwarzer Innenrand (nicht vollflächig) */
+    /* 2B–4D leicht anderes Beige */
+    .cell.beige3{ background: var(--beige-3x3); }
+
+    /* Farbflächen am Rand mit schwarzem Innenrand */
     .cell.colored{
-      color: rgba(255,255,255,.0);
       box-shadow: inset 0 0 0 var(--color-inset) var(--black);
     }
 
-    /* Das 3×3 Beige-Feld 2B–4D */
-    .cell.beige3{
-      background: var(--beige-3x3);
-    }
-
-    /* 4px Dunkelbraun-Rahmen um 2B–4D (nach innen) */
+    /* 4px Dunkelbraun-Rahmen um 2B–4D */
     .bt { box-shadow: inset 0 4px 0 0 var(--brown); }
     .bb { box-shadow: inset 0 -4px 0 0 var(--brown); }
     .bl { box-shadow: inset 4px 0 0 0 var(--brown); }
     .br { box-shadow: inset -4px 0 0 0 var(--brown); }
 
-    /* Wenn ein Feld schon colored ist, brauchen wir beides:
-       - farbiger Innenrand schwarz
-       - zusätzlicher brauner Rahmen (überlagern via multiple shadows) */
     .cell.colored.bt{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset 0 4px 0 0 var(--brown); }
     .cell.colored.bb{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset 0 -4px 0 0 var(--brown); }
     .cell.colored.bl{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset 4px 0 0 0 var(--brown); }
     .cell.colored.br{ box-shadow: inset 0 0 0 var(--color-inset) var(--black), inset -4px 0 0 0 var(--brown); }
 
     /* 2px Rahmen um 4B, 3B, 2C, 2D */
-    .cell.fine{
-      box-shadow: inset 0 0 0 2px var(--brown);
+    .cell.fine{ box-shadow: inset 0 0 0 2px var(--brown); }
+    .cell.beige3.fine{ box-shadow: inset 0 0 0 2px var(--brown); }
+
+    /* Diese Zellen werden “unsichtbar”, weil ein Overlay darüber die Fläche vollflächig macht */
+    .cell.merged{
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
     }
-    /* kombiniert mit Beige3 */
-    .cell.beige3.fine{
-      box-shadow: inset 0 0 0 2px var(--brown);
+
+    /* Overlays: vollflächige Bereiche ohne Unterteilungen */
+    .overlay{
+      position:absolute;
+      z-index: 5;
+      pointer-events:none;
+      border-radius: 10px;
     }
+
+    /* Helper: Rechnet Grid-Positionen (1..8) in px um */
+    /* left = padding(g) + (colIndex-1)*(cell+g)  */
+    /* top  = padding(g) + (rowIndex-1)*(cell+g)  */
+    /* width = cols*cell + (cols-1)*g */
+    /* height= rows*cell + (rows-1)*g */
   </style>
 </head>
 <body>
@@ -123,57 +128,16 @@
     const cols = ["A","B","C","D","E","F","G","H"];
     const rows = [1,2,3,4,5,6,7,8];
 
-    // Farbzuordnung aus deiner Liste
-    // Format: "ROWCOL": "colorName"
+    const colIndex = c => cols.indexOf(c) + 1; // 1..8
+
+    // Farbzuordnung aus deiner Liste (Achtung: "gelb" = dein Orange)
     const colored = new Map([
-      ["3A","gelb"],
-      ["4A","gruen"],
-      ["5A","violett"],
-      ["6A","blau"],
-
-      ["8C","gruen"],
-      ["8D","gelb"],
-      ["8E","gruen"],
-      ["8F","gelb"],
-
-      ["6H","violett"],
-      ["5H","blau"],
-      ["4H","gelb"],
-      ["3H","gruen"],
-
-      ["1F","blau"],
-      ["1E","violett"],
-      ["1D","blau"],
-      ["1C","violett"],
+      ["3A","gelb"], ["4A","gruen"], ["5A","violett"], ["6A","blau"],
+      ["8C","gruen"], ["8D","gelb"], ["8E","gruen"], ["8F","gelb"],
+      ["6H","violett"], ["5H","blau"], ["4H","gelb"], ["3H","gruen"],
+      ["1F","blau"], ["1E","violett"], ["1D","blau"], ["1C","violett"],
     ]);
 
-    // 3×3 beige: 2B bis 4D
-    function isBeige3(r, c){
-      return (r >= 2 && r <= 4) && (c >= "B" && c <= "D");
-    }
-
-    // Außenrand schwarz: Reihe 1/8 und Spalte A/H
-    function isBorder(r, c){
-      return r === 1 || r === 8 || c === "A" || c === "H";
-    }
-
-    // 4px brauner Rahmen um 2B–4D (per Zellkante)
-    function brownFrameClasses(r, c){
-      const cls = [];
-      const in3 = isBeige3(r, c);
-      if(!in3) return cls;
-
-      if(r === 2) cls.push("bt");
-      if(r === 4) cls.push("bb");
-      if(c === "B") cls.push("bl");
-      if(c === "D") cls.push("br");
-      return cls;
-    }
-
-    // 2px brauner Rahmen um: 4B, 3B, 2C, 2D
-    const fineSet = new Set(["4B","3B","2C","2D"]);
-
-    // Helper: CSS Variable Farbe setzen
     function colorToCss(name){
       switch(name){
         case "violett": return "var(--violett)";
@@ -184,7 +148,41 @@
       }
     }
 
-    // Grid bauen (Row 1 oben, Row 8 unten; Col A links -> H rechts)
+    function isBorder(r, c){
+      return r === 1 || r === 8 || c === "A" || c === "H";
+    }
+
+    function isBeige3(r, c){
+      return (r >= 2 && r <= 4) && (c >= "B" && c <= "D");
+    }
+
+    function brownFrameClasses(r, c){
+      const cls = [];
+      if(!isBeige3(r, c)) return cls;
+      if(r === 2) cls.push("bt");
+      if(r === 4) cls.push("bb");
+      if(c === "B") cls.push("bl");
+      if(c === "D") cls.push("br");
+      return cls;
+    }
+
+    const fineSet = new Set(["4B","3B","2C","2D"]);
+
+    // Bereiche, die vollflächig sein müssen (Zellen darunter -> class "merged")
+    // 1) 3C–4D (2×2)
+    function inBlock_3C_4D(r,c){
+      return (r >= 3 && r <= 4) && (c >= "C" && c <= "D");
+    }
+    // 2) 2E–4G (3×3)
+    function inBlock_2E_4G(r,c){
+      return (r >= 2 && r <= 4) && (c >= "E" && c <= "G");
+    }
+    // 3) 5B–7G (3×6)
+    function inBlock_5B_7G(r,c){
+      return (r >= 5 && r <= 7) && (c >= "B" && c <= "G");
+    }
+
+    // Grid bauen
     for(const r of rows){
       for(const c of cols){
         const key = `${r}${c}`;
@@ -192,31 +190,57 @@
         cell.className = "cell";
         cell.dataset.coord = key;
 
-        // Außenrand schwarz
         if(isBorder(r, c)) cell.classList.add("border");
-
-        // Innenfläche: standard beige
-        // Spezielles 3×3 Feld 2B–4D (leicht anders)
         if(!isBorder(r, c) && isBeige3(r, c)) cell.classList.add("beige3");
 
-        // Farbflächen (mit schwarzem Innenrand)
         if(colored.has(key)){
           cell.classList.add("colored");
           cell.style.background = colorToCss(colored.get(key));
         }
 
-        // 4px brauner Rahmen um 2B–4D
         for(const cl of brownFrameClasses(r, c)) cell.classList.add(cl);
-
-        // 2px Rahmen um die vier Steckfelder
         if(fineSet.has(key)) cell.classList.add("fine");
 
-        // optional: Koordinaten als “Debug” ausblendbar
-        // cell.textContent = key;
+        // Zellen, die zu “vollflächigen” Bereichen gehören, transparent schalten:
+        if(inBlock_3C_4D(r,c) || inBlock_2E_4G(r,c) || inBlock_5B_7G(r,c)){
+          // NICHT den Außenrand anfassen
+          if(!isBorder(r,c)) cell.classList.add("merged");
+        }
 
         board.appendChild(cell);
       }
     }
+
+    // Overlays hinzufügen (decken die Gap-Linien ab => Fläche wirkt “ein Stück”)
+    function addOverlay(rowStart, colStart, rowCount, colCount, bgCss){
+      const ov = document.createElement("div");
+      ov.className = "overlay";
+      ov.style.background = bgCss;
+
+      const g = "var(--g)";
+      const cell = "var(--cell)";
+
+      const leftExpr = `calc(${g} + (${colStart-1}) * (${cell} + ${g}))`;
+      const topExpr  = `calc(${g} + (${rowStart-1}) * (${cell} + ${g}))`;
+      const widthExpr  = `calc(${colCount} * ${cell} + (${colCount-1}) * ${g})`;
+      const heightExpr = `calc(${rowCount} * ${cell} + (${rowCount-1}) * ${g})`;
+
+      ov.style.left = leftExpr;
+      ov.style.top = topExpr;
+      ov.style.width = widthExpr;
+      ov.style.height = heightExpr;
+
+      board.appendChild(ov);
+    }
+
+    // 3C–4D (2×2) -> hellbeige (wie Q-Flächen)
+    addOverlay(3, colIndex("C"), 2, 2, "var(--inner-bg)");
+
+    // 2E–4G (3×3) -> hellbeige (Q1/Q2 Bereich)
+    addOverlay(2, colIndex("E"), 3, 3, "var(--inner-bg)");
+
+    // 5B–7G (3×6) -> hellbeige (Q3/Q2 Bereich groß)
+    addOverlay(5, colIndex("B"), 3, 6, "var(--inner-bg)");
   </script>
 </body>
 </html>
