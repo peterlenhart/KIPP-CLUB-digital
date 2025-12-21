@@ -93,15 +93,10 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      /* ✅ Würfel darf NUR hier hin:
-         Spalte B (=1) oder E (=4)
-         Zeile 2 (=1) oder 5 (=4)
-         => default: oben links (2B–4D)
-      */
+      /* Würfel darf NUR hier hin */
       --cube-col: 1;
       --cube-row: 1;
 
-      /* ✅ Exakt aus dem Raster gerechnet */
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
@@ -113,13 +108,13 @@
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
 
-      /* ✅ Slot-Ausrichtung (Defaults für q0) */
-      --h-edge: 0;   /* 0=oben, 2=unten (in step) */
-      --v-edge: 0;   /* 0=links, 2=rechts (in step) */
-      --h-x1: 1;     /* horizontale Slot X-Position 1 */
-      --h-x2: 2;     /* horizontale Slot X-Position 2 */
-      --v-y1: 1;     /* vertikale Slot Y-Position 1 */
-      --v-y2: 2;     /* vertikale Slot Y-Position 2 */
+      /* Slot-Ausrichtung (Defaults für q0) */
+      --h-edge: 0;
+      --v-edge: 0;
+      --h-x1: 1;
+      --h-x2: 2;
+      --v-y1: 1;
+      --v-y2: 2;
     }
 
     /* Quadranten */
@@ -197,7 +192,6 @@
         inset  0  22px 34px rgba(0,0,0,0.34);
     }
 
-    /* ✅ Schatten-Layer geclippt auf Innenboden */
     .shadowLayer{
       position:absolute;
       inset:0;
@@ -219,8 +213,6 @@
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       border-radius: clamp(10px, 2.2vmin, 18px);
       background: transparent;
-
-      /* ✅ FIX: falls jemals Border/Outline dazukommt -> bleibt Maß stabil */
       box-sizing: border-box;
 
       box-shadow:
@@ -254,8 +246,6 @@
 
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-
-      /* ✅ FIX: Border bleibt INNEN, Würfel bleibt exakt 3×3 Raster groß */
       box-sizing: border-box;
 
       background:
@@ -305,18 +295,35 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* ✅ Slots relativ zur Würfel-Position + je Quadrant richtig ausgerichtet */
+    /* Zahlen in Slots */
+    .slot .num{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      color: #111;
+      font-size: clamp(18px, 4.2vmin, 36px);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      user-select:none;
+    }
+
+    /* Slots relativ zur Würfel-Position + je Quadrant richtig ausgerichtet */
     .slot-2c{ left: calc(var(--cube-x) + var(--h-x1) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
     .slot-2d{ left: calc(var(--cube-x) + var(--h-x2) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
     .slot-3b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y1) * var(--step)); }
     .slot-4b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y2) * var(--step)); }
 
+    /* Controls: Button weiter runter (nur Abstand) */
     .controls{
       width: 100%;
       display:flex;
       justify-content:center;
       padding: 0 6px;
+      margin-top: 18px; /* ✅ weiter weg von der Box */
     }
+
     .btn{
       border: 1px solid var(--btn-border);
       background: var(--btn-bg);
@@ -337,6 +344,70 @@
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
+    .btn[disabled]{
+      opacity: 0.65;
+      cursor: default;
+      transform: none;
+    }
+
+    /* =========================
+       Kipp-Animation (Zwischenzustand)
+       - squash (50%) + Verschiebung
+       ========================= */
+    @keyframes kippRight {
+      0%   { transform: translate(0,0) scaleX(1); }
+      45%  { transform: translate(calc(1.5 * var(--step)), 0) scaleX(0.55); }
+      100% { transform: translate(calc(3 * var(--step)), 0) scaleX(1); }
+    }
+    @keyframes kippLeft {
+      0%   { transform: translate(0,0) scaleX(1); }
+      45%  { transform: translate(calc(-1.5 * var(--step)), 0) scaleX(0.55); }
+      100% { transform: translate(calc(-3 * var(--step)), 0) scaleX(1); }
+    }
+    @keyframes kippDown {
+      0%   { transform: translate(0,0) scaleY(1); }
+      45%  { transform: translate(0, calc(1.5 * var(--step))) scaleY(0.55); }
+      100% { transform: translate(0, calc(3 * var(--step))) scaleY(1); }
+    }
+    @keyframes kippUp {
+      0%   { transform: translate(0,0) scaleY(1); }
+      45%  { transform: translate(0, calc(-1.5 * var(--step))) scaleY(0.55); }
+      100% { transform: translate(0, calc(-3 * var(--step))) scaleY(1); }
+    }
+
+    .animRight .cube,
+    .animRight .slot,
+    .animRight .cubeShadow{
+      animation: kippRight 520ms ease-in-out forwards;
+    }
+
+    .animLeft .cube,
+    .animLeft .slot,
+    .animLeft .cubeShadow{
+      animation: kippLeft 520ms ease-in-out forwards;
+    }
+
+    .animDown .cube,
+    .animDown .slot,
+    .animDown .cubeShadow{
+      animation: kippDown 520ms ease-in-out forwards;
+    }
+
+    .animUp .cube,
+    .animUp .slot,
+    .animUp .cubeShadow{
+      animation: kippUp 520ms ease-in-out forwards;
+    }
+
+    /* kleines "blup" beim Einsetzen einer Zahl */
+    @keyframes popIn {
+      0%   { transform: scale(0.70); filter: brightness(1.05); }
+      60%  { transform: scale(1.10); }
+      100% { transform: scale(1.00); filter: none; }
+    }
+    .slot.pop .num{
+      animation: popIn 180ms ease-out;
+    }
   </style>
 </head>
 
@@ -355,10 +426,10 @@
 
       <div class="cube" aria-label="Würfel"></div>
 
-      <div class="slot slot-2c" aria-label="Slot 2C"></div>
-      <div class="slot slot-2d" aria-label="Slot 2D"></div>
-      <div class="slot slot-3b" aria-label="Slot 3B"></div>
-      <div class="slot slot-4b" aria-label="Slot 4B"></div>
+      <div class="slot slot-2c" data-slot="F3" aria-label="Slot 2C"><div class="num"></div></div>
+      <div class="slot slot-2d" data-slot="F4" aria-label="Slot 2D"><div class="num"></div></div>
+      <div class="slot slot-3b" data-slot="F2" aria-label="Slot 3B"><div class="num"></div></div>
+      <div class="slot slot-4b" data-slot="F1" aria-label="Slot 4B"><div class="num"></div></div>
     </div>
 
     <div class="controls">
@@ -369,6 +440,10 @@
   <script>
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
+    const btn = document.getElementById("btnBestuecken");
+
+    const slotEls = Array.from(document.querySelectorAll(".slot"));
+    const slotNumEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num")]));
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -416,11 +491,12 @@
       grid.dataset.built = "1";
     }
 
+    // Physische Ecken / Positionen
     const Q = [
-      { cls: "q0", col: 1, row: 1 },
-      { cls: "q1", col: 4, row: 1 },
-      { cls: "q2", col: 4, row: 4 },
-      { cls: "q3", col: 1, row: 4 },
+      { cls: "q0", col: 1, row: 1 }, // oben links
+      { cls: "q1", col: 4, row: 1 }, // oben rechts
+      { cls: "q2", col: 4, row: 4 }, // unten rechts
+      { cls: "q3", col: 1, row: 4 }, // unten links
     ];
 
     let currentQ = 0;
@@ -429,22 +505,131 @@
       currentQ = q;
       boardEl.classList.remove("q0","q1","q2","q3");
       boardEl.classList.add(Q[q].cls);
-
       boardEl.style.setProperty("--cube-col", String(Q[q].col));
       boardEl.style.setProperty("--cube-row", String(Q[q].row));
     }
 
-    document.getElementById("btnBestuecken").addEventListener("click", () => {
-      applyQuadrant(Math.floor(Math.random() * 4));
-    });
+    // ---------- Zahlen / Bestückung ----------
+    function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
+    function clearSlots(){
+      for (const el of slotNumEls.values()) el.textContent = "";
+    }
+
+    function shuffle(arr){
+      for (let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function draw12(){
+      const nums = Array.from({length:12}, (_,i)=>i+1);
+      return shuffle(nums);
+    }
+
+    async function placeFour(numbers, tempoMs){
+      // Reihenfolge wie du’s willst: "blup blup blup blup"
+      // Ich setze in Slot-Reihenfolge F1..F4 (klar & reproduzierbar)
+      const order = ["F1","F2","F3","F4"];
+      for(let i=0;i<4;i++){
+        const slotKey = order[i];
+        const numEl = slotNumEls.get(slotKey);
+        if(!numEl) continue;
+        numEl.textContent = String(numbers[i]);
+
+        // kleines Pop-Feedback (optisch)
+        const slotEl = slotEls.find(s => s.dataset.slot === slotKey);
+        if (slotEl){
+          slotEl.classList.remove("pop");
+          void slotEl.offsetWidth; // reflow, damit Animation sicher startet
+          slotEl.classList.add("pop");
+        }
+
+        await sleep(tempoMs);
+      }
+      // Pop-Klasse wieder weg (sauber)
+      slotEls.forEach(s => s.classList.remove("pop"));
+    }
+
+    // ---------- Kipp-Animation (clockwise für Bestückung) ----------
+    function directionForMove(fromQ, toQ){
+      // clockwise moves around: 0->1 right, 1->2 down, 2->3 left, 3->0 up
+      if (fromQ === 0 && toQ === 1) return "Right";
+      if (fromQ === 1 && toQ === 2) return "Down";
+      if (fromQ === 2 && toQ === 3) return "Left";
+      if (fromQ === 3 && toQ === 0) return "Up";
+      // fallback (sollte nicht passieren)
+      return "Right";
+    }
+
+    async function animateMoveTo(nextQ){
+      const dir = directionForMove(currentQ, nextQ);
+      const cls = "anim" + dir;
+
+      boardEl.classList.add(cls);
+      await sleep(540); // etwas > 520ms (Animation), damit sicher fertig
+
+      // Animation-Klassen weg & harte Zielposition setzen
+      boardEl.classList.remove("animRight","animLeft","animDown","animUp");
+      applyQuadrant(nextQ);
+    }
+
+    let busy = false;
+
+    async function runBestueckung(){
+      if (busy) return;
+      busy = true;
+      btn.disabled = true;
+
+      // Start: Würfel steht schon random beim App-Start.
+      // Klick startet jetzt die komplette Sequenz.
+      clearSlots();
+
+      const nums = draw12();
+      const W1 = nums.slice(0,4);
+      const W2 = nums.slice(4,8);
+      const W3 = nums.slice(8,12);
+
+      // Tempo: "mäßig", gut zum Zuschauen
+      const popTempo = 260;
+
+      // W1 setzen
+      await placeFour(W1, popTempo);
+
+      // Kipp zu W2 (clockwise: nächster Quadrant)
+      const qW2 = (currentQ + 1) % 4;
+      await animateMoveTo(qW2);
+      clearSlots();                 // W2 ist erst mal leer sichtbar
+      await sleep(120);
+      await placeFour(W2, popTempo);
+
+      // Kipp zu W3
+      const qW3 = (currentQ + 1) % 4;
+      await animateMoveTo(qW3);
+      clearSlots();                 // W3 leer sichtbar
+      await sleep(120);
+      await placeFour(W3, popTempo);
+
+      // Fertig: W3 liegt oben (wie gewünscht)
+      btn.disabled = false;
+      busy = false;
+    }
+
+    btn.addEventListener("click", runBestueckung);
+
+    // ---------- Init ----------
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      applyQuadrant(0);
+
+      // ✅ Würfel ist beim Start schon random in einer Ecke
+      applyQuadrant(Math.floor(Math.random() * 4));
+      clearSlots();
     });
 
     window.addEventListener("resize", () => {
