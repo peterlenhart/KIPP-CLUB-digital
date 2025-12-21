@@ -13,7 +13,7 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      /* Hintergrund (heller als vorher, aber weiterhin „braun-schwarz“) */
+      /* Hintergrund */
       --bg1: #3a231a;
       --bg2: #1b0f0c;
 
@@ -21,10 +21,10 @@
       --cell-gap: clamp(5px, 1.1vmin, 10px);
       --cell-radius: clamp(6px, 1.1vmin, 12px);
 
-      /* Floor (großes Quadrat) soll dunkler sein als Cube */
+      /* Floor */
       --floor: #d8c8ad;
 
-      /* Würfel (kleineres Quadrat) heller */
+      /* Würfel */
       --cube-fill: #ead7be;
       --cube-border: #7a4a34;
 
@@ -39,7 +39,6 @@
       display:flex;
       justify-content:center;
 
-      /* Hintergrund: heller, mehr „Ambient Light“ */
       background:
         radial-gradient(ellipse at top left, rgba(255,255,255,0.10), transparent 50%),
         radial-gradient(ellipse at bottom, rgba(0,0,0,0.35), transparent 60%),
@@ -61,6 +60,11 @@
       position:relative;
       width: 100%;
       height: 0;           /* wird per JS gesetzt */
+      aspect-ratio: 1 / 1; /* Backup */
+
+      /* >>> FIX: schwarzer Untergrund hinter den Grid-Gaps <<< */
+      background: #0b0b0b;
+
       overflow: visible;
     }
 
@@ -72,6 +76,7 @@
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
       gap: var(--cell-gap);
+      pointer-events: none;
     }
 
     .cell{
@@ -88,10 +93,7 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    /* ===========================================
-       FLOOR: dunkler + Innenschatten (Licht links oben)
-       - kein Außenschatten
-       =========================================== */
+    /* FLOOR: dunkler + Innenschatten */
     .floor{
       position:absolute;
 
@@ -100,24 +102,21 @@
       width: calc(6 * (100% - 7 * var(--cell-gap)) / 8 + 5 * var(--cell-gap));
       height: calc(6 * (100% - 7 * var(--cell-gap)) / 8 + 5 * var(--cell-gap));
 
-      /* leichtes Licht von links oben ins Material */
       background:
         linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
         var(--floor);
 
       border-radius: 0;
       z-index: 2;
+      pointer-events: none;
 
-      /* NUR Innenschatten (oben/links heller, unten/rechts dunkler) */
       box-shadow:
-        inset 14px 14px 26px rgba(255,255,255,0.14),   /* Lichtkante */
-        inset -18px -18px 34px rgba(0,0,0,0.22),       /* Schattenkante */
-        inset 0 0 0 1px rgba(0,0,0,0.12);              /* feine Innenkante */
+        inset 14px 14px 26px rgba(255,255,255,0.14),
+        inset -18px -18px 34px rgba(0,0,0,0.22),
+        inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
-    /* ===========================================
-       WÜRFEL: bleibt heller + leichter Außenschatten
-       =========================================== */
+    /* WÜRFEL */
     .cube{
       position:absolute;
       z-index: 5;
