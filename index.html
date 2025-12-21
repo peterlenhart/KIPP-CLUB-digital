@@ -297,7 +297,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* ✅ ZAHLEN: Drehung = "Boden" Richtung Farbfeld (nach außen) */
+    /* ZAHLEN: Drehung = "Boden" Richtung Farbfeld (nach außen) */
     .slot .num{
       position:absolute;
       inset:0;
@@ -347,7 +347,7 @@
     .slot-3b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y1) * var(--step)); }
     .slot-4b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y2) * var(--step)); }
 
-    /* Controls: Button weiter runter */
+    /* Controls */
     .controls{
       width: 100%;
       display:flex;
@@ -382,7 +382,7 @@
       transform: none;
     }
 
-    /* ✅ Pop ("blup") NUR am inneren Span, damit Rotation erhalten bleibt */
+    /* Pop ("blup") NUR am inneren Span, damit Rotation erhalten bleibt */
     @keyframes popIn {
       0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
       60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
@@ -392,7 +392,7 @@
       animation: popIn 220ms ease-out;
     }
 
-    /* ✅ Overlay-Layer für Zwischenbild */
+    /* Overlay-Layer für Zwischenbild */
     .kippOverlay{
       position:absolute;
       inset:0;
@@ -592,7 +592,7 @@
         });
       }
 
-      // Slots pixelgenau relativ zur Würfelgruppe platzieren (damit nix verrutscht)
+      // Slots pixelgenau relativ zur Würfelgruppe platzieren
       const cubeRect = cubeEl.getBoundingClientRect();
       slotClones.forEach((sc, idx) => {
         const origRect = slotEls[idx].getBoundingClientRect();
@@ -606,7 +606,7 @@
     }
 
     async function showIntermediate(fromQ, toQ, ms){
-      // Originale ausblenden (damit Overlay wirklich "Bild" ist)
+      // Originale ausblenden (Overlay ist "Bild")
       const prevCubeOpacity = cubeEl.style.opacity;
       const prevShadowOpacity = cubeShadowEl.style.opacity;
       const prevSlotOpacity = slotEls.map(s => s.style.opacity);
@@ -626,8 +626,7 @@
       const pFrom = posForQ(fromQ);
       const pTo   = posForQ(toQ);
 
-      // Plätze tauschen:
-      // W1 -> Zielquadrant, W2 (leer) -> Startquadrant
+      // W1 -> Ziel, W2 -> Start
       w1.style.left = pTo.left + "px";
       w1.style.top  = pTo.top  + "px";
 
@@ -659,7 +658,6 @@
         w1.style.transform = "scaleY(0.5)";
       }
 
-      // Reihenfolge: erst leer, dann Zahlen drüber (optisch schön)
       overlay.appendChild(w2);
       overlay.appendChild(w1);
 
@@ -690,10 +688,10 @@
       // 4 Zahlen * 1250ms = 5 Sekunden
       await placeFour(W1, 1250);
 
-      // 5 Sekunden stehen lassen (W1 fertig sichtbar)
+      // 5 Sekunden stehen lassen
       await sleep(5000);
 
-      // Zwischenbild 5 Sekunden (W1 & leere W2 getauscht, 50% gequetscht zur Mittellinie)
+      // Zwischenbild 5 Sekunden
       const nextQ = (currentQ + 1) % 4; // Uhrzeigersinn
       await showIntermediate(currentQ, nextQ, 5000);
 
@@ -715,7 +713,7 @@
 
       buildGridOnce();
 
-      // Würfel ist beim Start schon random in einer Ecke, leer
+      // Start: random Ecke, leer
       applyQuadrant(Math.floor(Math.random() * 4));
       clearSlots();
     });
