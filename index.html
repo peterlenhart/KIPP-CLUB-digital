@@ -12,23 +12,24 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      --bg1: #3a231a;
-      --bg2: #1b0f0c;
+      /* ✅ FIXIERT: Tisch/Umgebung-Farbton als wiederverwendbare Variable */
+      --table-dark: #1b0f0c;   /* dunkles Schwarzbraun */
+      --table-mid:  #3a231a;   /* warmes Braun */
 
       --cell-gap: clamp(5px, 1.1vmin, 10px);
       --cell-radius: clamp(6px, 1.1vmin, 12px);
 
-      /* ÄNDERUNG #1: Innenraum-Boden -> Braun wie Würfelumrahmung */
+      /* Innenraum-Boden -> Braun wie Würfelumrahmung */
       --floor: #7a4a34;
 
-      /* Rahmen-Braun ist super */
+      /* Rahmen-Braun */
       --cube-border: #7a4a34;
 
-      /* Würfeloberfläche: dunkler + wärmer */
-      --cube-wood-base: #d7c2a4;  /* dunkler als vorher */
-      --cube-wood-deep: #c9b08f;  /* Schatten */
-      --cube-wood-warm: rgba(155, 70, 110, 0.10); /* Magenta-Hauch */
-      --cube-wood-gold: rgba(249, 150, 30, 0.10); /* Gelb/Orange-Hauch */
+      /* Würfeloberfläche */
+      --cube-wood-base: #d7c2a4;
+      --cube-wood-deep: #c9b08f;
+      --cube-wood-warm: rgba(155, 70, 110, 0.10);
+      --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
       /* Slot */
       --slot-border: rgba(0,0,0,0.55);
@@ -46,10 +47,35 @@
       margin:0;
       display:flex;
       justify-content:center;
+
+      /* ✅ FIXIERT: Tisch-Hintergrund (Holz + dunkler Ton + dezente Vignette) */
       background:
-        radial-gradient(ellipse at top left, rgba(255,255,255,0.10), transparent 50%),
-        radial-gradient(ellipse at bottom, rgba(0,0,0,0.35), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
+        radial-gradient(ellipse at center, rgba(0,0,0,0.00) 35%, rgba(0,0,0,0.34) 100%),
+        radial-gradient(ellipse at top left, rgba(255,255,255,0.07), transparent 55%),
+
+        /* dunkle Grundstimmung (unser gemerkter Braunton) */
+        linear-gradient(180deg, var(--table-mid), var(--table-dark)),
+
+        /* Holzstruktur (Streifen + leichte Varianz) */
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,0.05) 0px,
+          rgba(255,255,255,0.05) 40px,
+          rgba(0,0,0,0.05) 40px,
+          rgba(0,0,0,0.05) 82px
+        ),
+        linear-gradient(90deg,
+          rgba(0,0,0,0.06) 0%,
+          rgba(0,0,0,0.00) 14%,
+          rgba(0,0,0,0.04) 34%,
+          rgba(0,0,0,0.00) 52%,
+          rgba(0,0,0,0.05) 72%,
+          rgba(0,0,0,0.00) 86%,
+          rgba(0,0,0,0.06) 100%
+        );
+
+      background-blend-mode: normal, normal, normal, overlay, normal;
+
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
@@ -64,8 +90,8 @@
     .board{
       position:relative;
       width: 100%;
-      height: 0;             /* wird per JS gesetzt */
-      aspect-ratio: 1 / 1;   /* Backup */
+      height: 0;
+      aspect-ratio: 1 / 1;
       box-sizing: border-box;
 
       background: #0b0b0b;
@@ -75,7 +101,6 @@
 
       overflow: visible;
 
-      /* Zellmaß als Variable */
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
     }
 
@@ -124,11 +149,9 @@
         inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
-    /* ÄNDERUNG #2: Kugel im Mittelpunkt, unter dem Würfel */
+    /* Kugel im Mittelpunkt, unter dem Würfel */
     .ball{
       position:absolute;
-
-      /* Mittelpunkt der 6x6 Innenfläche (floor) */
       left: calc(
         (var(--cell) + var(--cell-gap)) +
         ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 )
@@ -138,14 +161,11 @@
         ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 )
       );
 
-      /* Symbolisch etwas größer als im Original (wie gewünscht) */
       width: calc(var(--cell) * 0.55);
       height: calc(var(--cell) * 0.55);
       border-radius: 50%;
-
       transform: translate(-50%, -50%);
 
-      /* Holzkugel-Optik: Licht oben/links, Schatten unten/rechts */
       background:
         radial-gradient(circle at 30% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0.0) 45%),
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
@@ -154,12 +174,10 @@
       box-shadow:
         0 3px 6px rgba(0,0,0,0.28);
 
-      /* Wichtig: unter dem Würfel (cube z-index 5) */
       z-index: 4;
       pointer-events: none;
     }
 
-    /* Würfel */
     .cube{
       position:absolute;
       left: calc(var(--cell) + var(--cell-gap));
@@ -171,7 +189,6 @@
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
-
         repeating-linear-gradient(
           20deg,
           rgba(0,0,0,0.02) 0px,
@@ -179,7 +196,6 @@
           rgba(255,255,255,0.02) 10px,
           rgba(255,255,255,0.02) 18px
         ),
-
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
@@ -194,7 +210,6 @@
       pointer-events: none;
     }
 
-    /* Slots: (dein realistischerer Schatten bleibt) */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -218,7 +233,6 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* Positionen (Rasterkoordinaten) */
     .slot-2c{ left: calc(2 * (var(--cell) + var(--cell-gap))); top:  calc(1 * (var(--cell) + var(--cell-gap))); }
     .slot-2d{ left: calc(3 * (var(--cell) + var(--cell-gap))); top:  calc(1 * (var(--cell) + var(--cell-gap))); }
     .slot-3b{ left: calc(1 * (var(--cell) + var(--cell-gap))); top:  calc(2 * (var(--cell) + var(--cell-gap))); }
@@ -230,15 +244,12 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-
-      <!-- Kugel (unter dem Würfel) -->
       <div class="ball" aria-label="Kugel"></div>
 
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
       <div class="cube" aria-label="Würfel"></div>
 
-      <!-- Slots -->
       <div class="slot slot-2c" aria-label="Slot 2C"></div>
       <div class="slot slot-2d" aria-label="Slot 2D"></div>
       <div class="slot slot-3b" aria-label="Slot 3B"></div>
@@ -247,7 +258,6 @@
   </div>
 
   <script>
-    // Quadrat erzwingen (Höhe = Breite)
     const boardEl = document.getElementById("board");
 
     function setBoardSquare(){
@@ -266,7 +276,6 @@
       requestAnimationFrame(setBoardSquare);
     });
 
-    // Raster bauen
     const cols = ["A","B","C","D","E","F","G","H"];
     const grid = document.getElementById("grid");
 
