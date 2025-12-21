@@ -122,12 +122,7 @@
       --v-y2: 2;     /* vertikale Slot Y-Position 2 */
     }
 
-    /* Quadranten:
-       q0 = oben links  (2B–4D)
-       q1 = oben rechts (2E–4G)
-       q2 = unten rechts(5E–7G)
-       q3 = unten links (5B–7D)
-    */
+    /* Quadranten */
     .board.q0{
       --cast-x: 18px;  --cast-y: 18px;
       --h-edge: 0; --v-edge: 0;
@@ -225,6 +220,9 @@
       border-radius: clamp(10px, 2.2vmin, 18px);
       background: transparent;
 
+      /* ✅ FIX: falls jemals Border/Outline dazukommt -> bleibt Maß stabil */
+      box-sizing: border-box;
+
       box-shadow:
         var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
         calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
@@ -256,6 +254,9 @@
 
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+
+      /* ✅ FIX: Border bleibt INNEN, Würfel bleibt exakt 3×3 Raster groß */
+      box-sizing: border-box;
 
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
@@ -415,11 +416,6 @@
       grid.dataset.built = "1";
     }
 
-    // ✅ Nur diese 4 erlaubten Würfel-Lagen:
-    // q0: 2B..4D => col=1,row=1
-    // q1: 2E..4G => col=4,row=1
-    // q2: 5E..7G => col=4,row=4
-    // q3: 5B..7D => col=1,row=4
     const Q = [
       { cls: "q0", col: 1, row: 1 },
       { cls: "q1", col: 4, row: 1 },
@@ -448,13 +444,12 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      applyQuadrant(0); // Start: oben links (2B..4D)
+      applyQuadrant(0);
     });
 
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-      // Quadrant bleibt gleich, Position bleibt exakt
       applyQuadrant(currentQ);
     });
   </script>
