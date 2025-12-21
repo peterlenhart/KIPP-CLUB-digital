@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KIPP – Spielfeld Prototyp</title>
+
+<style>
+  :root {
+    --bg-dark: #3a3a3a;
+    --orange: #d58a3a;
+    --pink: #9a3f6b;
+    --blue: #3b7fb1;
+    --green: #4a8f5a;
+    --inner: #efe4cf;
+  }
+
+  body {
+    margin: 0;
+    background: #2a1a12;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Spielfeld-Container */
+  .board-wrapper {
+    position: absolute;
+    top: 42vh;                 /* 👈 über der Mitte */
+    transform: translateY(-50%);
+    width: min(92vw, 92vh);    /* Breite ausnutzen, bleibt quadratisch */
+    aspect-ratio: 1 / 1;
+  }
+
+  /* 8×8 Raster */
+  .board {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    background: var(--bg-dark);
+  }
+
+  .cell {
+    box-sizing: border-box;
+  }
+
+  /* Rahmenfarben */
+  .top.orange { background: var(--orange); }
+  .top.pink   { background: var(--pink); }
+
+  .left.orange { background: var(--orange); }
+  .left.blue   { background: var(--blue); }
+
+  .right.pink  { background: var(--pink); }
+  .right.green { background: var(--green); }
+
+  .bottom.blue  { background: var(--blue); }
+  .bottom.green{ background: var(--green); }
+
+  /* Innenfläche */
+  .inner {
+    background: var(--inner);
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="board-wrapper">
+  <div class="board">
+
+    <!-- Zeile 1 -->
+    <div class="cell"></div>
+    <div class="cell top orange"></div>
+    <div class="cell top orange"></div>
+    <div class="cell top pink"></div>
+    <div class="cell top pink"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 2 -->
+    <div class="cell"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 3 -->
+    <div class="cell left orange"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell right pink"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 4 -->
+    <div class="cell left orange"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell right pink"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 5 -->
+    <div class="cell left blue"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell right green"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 6 -->
+    <div class="cell left blue"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell inner"></div>
+    <div class="cell right green"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 7 -->
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- Zeile 8 -->
+    <div class="cell"></div>
+    <div class="cell bottom blue"></div>
+    <div class="cell bottom blue"></div>
+    <div class="cell bottom green"></div>
+    <div class="cell bottom green"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+  </div>
+</div>
+
+</body>
+</html>
