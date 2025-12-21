@@ -15,6 +15,7 @@
       --cell-gap: clamp(5px, 1.1vmin, 10px);
       --cell-radius: clamp(6px, 1.1vmin, 12px);
 
+      /* ✅ dunkelbrauner Ton (merken!) */
       --floor: #7a4a34;
       --cube-border: #7a4a34;
 
@@ -93,19 +94,21 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      /* ✅ Würfel darf NUR hier hin:
-         Spalte B (=1) oder E (=4)
-         Zeile 2 (=1) oder 5 (=4)
-         => default: oben links (2B–4D)
+      /* ✅ Würfelgröße exakt aus Raster */
+      --cube-size: calc(3 * var(--cell) + 2 * var(--cell-gap));
+
+      /* ✅ Pivot (Kugel) = Raster-Schnittpunkt nach 3 Zellen + 2 Gaps in der 6×6 Fläche
+         => NICHT geometrische Mitte, sondern "echter Drehpunkt" wie beim Holzspiel
       */
-      --cube-col: 1;
-      --cube-row: 1;
+      --pivot-x: calc(var(--step) + var(--cube-size));
+      --pivot-y: calc(var(--step) + var(--cube-size));
 
-      /* ✅ Exakt aus dem Raster gerechnet */
-      --cube-x: calc(var(--cube-col) * var(--step));
-      --cube-y: calc(var(--cube-row) * var(--step));
+      /* ✅ Lage/Rotation per JS gesetzt */
+      --tx: calc(-1 * var(--cube-size));
+      --ty: calc(-1 * var(--cube-size));
+      --rot: 0deg;
 
-      /* Cast-Shadow Offset (je Quadrant Richtung Mitte) */
+      /* ✅ Cast-Shadow Offset (je Quadrant Richtung Mitte) */
       --cast-x: 18px;
       --cast-y: 18px;
 
@@ -114,12 +117,6 @@
         3px 6px 16px rgba(0,0,0,0.35);
     }
 
-    /* Quadranten:
-       q0 = oben links  (2B–4D)
-       q1 = oben rechts (2E–4G)
-       q2 = unten rechts(5E–7G)
-       q3 = unten links (5B–7D)
-    */
     .board.q0{ --cast-x: 18px;  --cast-y: 18px;  }
     .board.q1{ --cast-x: -18px; --cast-y: 18px;  }
     .board.q2{ --cast-x: -18px; --cast-y: -18px; }
@@ -190,10 +187,10 @@
 
     .cubeShadow{
       position:absolute;
-      left: var(--cube-x);
-      top:  var(--cube-y);
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      left: calc(var(--pivot-x) + var(--tx));
+      top:  calc(var(--pivot-y) + var(--ty));
+      width: var(--cube-size);
+      height: var(--cube-size);
       border-radius: clamp(10px, 2.2vmin, 18px);
       background: transparent;
 
@@ -206,8 +203,8 @@
 
     .ball{
       position:absolute;
-      left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
-      top:  calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
+      left: var(--pivot-x);
+      top:  var(--pivot-y);
       width: calc(var(--cell) * 0.55);
       height: calc(var(--cell) * 0.55);
       border-radius: 50%;
@@ -217,20 +214,43 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 4;
+      z-index: 6;
       pointer-events: none;
     }
 
-    .cube{
-      /* ✅ FIX: Border bleibt im Rastermaß (sonst +8px rechts/unten Überstand) */
-      box-sizing: border-box;
-
+    /* ✅ Pivot-Gruppe: an der Kugel verankert */
+    .cubePivot{
       position:absolute;
-      left: var(--cube-x);
-      top:  var(--cube-y);
+      left: var(--pivot-x);
+      top:  var(--pivot-y);
+      width: 0;
+      height: 0;
+      z-index: 7;
+      pointer-events: none;
+    }
 
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+    /* ✅ Position (welche Ecke hängt am Pivot) */
+    .cubePos{
+      position:absolute;
+      left: 0;
+      top: 0;
+      transform: translate(var(--tx), var(--ty));
+      transform-origin: 0 0;
+    }
+
+    /* ✅ Rotation (Plättchen bleiben fix am Würfel) */
+    .cubeRot{
+      position:relative;
+      width: var(--cube-size);
+      height: var(--cube-size);
+      transform: rotate(var(--rot));
+      transform-origin: center center;
+    }
+
+    .cube{
+      box-sizing: border-box;
+      position:absolute;
+      inset:0;
 
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
@@ -251,9 +271,6 @@
       box-shadow:
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
-
-      z-index: 5;
-      pointer-events: none;
     }
 
     .slot{
@@ -269,8 +286,7 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 7;
-      pointer-events: none;
+      z-index: 2;
 
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
@@ -279,11 +295,11 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* Slots relativ zur Würfel-Position */
-    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-2d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-3b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
-    .slot-4b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
+    /* ✅ Slots im lokalen 3×3 Raster des Würfels (fix!) */
+    .slot-2c{ left: calc(1 * var(--step)); top:  calc(0 * var(--step)); }
+    .slot-2d{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
+    .slot-3b{ left: calc(0 * var(--step)); top:  calc(1 * var(--step)); }
+    .slot-4b{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
 
     .controls{
       width: 100%;
@@ -323,16 +339,25 @@
         <div class="cubeShadow"></div>
       </div>
 
-      <div class="ball" aria-label="Kugel"></div>
-
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div class="cube" aria-label="Würfel"></div>
+      <!-- ✅ Kugel = Drehpunkt -->
+      <div class="ball" aria-label="Kugel"></div>
 
-      <div class="slot slot-2c" aria-label="Slot 2C"></div>
-      <div class="slot slot-2d" aria-label="Slot 2D"></div>
-      <div class="slot slot-3b" aria-label="Slot 3B"></div>
-      <div class="slot slot-4b" aria-label="Slot 4B"></div>
+      <!-- ✅ Würfelpaket um Pivot -->
+      <div class="cubePivot" aria-hidden="true">
+        <div class="cubePos">
+          <div class="cubeRot">
+            <div class="cube" aria-label="Würfel"></div>
+
+            <div class="slot slot-2c" aria-label="Slot 2C"></div>
+            <div class="slot slot-2d" aria-label="Slot 2D"></div>
+            <div class="slot slot-3b" aria-label="Slot 3B"></div>
+            <div class="slot slot-4b" aria-label="Slot 4B"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="controls">
@@ -390,16 +415,20 @@
       grid.dataset.built = "1";
     }
 
-    // ✅ Nur diese 4 erlaubten Würfel-Lagen:
-    // q0: 2B..4D => col=1,row=1
-    // q1: 2E..4G => col=4,row=1
-    // q2: 5E..7G => col=4,row=4
-    // q3: 5B..7D => col=1,row=4
+    /*
+      ✅ Vier Zustände = "Uhrzeiger" um den Pivot:
+      q0: oben links    -> Pivot ist unten rechts am Würfel  => tx=-S, ty=-S, rot=0
+      q1: oben rechts   -> Pivot ist unten links  am Würfel  => tx=0,  ty=-S, rot=90
+      q2: unten rechts  -> Pivot ist oben links   am Würfel  => tx=0,  ty=0,  rot=180
+      q3: unten links   -> Pivot ist oben rechts  am Würfel  => tx=-S, ty=0,  rot=270
+
+      S = --cube-size (wird in CSS berechnet)
+    */
     const Q = [
-      { cls: "q0", col: 1, row: 1 },
-      { cls: "q1", col: 4, row: 1 },
-      { cls: "q2", col: 4, row: 4 },
-      { cls: "q3", col: 1, row: 4 },
+      { cls: "q0", tx: "calc(-1 * var(--cube-size))", ty: "calc(-1 * var(--cube-size))", rot: "0deg"   },
+      { cls: "q1", tx: "0px",                         ty: "calc(-1 * var(--cube-size))", rot: "90deg"  },
+      { cls: "q2", tx: "0px",                         ty: "0px",                         rot: "180deg" },
+      { cls: "q3", tx: "calc(-1 * var(--cube-size))", ty: "0px",                         rot: "270deg" },
     ];
 
     let currentQ = 0;
@@ -409,8 +438,9 @@
       boardEl.classList.remove("q0","q1","q2","q3");
       boardEl.classList.add(Q[q].cls);
 
-      boardEl.style.setProperty("--cube-col", String(Q[q].col));
-      boardEl.style.setProperty("--cube-row", String(Q[q].row));
+      boardEl.style.setProperty("--tx", Q[q].tx);
+      boardEl.style.setProperty("--ty", Q[q].ty);
+      boardEl.style.setProperty("--rot", Q[q].rot);
     }
 
     document.getElementById("btnBestuecken").addEventListener("click", () => {
@@ -423,13 +453,12 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      applyQuadrant(0); // Start: oben links (2B..4D)
+      applyQuadrant(0); // Start: oben links
     });
 
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-      // Quadrant bleibt gleich, Position bleibt exakt
       applyQuadrant(currentQ);
     });
   </script>
