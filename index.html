@@ -7,31 +7,27 @@
 
   <style>
     :root{
-      /* Farben (deine Palette) */
       --violett: rgb(164, 27, 133);
       --blau:    rgb(0, 107, 179);
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      /* Hintergrund */
       --bg1: #3a231a;
       --bg2: #1b0f0c;
 
-      /* Raster/Board */
       --cell-gap: clamp(5px, 1.1vmin, 10px);
       --cell-radius: clamp(6px, 1.1vmin, 12px);
 
-      /* Floor */
       --floor: #d8c8ad;
 
-      /* Würfel */
       --cube-fill: #ead7be;
       --cube-border: #7a4a34;
 
-      /* Steckfelder-Outline */
+      /* Slot */
       --slot-border: rgba(0,0,0,0.55);
+      --slot-fill: var(--cube-fill);              /* <<< NEU: beige Füllung */
+      --slot-border-w: 2px;
 
-      /* Board-Rahmen */
       --board-border: 4px;
       --board-border-color: #000;
       --board-radius: clamp(14px, 2.2vmin, 22px);
@@ -43,12 +39,10 @@
       margin:0;
       display:flex;
       justify-content:center;
-
       background:
         radial-gradient(ellipse at top left, rgba(255,255,255,0.10), transparent 50%),
         radial-gradient(ellipse at bottom, rgba(0,0,0,0.35), transparent 60%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
-
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
@@ -60,7 +54,6 @@
       align-items:flex-start;
     }
 
-    /* Board: Breite fix, Höhe wird per JS exakt auf Breite gesetzt */
     .board{
       position:relative;
       width: 100%;
@@ -68,17 +61,17 @@
       aspect-ratio: 1 / 1;   /* Backup */
       box-sizing: border-box;
 
-      /* Fugen-Untergrund (damit nix Braun durchscheint) */
       background: #0b0b0b;
 
-      /* >>> NEU: außen 4px schwarzer Rahmen + Radius <<< */
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
 
       overflow: visible;
+
+      /* Zellmaß als Variable */
+      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
     }
 
-    /* 8×8 Raster */
     .grid{
       position:absolute;
       inset:0;
@@ -87,6 +80,7 @@
       grid-template-rows: repeat(8, 1fr);
       gap: var(--cell-gap);
       pointer-events: none;
+      z-index: 1;
     }
 
     .cell{
@@ -97,21 +91,13 @@
         0 10px 18px rgba(0,0,0,0.32);
     }
 
-    /* farbige Randfelder */
     .c-orange{ background: var(--orange); }
     .c-gruen { background: var(--gruen);  }
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    /* Für exakte Fluchtung: Zellmaß als Variable */
-    .board{
-      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
-    }
-
-    /* FLOOR */
     .floor{
       position:absolute;
-
       left: calc(var(--cell) + var(--cell-gap));
       top:  calc(var(--cell) + var(--cell-gap));
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
@@ -131,11 +117,9 @@
         inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
-    /* WÜRFEL */
+    /* Würfel */
     .cube{
       position:absolute;
-      z-index: 5;
-
       left: calc(var(--cell) + var(--cell-gap));
       top:  calc(var(--cell) + var(--cell-gap));
 
@@ -153,46 +137,39 @@
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
+      z-index: 5;
       pointer-events: none;
     }
 
-    /* >>> NEU: Platzhalter NICHT mehr im 3x3-Innenraster,
-       sondern exakt auf Grid-Koordinaten (fluchtet + gleiche Größe wie Randzellen) <<< */
+    /* >>> Slots: jetzt gefüllt + Ebene über Würfelrahmen <<< */
     .slot{
       position:absolute;
-      z-index: 6; /* über dem Cube */
 
       width: var(--cell);
       height: var(--cell);
 
       box-sizing: border-box;
-      background: transparent;
-      border: 2px solid var(--slot-border);
+
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.04)),
+        var(--slot-fill);                 /* <<< NEU: beige Füllung */
+
+      border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
+
+      /* Ebene über Würfel */
+      z-index: 7;                         /* <<< höher als cube (5) */
       pointer-events: none;
+
+      box-shadow:
+        0 2px 6px rgba(0,0,0,0.18);       /* leicht abheben, sehr subtil */
     }
 
-    /* Koordinaten: left = col*(cell+gap), top = (row-1)*(cell+gap) */
-    /* 2C: row 2, col C(2) => left: 2*(cell+gap), top: 1*(cell+gap) */
-    .slot-2c{
-      left: calc(2 * (var(--cell) + var(--cell-gap)));
-      top:  calc(1 * (var(--cell) + var(--cell-gap)));
-    }
-    /* 2D: row 2, col D(3) */
-    .slot-2d{
-      left: calc(3 * (var(--cell) + var(--cell-gap)));
-      top:  calc(1 * (var(--cell) + var(--cell-gap)));
-    }
-    /* 3B: row 3, col B(1) */
-    .slot-3b{
-      left: calc(1 * (var(--cell) + var(--cell-gap)));
-      top:  calc(2 * (var(--cell) + var(--cell-gap)));
-    }
-    /* 4B: row 4, col B(1) */
-    .slot-4b{
-      left: calc(1 * (var(--cell) + var(--cell-gap)));
-      top:  calc(3 * (var(--cell) + var(--cell-gap)));
-    }
+    /* Raster-Positionen */
+    .slot-2c{ left: calc(2 * (var(--cell) + var(--cell-gap))); top:  calc(1 * (var(--cell) + var(--cell-gap))); }
+    .slot-2d{ left: calc(3 * (var(--cell) + var(--cell-gap))); top:  calc(1 * (var(--cell) + var(--cell-gap))); }
+    .slot-3b{ left: calc(1 * (var(--cell) + var(--cell-gap))); top:  calc(2 * (var(--cell) + var(--cell-gap))); }
+    .slot-4b{ left: calc(1 * (var(--cell) + var(--cell-gap))); top:  calc(3 * (var(--cell) + var(--cell-gap))); }
   </style>
 </head>
 
@@ -205,11 +182,11 @@
 
       <div class="cube" aria-label="Würfel"></div>
 
-      <!-- Platzhalter exakt auf Raster -->
-      <div class="slot slot-2c" aria-hidden="true"></div>
-      <div class="slot slot-2d" aria-hidden="true"></div>
-      <div class="slot slot-3b" aria-hidden="true"></div>
-      <div class="slot slot-4b" aria-hidden="true"></div>
+      <!-- Slots (Zahlen-Blöckchen) -->
+      <div class="slot slot-2c" aria-label="Slot 2C"></div>
+      <div class="slot slot-2d" aria-label="Slot 2D"></div>
+      <div class="slot slot-3b" aria-label="Slot 3B"></div>
+      <div class="slot slot-4b" aria-label="Slot 4B"></div>
     </div>
   </div>
 
