@@ -36,13 +36,13 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Cube-Außenschatten (Richtung Mitte/Oben-Links) */
-      --cubeShadow1: rgba(0,0,0,0.34);
-      --cubeShadow2: rgba(0,0,0,0.18);
-      --cubeShadowX: -16px;  /* Nach links */
-      --cubeShadowY: -16px;  /* Nach oben */
-      --cubeShadowBlur1: 26px;
-      --cubeShadowBlur2: 14px;
+      /* Cube-Außenschatten (Photoshop: Links & Oben) */
+      --cubeShadow1: rgba(0,0,0,0.45);
+      --cubeShadow2: rgba(0,0,0,0.25);
+      --cubeShadowX: -18px;  /* Nach links außen */
+      --cubeShadowY: -18px;  /* Nach oben außen */
+      --cubeShadowBlur1: 28px;
+      --cubeShadowBlur2: 12px;
     }
 
     html, body { height: 100%; }
@@ -90,17 +90,12 @@
       height: 0;
       aspect-ratio: 1 / 1;
       box-sizing: border-box;
-
       background: #0b0b0b;
-
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
-
       overflow: visible;
-
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
-
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
@@ -136,16 +131,13 @@
       top:  var(--step);
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(6 * var(--cell) + 5 * var(--cell-gap));
-
       background:
         linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
         var(--floor);
-
       border-radius: 0;
       z-index: 2;
       pointer-events: none;
       overflow: hidden;
-
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -176,24 +168,20 @@
       pointer-events: none;
     }
 
-    /* FIX: Der Schatten-Träger */
+    /* FIX: Schatten-Träger optimiert */
     .floorShadow{
       position:absolute;
-      /* Größe des Würfels + Berücksichtigung der Rahmenbreite */
+      /* Deckungsgleich mit Cube inkl. Border */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap) + (2 * var(--cube-border-w)));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap) + (2 * var(--cube-border-w)));
       pointer-events:none;
       z-index: 3;
-    }
-    .floorShadow::before{
-      content:"";
-      position:absolute;
-      inset:0;
       border-radius: clamp(10px, 2.2vmin, 18px);
-      background: transparent;
+      /* Wir nutzen eine minimale Hintergrundfarbe, damit der Browser den Schatten sicher rendert */
+      background: rgba(0,0,0,0.01); 
       box-shadow:
         var(--cubeShadowX) var(--cubeShadowY) var(--cubeShadowBlur1) var(--cubeShadow1),
-        calc(var(--cubeShadowX) * 0.55) calc(var(--cubeShadowY) * 0.55) var(--cubeShadowBlur2) var(--cubeShadow2);
+        calc(var(--cubeShadowX) * 0.5) calc(var(--cubeShadowY) * 0.5) var(--cubeShadowBlur2) var(--cubeShadow2);
     }
 
     .cubeFinal{
@@ -201,7 +189,6 @@
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
-
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
@@ -214,13 +201,10 @@
         ),
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
-
       border-radius: clamp(10px, 2.2vmin, 18px);
-
       box-shadow:
         0 0 0 var(--cube-border-w) var(--cube-border),
         0 0 0 1px rgba(255,255,255,0.10) inset;
-
       z-index: 6;
     }
 
@@ -229,15 +213,12 @@
       width: var(--cell);
       height: var(--cell);
       box-sizing: border-box;
-
       background:
         linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
         var(--slot-fill);
-
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
       z-index: 7;
-
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -303,9 +284,7 @@
       padding: 12px 16px;
       border-radius: 14px;
       cursor: pointer;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -331,7 +310,6 @@
 
       <div class="view shown" id="finalView" aria-label="FINAL (W3 in Q2)">
         <div class="cubeFinal" id="w3Cube" aria-label="W3 Final Fläche"></div>
-
         <div class="slot w3-5g read-east"  data-final-w3="U1"><div class="num"><span></span></div></div>
         <div class="slot w3-6g read-east"  data-final-w3="U2"><div class="num"><span></span></div></div>
         <div class="slot w3-7e read-south" data-final-w3="U3"><div class="num"><span></span></div></div>
@@ -417,18 +395,17 @@
     }
 
     function layoutW3Final_Q2(){
-      const cubeStepLeft = 4; // Start bei E
-      const cubeStepTop  = 4; // Start bei Zeile 5
+      const cubeStepLeft = 4; // Spalte E
+      const cubeStepTop  = 4; // Zeile 5
 
-      // Würfel auf Board
+      // Würfel auf Board (0,0 Basis)
       w3Cube.style.left = `calc(${cubeStepLeft} * var(--step))`;
       w3Cube.style.top  = `calc(${cubeStepTop}  * var(--step))`;
 
-      // FIX: Schatten-Positionierung relativ zum Floor
-      // Da der Floor bei Index 1 startet, ziehen wir diesen Versatz ab.
+      // SCHATTEN FIX: Da .floor bei (1,1) startet, muss der Schatten bei Index 3 (4-1) liegen.
       const shadow = ensureW3FloorShadow();
-      shadow.style.left = `calc(${cubeStepLeft - 1} * var(--step) - var(--cube-border-w))`;
-      shadow.style.top  = `calc(${cubeStepTop - 1}  * var(--step) - var(--cube-border-w))`;
+      shadow.style.left = `calc(3 * var(--step) - var(--cube-border-w))`;
+      shadow.style.top  = `calc(3 * var(--step) - var(--cube-border-w))`;
 
       // Slots
       document.querySelector(".w3-5g").style.left = "calc(6 * var(--step))";
