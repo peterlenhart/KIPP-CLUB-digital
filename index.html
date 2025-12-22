@@ -148,7 +148,6 @@
       z-index: 2;
       pointer-events: none;
 
-      /* ✅ Innenschatten im Box-Inneren (Boden) */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -157,81 +156,6 @@
         inset  26px 0 40px rgba(0,0,0,0.26),
         inset  0 -26px 40px rgba(0,0,0,0.30),
         inset  0  26px 40px rgba(0,0,0,0.30);
-    }
-
-    /* =========================================================
-       ✅ NEU: Clip-Layer fürs Box-Innere (damit am Rahmen NIE Schatten liegt)
-       - Board ist 8×8, die Innenbox beginnt bei 1×step inset rundum
-       ========================================================= */
-    .innerClip{
-      position:absolute;
-      inset:0;
-      z-index: 3;            /* über Boden, unter Würfel/Slots */
-      pointer-events:none;
-
-      /* clip genau auf die Innenbox: inset = 1× step rundum */
-      clip-path: inset(var(--step) var(--step) var(--step) var(--step));
-    }
-
-    /* =========================================================
-       ✅ Schattenobjekt: exakt auf W2 (2E bis 4G) gelegt
-       - top-left = 2E => left 4*step, top 1*step
-       - Größe = 3×3 => 3*cell + 2*gaps
-       ========================================================= */
-    .w2ShadowPlane{
-      position:absolute;
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-
-      border-radius: clamp(10px, 2.2vmin, 18px);
-      background: transparent;
-      pointer-events:none;
-    }
-
-    /* Schatten nach links + unten (ins Innere) */
-    .w2ShadowPlane::before,
-    .w2ShadowPlane::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius: inherit;
-      pointer-events:none;
-      mix-blend-mode: multiply;
-    }
-
-    /* Linke Kante: gleicher „Kanten“-Schatten */
-    .w2ShadowPlane::before{
-      background:
-        linear-gradient(
-          90deg,
-          rgba(0,0,0,0.36),
-          rgba(0,0,0,0.00) 30%
-        );
-      filter: blur(0.7px);
-      opacity: 0.92;
-    }
-
-    /* Untere Kante: gleicher „Kanten“-Schatten */
-    .w2ShadowPlane::after{
-      background:
-        linear-gradient(
-          180deg,
-          rgba(0,0,0,0.00) 70%,
-          rgba(0,0,0,0.36) 100%
-        );
-      filter: blur(0.7px);
-      opacity: 0.92;
-    }
-
-    /* zusätzlicher weicher Wurf (ebenfalls NUR innen sichtbar, weil .innerClip) */
-    .w2ShadowPlane{
-      box-shadow:
-        -18px 18px 18px rgba(0,0,0,0.34),
-        -10px 10px 10px rgba(0,0,0,0.22);
-      filter: blur(0.6px);
     }
 
     .ball{
@@ -269,36 +193,49 @@
     }
 
     /* =========================================================
-       W2 FINAL (sichtbar): Q1, Slots: 2E 2F 3G 4G
+       W2 FINAL (sichtbar): jetzt in Q2 (5E–7G)
        ========================================================= */
     .w2FinalLayer{
       position:absolute;
       inset:0;
-      z-index: 7; /* über Schatten/Innenclip, unter Divider */
+      z-index: 7; /* über Boden */
       pointer-events:none;
     }
 
-    /* ✅ Der alte äußere cubeShadow darf in dieser Ansicht NICHT sichtbar sein */
-    .w2FinalLayer .cubeShadow{
-      display:none;
+    /* ===== Inner Clip: sorgt dafür, dass Schatten NIE auf den Außenrahmen kommt ===== */
+    .innerClip{
+      position:absolute;
+      inset:0;
+      z-index: 6;            /* unter dem Würfel, über Boden */
+      pointer-events:none;
+      clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    .cubeShadow{
+    /* ===== Schatten für W2 in Q2: NUR LINKS, kein oben/unten ===== */
+    .w2LeftShadow{
       position:absolute;
+      left: calc(4 * var(--step));  /* E */
+      top:  calc(4 * var(--step));  /* 5 */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       border-radius: clamp(10px, 2.2vmin, 18px);
-      background: transparent;
-      box-sizing: border-box;
-      box-shadow:
-        18px 18px 18px rgba(0,0,0,0.35),
-        10px 10px 10px rgba(0,0,0,0.22);
-      filter: blur(1px);
     }
+    .w2LeftShadow::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
 
-    /* Shadows in Basis/KIP (unsichtbar) */
-    .pairLayer .cubeShadow.w2{ left: var(--cube-x); top: var(--cube-y); }
-    .pairLayer .cubeShadow.w1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+      /* nur linke Kontaktkante */
+      background: linear-gradient(
+        90deg,
+        rgba(0,0,0,0.34),
+        rgba(0,0,0,0.00) 26%
+      );
+
+      filter: blur(0.6px);
+      opacity: 0.95;
+    }
 
     .cube,
     .cube2,
@@ -324,9 +261,8 @@
       border: 4px solid var(--cube-border);
       border-radius: clamp(10px, 2.2vmin, 18px);
 
-      /* Würfelfläche: nur eigener Körper, Schatten kommt von der ShadowPlane */
       box-shadow:
-        0 12px 22px rgba(0,0,0,0.18),
+        0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
       z-index: 6;
@@ -343,10 +279,10 @@
       top:  calc(1 * var(--step));
     }
 
-    /* W2 Final in Q1 */
+    /* ✅ W2 Final in Q2: 5E–7G => left 4*step, top 4*step */
     .w2FinalLayer .cubeFinal{
       left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
+      top:  calc(4 * var(--step));
     }
 
     .slot{
@@ -391,7 +327,7 @@
       position: relative;
     }
 
-    /* ✅ Punkt für 6 und 9: als "Satzpunkt" rechts daneben (nicht UNTER der Zahl) */
+    /* Punkt für 6 und 9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
@@ -399,11 +335,9 @@
       height: clamp(3px, 0.55vmin, 6px);
       border-radius: 50%;
       background: #111;
-
       left: 100%;
       top: 72%;
       transform: translate(25%, -50%);
-
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
@@ -424,29 +358,17 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ===== Slot-Positionen (W2 FINAL: 2E 2F 3G 4G) ===== */
-    .w2f-2e{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }               /* 2E */
-    .w2f-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }               /* 2F */
-    .w2f-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }               /* 3G */
-    .w2f-4g{ left: calc(6 * var(--step)); top: calc(3 * var(--step)); }               /* 4G */
+    /* ===== Slot-Positionen (W2 FINAL: jetzt Q2 5E–7G) =====
+       (entspricht: vorher 2E–4G, nur +3 Zeilen)
+    */
+    .w2f-2e{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); }  /* 5E */
+    .w2f-2f{ left: calc(5 * var(--step)); top: calc(4 * var(--step)); }  /* 5F */
+    .w2f-3g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); }  /* 6G */
+    .w2f-4g{ left: calc(6 * var(--step)); top: calc(6 * var(--step)); }  /* 7G */
 
-    /* ✅ Divider bleibt im DOM, ist aber unsichtbar */
+    /* ✅ Divider: unsichtbar */
     .divider-DE-rows2to4{
-      position:absolute;
-      left: calc(var(--axis-x) - 1px);
-      top:  calc(1 * var(--step));
-      height: calc(2 * var(--step) + var(--cell));
-      width: 2px;
-
-      background: rgba(234,215,190,0.5);
-      border-radius: 999px;
-      filter: blur(0.1px);
-
-      z-index: 9999;
-      pointer-events: none;
-
-      opacity: 0;
-      visibility: hidden;
+      display:none;
     }
 
     .controls{
@@ -494,9 +416,9 @@
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
 
-      <!-- ✅ NEU: Schatten nur im Inneren + exakt unter W2 (2E-4G) -->
+      <!-- ✅ Schatten nur im Box-Innenraum + nur links -->
       <div class="innerClip" aria-hidden="true">
-        <div class="w2ShadowPlane" aria-hidden="true"></div>
+        <div class="w2LeftShadow" aria-hidden="true"></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
@@ -506,9 +428,6 @@
            W2KIP + W1KIP (unsichtbar, gespeichert)
            ========================= -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
-        <div class="cubeShadow w2" aria-hidden="true"></div>
-        <div class="cubeShadow w1" aria-hidden="true"></div>
-
         <!-- W2 (links) -->
         <div class="cube" aria-label="W2 Basis/KIP"></div>
 
@@ -533,19 +452,21 @@
       </div>
 
       <!-- =========================
-           W2 FINAL (sichtbar) in Q1
-           Slots: 2E,2F,3G,4G
+           W2 FINAL (sichtbar) in Q2
+           Slots: 5E,5F,6G,7G
+           Zahlen-Ausrichtung bleibt 1:1 wie in W2KIP
            ========================= -->
-      <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 Final (Q1)">
-        <div class="cubeShadow w2final" aria-hidden="true"></div>
+      <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 Final (Q2)">
         <div class="cubeFinal" aria-label="W2 Final Fläche"></div>
 
-        <div class="slot w2f-2e read-north" data-final="S1" aria-label="W2 Final 2E"><div class="num"><span></span></div></div>
-        <div class="slot w2f-2f read-north" data-final="S2" aria-label="W2 Final 2F"><div class="num"><span></span></div></div>
-        <div class="slot w2f-3g read-east"  data-final="S3" aria-label="W2 Final 3G"><div class="num"><span></span></div></div>
-        <div class="slot w2f-4g read-east"  data-final="S4" aria-label="W2 Final 4G"><div class="num"><span></span></div></div>
+        <!-- Mapping: W2 Final nutzt S1,S2,S3,S4 (genau die vier W2-Zahlen) -->
+        <div class="slot w2f-2e read-north" data-final="S1" aria-label="W2 Final 5E"><div class="num"><span></span></div></div>
+        <div class="slot w2f-2f read-north" data-final="S2" aria-label="W2 Final 5F"><div class="num"><span></span></div></div>
+        <div class="slot w2f-3g read-east"  data-final="S3" aria-label="W2 Final 6G"><div class="num"><span></span></div></div>
+        <div class="slot w2f-4g read-east"  data-final="S4" aria-label="W2 Final 7G"><div class="num"><span></span></div></div>
       </div>
 
+      <!-- Divider bleibt im DOM, aber ist unsichtbar -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
@@ -637,6 +558,7 @@
     }
 
     function syncFinalFromKip(){
+      // W2 Final zeigt S1..S4 (W2-Zahlen) exakt 1:1 (inkl. Punkt-Klasse)
       ["S1","S2","S3","S4"].forEach(k => {
         const src = slotSpanEls.get(k);
         const dst = finalSpanEls.get(k);
@@ -658,6 +580,7 @@
         setDot(span, n);
       });
 
+      // Final aktualisieren (nur W2)
       syncFinalFromKip();
 
       if (withPop){
