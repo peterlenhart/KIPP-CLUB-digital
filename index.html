@@ -95,7 +95,10 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
+      /* Achse zwischen D/E (wie gehabt) */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
+      /* Achse zwischen Zeile 4 / 5 (für W3/W2 vertikal) */
+      --axis-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
       /* W2 Basis links oben (B) */
       --cube-col: 1;
@@ -187,59 +190,67 @@
       transform-origin: var(--axis-x) 50%;
       transform: scaleX(var(--pair-scale-x, 0.5));
 
-      /* ✅ im Hintergrund behalten */
       opacity: 0;
       visibility: hidden;
     }
 
     /* =========================================================
-       W2 FINAL (sichtbar): jetzt in Q2 (5E–7G)
+       W3 + W2 BASIS (sichtbar): Q1 + Q2 (noch NICHT skaliert)
+       - W3 liegt in Q1 (2E–4G)
+       - W2 liegt in Q2 (5E–7G)
+       - später wird dieses gesamte Layer um axis-y vertikal skaliert (KIP)
        ========================================================= */
-    .w2FinalLayer{
+    .w3w2BasisLayer{
       position:absolute;
       inset:0;
-      z-index: 7; /* über Boden */
+      z-index: 7;
       pointer-events:none;
+
+      /* später für KIP: scaleY(0.5) um die Achse */
+      transform-origin: 50% var(--axis-y);
+      transform: scaleY(var(--w3w2-scale-y, 1));
     }
 
-    /* ===== Inner Clip: sorgt dafür, dass Schatten NIE auf den Außenrahmen kommt ===== */
+    /* Clip fürs Box-Innere (damit Schatten NIE auf Außenrahmen kommt) */
     .innerClip{
       position:absolute;
       inset:0;
-      z-index: 6;            /* unter dem Würfel, über Boden */
+      z-index: 6;           /* unter Würfelflächen, über Boden */
       pointer-events:none;
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ===== Schatten für W2 in Q2: NUR LINKS, kein oben/unten ===== */
-    .w2LeftShadow{
+    /* Linker Kontaktschatten (nur links), Q1 (W3) und Q2 (W2) */
+    .leftContactShadow{
       position:absolute;
-      left: calc(4 * var(--step));  /* E */
-      top:  calc(4 * var(--step));  /* 5 */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       border-radius: clamp(10px, 2.2vmin, 18px);
+      pointer-events:none;
     }
-    .w2LeftShadow::before{
+    .leftContactShadow::before{
       content:"";
       position:absolute;
       inset:0;
       border-radius: inherit;
-
-      /* nur linke Kontaktkante */
       background: linear-gradient(
         90deg,
-        rgba(0,0,0,0.34),
+        rgba(0,0,0,0.36),
         rgba(0,0,0,0.00) 26%
       );
-
       filter: blur(0.6px);
       opacity: 0.95;
     }
 
+    /* Positionen der Schatten exakt unter den Flächen */
+    .shadow-w3{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); } /* Q1 */
+    .shadow-w2{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); } /* Q2 */
+
     .cube,
     .cube2,
-    .cubeFinal{
+    .cubeFinal,
+    .cubeW3,
+    .cubeW2{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -279,8 +290,13 @@
       top:  calc(1 * var(--step));
     }
 
-    /* ✅ W2 Final in Q2: 5E–7G => left 4*step, top 4*step */
-    .w2FinalLayer .cubeFinal{
+    /* W3 in Q1 (2E–4G) */
+    .w3w2BasisLayer .cubeW3{
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+    }
+    /* W2 in Q2 (5E–7G) */
+    .w3w2BasisLayer .cubeW2{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
     }
@@ -327,7 +343,7 @@
       position: relative;
     }
 
-    /* Punkt für 6 und 9 */
+    /* ✅ Punkt für 6 und 9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
@@ -335,9 +351,11 @@
       height: clamp(3px, 0.55vmin, 6px);
       border-radius: 50%;
       background: #111;
+
       left: 100%;
       top: 72%;
       transform: translate(25%, -50%);
+
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
@@ -358,18 +376,36 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ===== Slot-Positionen (W2 FINAL: jetzt Q2 5E–7G) =====
-       (entspricht: vorher 2E–4G, nur +3 Zeilen)
-    */
-    .w2f-2e{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); }  /* 5E */
-    .w2f-2f{ left: calc(5 * var(--step)); top: calc(4 * var(--step)); }  /* 5F */
-    .w2f-3g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); }  /* 6G */
-    .w2f-4g{ left: calc(6 * var(--step)); top: calc(6 * var(--step)); }  /* 7G */
+    /* ===== W2 in Q2 (5E–7G): Slots wie vorher, nur +3 Zeilen ===== */
+    .w2q2-5e{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); }  /* 5E */
+    .w2q2-5f{ left: calc(5 * var(--step)); top: calc(4 * var(--step)); }  /* 5F */
+    .w2q2-6g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); }  /* 6G */
+    .w2q2-7g{ left: calc(6 * var(--step)); top: calc(6 * var(--step)); }  /* 7G */
 
-    /* ✅ Divider: unsichtbar */
-    .divider-DE-rows2to4{
-      display:none;
+    /* ===== W3 in Q1 (2E–4G): leere Fläche + Slots auf 4E,4F,2G,3G ===== */
+    .w3q1-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }  /* 4E */
+    .w3q1-4f{ left: calc(5 * var(--step)); top: calc(3 * var(--step)); }  /* 4F */
+    .w3q1-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }  /* 2G */
+    .w3q1-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }  /* 3G */
+
+    /* ✅ Divider für W3/W2 (horizontal, zwischen Q1 und Q2) */
+    .divider-EG-cols{
+      position:absolute;
+      left: calc(4 * var(--step));                    /* ab E */
+      top:  calc(var(--axis-y) - 1px);                /* zwischen 4/5 */
+      width: calc(2 * var(--step) + var(--cell));     /* E..G Breite (3 Zellen) */
+      height: 2px;
+
+      background: rgba(234,215,190,0.5);
+      border-radius: 999px;
+      filter: blur(0.1px);
+
+      z-index: 9999;
+      pointer-events: none;
     }
+
+    /* alter Divider bleibt unsichtbar */
+    .divider-DE-rows2to4{ display:none; }
 
     .controls{
       width: 100%;
@@ -416,9 +452,10 @@
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
 
-      <!-- ✅ Schatten nur im Box-Innenraum + nur links -->
+      <!-- Schatten nur im Innenraum -->
       <div class="innerClip" aria-hidden="true">
-        <div class="w2LeftShadow" aria-hidden="true"></div>
+        <div class="leftContactShadow shadow-w3" aria-hidden="true"></div>
+        <div class="leftContactShadow shadow-w2" aria-hidden="true"></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
@@ -428,45 +465,47 @@
            W2KIP + W1KIP (unsichtbar, gespeichert)
            ========================= -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
-        <!-- W2 (links) -->
         <div class="cube" aria-label="W2 Basis/KIP"></div>
-
-        <!-- W1 (rechts) -->
         <div class="cube2" aria-label="W1 Basis/KIP"></div>
 
-        <!-- ✅ Zeile 2: vom NORDEN lesbar -->
-        <div class="slot slot-2b read-north" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
-        <div class="slot slot-2c read-north" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
+        <div class="slot slot-2b read-north" data-slot="S1"><div class="num"><span></span></div></div>
+        <div class="slot slot-2c read-north" data-slot="S2"><div class="num"><span></span></div></div>
+        <div class="slot slot-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
+        <div class="slot slot-4d read-east"  data-slot="S4"><div class="num"><span></span></div></div>
 
-        <!-- ✅ W2 Kontaktkante: Osten lesbar -->
-        <div class="slot slot-3d read-east" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
-        <div class="slot slot-4d read-east" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
-
-        <!-- ✅ Zeile 2 (W1): vom NORDEN lesbar -->
-        <div class="slot slot2-2f read-north" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
-        <div class="slot slot2-2g read-north" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
-
-        <!-- ✅ W1 Kontaktkante: Westen lesbar -->
-        <div class="slot slot2-3e read-west" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
-        <div class="slot slot2-4e read-west" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
+        <div class="slot slot2-2f read-north" data-slot="T1"><div class="num"><span></span></div></div>
+        <div class="slot slot2-2g read-north" data-slot="T2"><div class="num"><span></span></div></div>
+        <div class="slot slot2-3e read-west"  data-slot="T3"><div class="num"><span></span></div></div>
+        <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
       <!-- =========================
-           W2 FINAL (sichtbar) in Q2
-           Slots: 5E,5F,6G,7G
-           Zahlen-Ausrichtung bleibt 1:1 wie in W2KIP
+           W3 + W2 BASIS sichtbar (noch ohne KIP-Skalierung)
+           W3: leerer Würfel + 4 Zahlenblättchen (random aus Rest 4)
+           W2: zeigt die 4 W2-Zahlen (S1..S4) in Q2
            ========================= -->
-      <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 Final (Q2)">
-        <div class="cubeFinal" aria-label="W2 Final Fläche"></div>
+      <div class="w3w2BasisLayer" id="w3w2BasisLayer" aria-label="W3+W2 Basis (Q1/Q2)">
+        <!-- W3 Fläche (leer) -->
+        <div class="cubeW3" aria-label="W3 Fläche (leer)"></div>
 
-        <!-- Mapping: W2 Final nutzt S1,S2,S3,S4 (genau die vier W2-Zahlen) -->
-        <div class="slot w2f-2e read-north" data-final="S1" aria-label="W2 Final 5E"><div class="num"><span></span></div></div>
-        <div class="slot w2f-2f read-north" data-final="S2" aria-label="W2 Final 5F"><div class="num"><span></span></div></div>
-        <div class="slot w2f-3g read-east"  data-final="S3" aria-label="W2 Final 6G"><div class="num"><span></span></div></div>
-        <div class="slot w2f-4g read-east"  data-final="S4" aria-label="W2 Final 7G"><div class="num"><span></span></div></div>
+        <!-- W2 Fläche (bestückt wie W2) -->
+        <div class="cubeW2" aria-label="W2 Fläche (Q2)"></div>
+
+        <!-- W3 Blättchenpositionen: 4E,4F,2G,3G -->
+        <div class="slot w3q1-4e read-north" data-w3="U1" aria-label="W3 4E"><div class="num"><span></span></div></div>
+        <div class="slot w3q1-4f read-north" data-w3="U2" aria-label="W3 4F"><div class="num"><span></span></div></div>
+        <div class="slot w3q1-2g read-east"  data-w3="U3" aria-label="W3 2G"><div class="num"><span></span></div></div>
+        <div class="slot w3q1-3g read-east"  data-w3="U4" aria-label="W3 3G"><div class="num"><span></span></div></div>
+
+        <!-- W2 in Q2 (zeigt S1..S4) -->
+        <div class="slot w2q2-5e read-north" data-w2q2="S1" aria-label="W2 5E"><div class="num"><span></span></div></div>
+        <div class="slot w2q2-5f read-north" data-w2q2="S2" aria-label="W2 5F"><div class="num"><span></span></div></div>
+        <div class="slot w2q2-6g read-east"  data-w2q2="S3" aria-label="W2 6G"><div class="num"><span></span></div></div>
+        <div class="slot w2q2-7g read-east"  data-w2q2="S4" aria-label="W2 7G"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Divider bleibt im DOM, aber ist unsichtbar -->
+      <!-- Divider (horizontal) oben drüber -->
+      <div class="divider-EG-cols" aria-hidden="true"></div>
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
@@ -480,13 +519,17 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
 
-    // Slots in W2KIP/W1KIP (unsichtbar) => Quelle
+    // Quelle (unsichtbar): W2KIP/W1KIP
     const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // Slots in W2 Final => Anzeige
-    const finalSlotEls = Array.from(document.querySelectorAll(".w2FinalLayer .slot"));
-    const finalSpanEls = new Map(finalSlotEls.map(s => [s.dataset.final, s.querySelector(".num > span")]));
+    // W2 in Q2 (sichtbar): zeigt S1..S4
+    const w2q2Els = Array.from(document.querySelectorAll(".w3w2BasisLayer .slot[data-w2q2]"));
+    const w2q2Span = new Map(w2q2Els.map(s => [s.dataset.w2q2, s.querySelector(".num > span")]));
+
+    // W3 Slots (sichtbar): U1..U4
+    const w3Els = Array.from(document.querySelectorAll(".w3w2BasisLayer .slot[data-w3]"));
+    const w3Span = new Map(w3Els.map(s => [s.dataset.w3, s.querySelector(".num > span")]));
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -538,7 +581,8 @@
 
     function clearPops(){
       slotEls.forEach(s => s.classList.remove("pop"));
-      finalSlotEls.forEach(s => s.classList.remove("pop"));
+      w2q2Els.forEach(s => s.classList.remove("pop"));
+      w3Els.forEach(s => s.classList.remove("pop"));
     }
 
     function setDot(span, number){
@@ -557,11 +601,11 @@
       return pool.slice(0, count);
     }
 
-    function syncFinalFromKip(){
-      // W2 Final zeigt S1..S4 (W2-Zahlen) exakt 1:1 (inkl. Punkt-Klasse)
+    function syncW2Q2FromKip(){
+      // W2 Q2 zeigt S1..S4 exakt 1:1 (inkl. Punkt-Klasse)
       ["S1","S2","S3","S4"].forEach(k => {
         const src = slotSpanEls.get(k);
-        const dst = finalSpanEls.get(k);
+        const dst = w2q2Span.get(k);
         if(!src || !dst) return;
         dst.textContent = src.textContent;
         dst.classList.toggle("dot", src.classList.contains("dot"));
@@ -569,22 +613,38 @@
     }
 
     function setRandomNumbers(withPop=false){
-      const keys = ["S1","S2","S3","S4","T1","T2","T3","T4"];
-      const nums = getUniqueRandomNumbers(8, 1, 12);
+      // 12 eindeutige Zahlen -> 8 für W2/W1-Basis, 4 Rest für W3
+      const nums12 = getUniqueRandomNumbers(12, 1, 12);
 
-      keys.forEach((k, idx) => {
+      const keys8 = ["S1","S2","S3","S4","T1","T2","T3","T4"];
+      keys8.forEach((k, idx) => {
         const span = slotSpanEls.get(k);
         if(!span) return;
-        const n = nums[idx];
+        const n = nums12[idx];
         span.textContent = String(n);
         setDot(span, n);
       });
 
-      // Final aktualisieren (nur W2)
-      syncFinalFromKip();
+      // Rest 4 -> W3 U1..U4
+      const w3Keys = ["U1","U2","U3","U4"];
+      w3Keys.forEach((k, idx) => {
+        const span = w3Span.get(k);
+        if(!span) return;
+        const n = nums12[8 + idx];
+        span.textContent = String(n);
+        setDot(span, n);
+      });
+
+      // W2 Q2 aktualisieren
+      syncW2Q2FromKip();
 
       if (withPop){
-        for (const el of finalSlotEls){
+        for (const el of w2q2Els){
+          el.classList.remove("pop");
+          void el.offsetWidth;
+          el.classList.add("pop");
+        }
+        for (const el of w3Els){
           el.classList.remove("pop");
           void el.offsetWidth;
           el.classList.add("pop");
