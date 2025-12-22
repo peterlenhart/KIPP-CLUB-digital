@@ -188,7 +188,7 @@
     .pairLayer{
       position:absolute;
       inset:0;
-      z-index: 6; /* unter der weißen Linie, aber über Boden/Grid */
+      z-index: 6; /* unter Divider, aber über Boden/Grid */
       pointer-events:none;
 
       /* Skalierung wie Photoshop: nur Breite (X) */
@@ -220,7 +220,10 @@
       top:  calc(1 * var(--step));
     }
 
-    /* W1 (Q0) */
+    /* ======================
+       W1 (Q0) – Innenkante eckig
+       innen = rechts oben / rechts unten => 0
+       ====================== */
     .cube{
       position:absolute;
       left: var(--cube-x);
@@ -244,7 +247,9 @@
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
       border: 4px solid var(--cube-border);
-      border-radius: clamp(10px, 2.2vmin, 18px);
+
+      /* TL TR BR BL */
+      border-radius: clamp(10px, 2.2vmin, 18px) 0 0 clamp(10px, 2.2vmin, 18px);
 
       box-shadow:
         0 12px 22px rgba(0,0,0,0.28),
@@ -254,7 +259,10 @@
       pointer-events: none;
     }
 
-    /* W2 (Q1) */
+    /* ======================
+       W2 (Q1) – Innenkante eckig
+       innen = links oben / links unten => 0
+       ====================== */
     .cube2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -278,7 +286,9 @@
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
       border: 4px solid var(--cube-border);
-      border-radius: clamp(10px, 2.2vmin, 18px);
+
+      /* TL TR BR BL */
+      border-radius: 0 clamp(10px, 2.2vmin, 18px) clamp(10px, 2.2vmin, 18px) 0;
 
       box-shadow:
         0 12px 22px rgba(0,0,0,0.28),
@@ -369,7 +379,7 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ✅ Trennlinie (nicht skalieren!) */
+    /* ✅ Dein Divider bleibt separat & oben drüber (NICHT skalieren) */
     .divider-DE-rows2to4{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
@@ -377,6 +387,7 @@
       height: calc(2 * var(--step) + var(--cell));
       width: 2px;
 
+      /* DEINE Werte 그대로 */
       background: rgba(234,215,190,0.5);
       border-radius: 999px;
       filter: blur(0.1px);
@@ -453,7 +464,7 @@
         <div class="slot slot2-4e" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ Linie bleibt separat & oben drüber -->
+      <!-- ✅ Divider bleibt separat & oben drüber -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
