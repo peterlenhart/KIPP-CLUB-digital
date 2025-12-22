@@ -35,9 +35,12 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* bestehende Würfel-Schattenwerte (werden 1:1 wiederverwendet) */
+      /* bestehende Würfel-Schattenwerte */
       --cast-x: 18px;
       --cast-y: 18px;
+
+      /* W3-W2-KIP Quetschfaktor (gespeichert) */
+      --w3w2-scale-y: 0.5;
 
       --rotSign: 1;
     }
@@ -192,12 +195,19 @@
       visibility: hidden;
     }
 
-    /* sichtbar */
-    .w3w2BasisLayer{
+    /* =========================================
+       ✅ W3-W2-KIP Wrapper (GESPEICHERTER Zustand)
+       - quetscht die komplette Darstellung vertikal auf 50%
+       - Achse = Zwischenlinie (axis-y)
+       ========================================= */
+    .w3w2KipLayer{
       position:absolute;
       inset:0;
       z-index: 7;
       pointer-events:none;
+
+      transform-origin: 50% var(--axis-y);
+      transform: scaleY(var(--w3w2-scale-y));
     }
 
     /* Clip fürs Box-Innere (damit NIE Schatten auf dem Außenrahmen landet) */
@@ -209,8 +219,7 @@
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ Linker Innenschatten mit exakt denselben Werten wie cubeShadow,
-          nur nach links gerichtet */
+    /* Linker Innenschatten (gleich wie cubeShadow-Werte, nur nach links) */
     .cubeShadowLeft{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -219,7 +228,6 @@
       background: transparent;
       box-sizing: border-box;
 
-      /* 1:1 die alten Werte, nur X negativ und Y = 0 (links in den Innenraum) */
       box-shadow:
         calc(var(--cast-x) * -1) 0px 18px rgba(0,0,0,0.35),
         calc(var(--cast-x) * -0.55) 0px 10px rgba(0,0,0,0.22);
@@ -228,7 +236,6 @@
       opacity: 1;
     }
 
-    /* Positionen: jeweils exakt auf den 3×3-Würfel in Q1 und Q2 */
     .shadow-w3{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); } /* Q1 */
     .shadow-w2{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); } /* Q2 */
 
@@ -273,14 +280,15 @@
       top:  calc(1 * var(--step));
     }
 
-    .w3w2BasisLayer .cubeW3{
+    /* W3 oben (Q1) + W2 unten (Q2), innere Kante OHNE Radius */
+    .cubeW3{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
       border-bottom-left-radius: 0 !important;
       border-bottom-right-radius: 0 !important;
     }
 
-    .w3w2BasisLayer .cubeW2{
+    .cubeW2{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
       border-top-left-radius: 0 !important;
@@ -381,16 +389,12 @@
       background: rgba(234,215,190,0.5);
       border-radius: 999px;
 
-      /* ausdrücklich kein Schatten/Filter */
       box-shadow: none !important;
       filter: none !important;
 
       z-index: 9999;
       pointer-events: none;
     }
-
-    /* alter Divider unsichtbar */
-    .divider-DE-rows2to4{ display:none; }
 
     .controls{
       width: 100%;
@@ -436,13 +440,6 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-
-      <!-- Schatten nur im Innenraum (geclippt) -->
-      <div class="innerClip" aria-hidden="true">
-        <div class="cubeShadowLeft shadow-w3"></div>
-        <div class="cubeShadowLeft shadow-w2"></div>
-      </div>
-
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -462,12 +459,19 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- sichtbare Basis: W3 oben (Q1) + W2 unten (Q2) -->
-      <div class="w3w2BasisLayer" id="w3w2BasisLayer" aria-label="W3+W2 Basis (Q1/Q2)">
+      <!-- ✅ W3-W2-KIP Ansicht (sichtbar, gespeichert) -->
+      <div class="w3w2KipLayer" id="w3w2KipLayer" aria-label="W3+W2 KIP (vertikal 50%)">
+        <!-- Schatten nur im Innenraum (geclippt) -->
+        <div class="innerClip" aria-hidden="true">
+          <div class="cubeShadowLeft shadow-w3"></div>
+          <div class="cubeShadowLeft shadow-w2"></div>
+        </div>
+
+        <!-- W3 oben (Q1) + W2 unten (Q2) -->
         <div class="cubeW3" aria-label="W3 Fläche (leer)"></div>
         <div class="cubeW2" aria-label="W2 Fläche (Q2)"></div>
 
-        <!-- W3-Ausrichtung nach deiner Ansage -->
+        <!-- W3-Ausrichtung -->
         <div class="slot w3q1-4e read-south" data-w3="U1" aria-label="W3 4E"><div class="num"><span></span></div></div>
         <div class="slot w3q1-4f read-south" data-w3="U2" aria-label="W3 4F"><div class="num"><span></span></div></div>
         <div class="slot w3q1-2g read-east"  data-w3="U3" aria-label="W3 2G"><div class="num"><span></span></div></div>
@@ -478,11 +482,10 @@
         <div class="slot w2q2-5f read-north" data-w2q2="S2" aria-label="W2 5F"><div class="num"><span></span></div></div>
         <div class="slot w2q2-6g read-east"  data-w2q2="S3" aria-label="W2 6G"><div class="num"><span></span></div></div>
         <div class="slot w2q2-7g read-east"  data-w2q2="S4" aria-label="W2 7G"><div class="num"><span></span></div></div>
-      </div>
 
-      <!-- Divider oben drüber, ohne Schatten -->
-      <div class="divider-EG-cols" aria-hidden="true"></div>
-      <div class="divider-DE-rows2to4" aria-hidden="true"></div>
+        <!-- Divider oben drüber, ohne Schatten -->
+        <div class="divider-EG-cols" aria-hidden="true"></div>
+      </div>
     </div>
 
     <div class="controls">
@@ -500,11 +503,11 @@
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
     // W2 in Q2 (sichtbar): zeigt S1..S4
-    const w2q2Els = Array.from(document.querySelectorAll(".w3w2BasisLayer .slot[data-w2q2]"));
+    const w2q2Els = Array.from(document.querySelectorAll(".w3w2KipLayer .slot[data-w2q2]"));
     const w2q2Span = new Map(w2q2Els.map(s => [s.dataset.w2q2, s.querySelector(".num > span")]));
 
     // W3 Slots (sichtbar): U1..U4
-    const w3Els = Array.from(document.querySelectorAll(".w3w2BasisLayer .slot[data-w3]"));
+    const w3Els = Array.from(document.querySelectorAll(".w3w2KipLayer .slot[data-w3]"));
     const w3Span = new Map(w3Els.map(s => [s.dataset.w3, s.querySelector(".num > span")]));
 
     function setBoardSquare(){
