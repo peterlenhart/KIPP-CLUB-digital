@@ -297,7 +297,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* ZAHLEN: Drehung = "Boden" Richtung Farbfeld (nach außen) */
+    /* ZAHLEN: Rotation über --num-rot */
     .slot .num{
       position:absolute;
       inset:0;
@@ -317,37 +317,37 @@
       will-change: transform;
     }
 
-    /* q0: oben & links außen */
+    /* Rotationslogik pro Quadrant: horizontal-edge = nach außen, vertical-edge = nach außen */
+    /* q0: außen = oben & links */
     .board.q0 .slot-2c .num > span,
-    .board.q0 .slot-2d .num > span { --num-rot: 180deg; }
+    .board.q0 .slot-2d .num > span { --num-rot: 180deg; }  /* oben */
     .board.q0 .slot-3b .num > span,
-    .board.q0 .slot-4b .num > span { --num-rot: -90deg; }
+    .board.q0 .slot-4b .num > span { --num-rot: -90deg; }  /* links */
 
-    /* q1: oben & rechts außen */
+    /* q1: außen = oben & rechts */
     .board.q1 .slot-2c .num > span,
-    .board.q1 .slot-2d .num > span { --num-rot: 180deg; }
+    .board.q1 .slot-2d .num > span { --num-rot: 180deg; }  /* oben */
     .board.q1 .slot-3b .num > span,
-    .board.q1 .slot-4b .num > span { --num-rot: 90deg; }
+    .board.q1 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts */
 
-    /* q2: unten & rechts außen */
+    /* q2: außen = unten & rechts */
     .board.q2 .slot-2c .num > span,
-    .board.q2 .slot-2d .num > span { --num-rot: 0deg; }
+    .board.q2 .slot-2d .num > span { --num-rot: 0deg; }    /* unten */
     .board.q2 .slot-3b .num > span,
-    .board.q2 .slot-4b .num > span { --num-rot: 90deg; }
+    .board.q2 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts */
 
-    /* q3: unten & links außen */
+    /* q3: außen = unten & links */
     .board.q3 .slot-2c .num > span,
-    .board.q3 .slot-2d .num > span { --num-rot: 0deg; }
+    .board.q3 .slot-2d .num > span { --num-rot: 0deg; }    /* unten */
     .board.q3 .slot-3b .num > span,
-    .board.q3 .slot-4b .num > span { --num-rot: -90deg; }
+    .board.q3 .slot-4b .num > span { --num-rot: -90deg; }  /* links */
 
-    /* Slots relativ zur Würfel-Position + je Quadrant richtig ausgerichtet */
+    /* Slots relativ zur Würfel-Position + je Quadrant richtig */
     .slot-2c{ left: calc(var(--cube-x) + var(--h-x1) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
     .slot-2d{ left: calc(var(--cube-x) + var(--h-x2) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
     .slot-3b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y1) * var(--step)); }
     .slot-4b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y2) * var(--step)); }
 
-    /* Controls */
     .controls{
       width: 100%;
       display:flex;
@@ -382,7 +382,6 @@
       transform: none;
     }
 
-    /* Pop ("blup") NUR am inneren Span, damit Rotation erhalten bleibt */
     @keyframes popIn {
       0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
       60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
@@ -417,10 +416,10 @@
 
       <div class="cube" aria-label="Würfel"></div>
 
-      <div class="slot slot-2c" data-slot="F3" aria-label="Slot 2C"><div class="num"><span></span></div></div>
-      <div class="slot slot-2d" data-slot="F4" aria-label="Slot 2D"><div class="num"><span></span></div></div>
-      <div class="slot slot-3b" data-slot="F2" aria-label="Slot 3B"><div class="num"><span></span></div></div>
-      <div class="slot slot-4b" data-slot="F1" aria-label="Slot 4B"><div class="num"><span></span></div></div>
+      <div class="slot slot-2c" data-slot="F3" aria-label="Slot F3"><div class="num"><span></span></div></div>
+      <div class="slot slot-2d" data-slot="F4" aria-label="Slot F4"><div class="num"><span></span></div></div>
+      <div class="slot slot-3b" data-slot="F2" aria-label="Slot F2"><div class="num"><span></span></div></div>
+      <div class="slot slot-4b" data-slot="F1" aria-label="Slot F1"><div class="num"><span></span></div></div>
     </div>
 
     <div class="controls">
@@ -485,7 +484,7 @@
       grid.dataset.built = "1";
     }
 
-    // Physische Ecken / Positionen
+    // Quadranten
     const Q = [
       { cls: "q0", col: 1, row: 1 }, // oben links
       { cls: "q1", col: 4, row: 1 }, // oben rechts
@@ -503,7 +502,6 @@
       boardEl.style.setProperty("--cube-row", String(Q[q].row));
     }
 
-    // ---------- Helpers ----------
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
     function clearSlots(){
@@ -545,25 +543,21 @@
       slotEls.forEach(s => s.classList.remove("pop"));
     }
 
-    // ---------- Zwischenbild (Overlay, "Photoshop") ----------
+    // ---------- Zwischenbild: 2 Faces an die Achse ziehen + 50% quetschen ----------
     function getPxVar(name){
       const v = getComputedStyle(boardEl).getPropertyValue(name).trim();
       return parseFloat(v) || 0;
     }
-
     function cubeSizePx(){
       const cell = getPxVar("--cell");
       const gap  = getPxVar("--cell-gap");
       return 3 * cell + 2 * gap;
     }
-
     function posForQ(q){
       const step = getPxVar("--step");
       return { left: Q[q].col * step, top: Q[q].row * step };
     }
-
     function directionForClockwise(fromQ, toQ){
-      // clockwise: 0->1 right, 1->2 down, 2->3 left, 3->0 up
       if (fromQ === 0 && toQ === 1) return "Right";
       if (fromQ === 1 && toQ === 2) return "Down";
       if (fromQ === 2 && toQ === 3) return "Left";
@@ -571,26 +565,36 @@
       return "Right";
     }
 
-    function buildSnapshotGroup(isEmpty){
-      // Gruppe: Würfelfläche + 4 Slots (+ Zahlen) als statisches "Bild"
-      const g = document.createElement("div");
-      g.style.position = "absolute";
-      g.style.width = cubeSizePx() + "px";
-      g.style.height = cubeSizePx() + "px";
-      g.style.pointerEvents = "none";
+    function makeFace(q, numbers4orNull){
+      // Snapshot-Face: Würfel + Slots als "Bild"
+      const face = document.createElement("div");
+      face.style.position = "absolute";
+      face.style.width = cubeSizePx() + "px";
+      face.style.height = cubeSizePx() + "px";
+      face.style.pointerEvents = "none";
+
+      // Klasse qX drauf, damit die Zahlenrotation auch im Snapshot stimmt
+      face.className = "board " + Q[q].cls;
 
       const cubeClone = cubeEl.cloneNode(true);
       cubeClone.style.left = "0px";
-      cubeClone.style.top  = "0px";
+      cubeClone.style.top = "0px";
 
       const slotClones = slotEls.map(s => s.cloneNode(true));
 
-      if (isEmpty){
-        slotClones.forEach(sc => {
-          const span = sc.querySelector(".num > span");
-          if (span) span.textContent = "";
-        });
-      }
+      // Zahlen setzen (oder leer lassen)
+      const order = ["F1","F2","F3","F4"];
+      slotClones.forEach(sc => {
+        const slotKey = sc.dataset.slot;
+        const span = sc.querySelector(".num > span");
+        if (!span) return;
+        if (!numbers4orNull){
+          span.textContent = "";
+          return;
+        }
+        const idx = order.indexOf(slotKey);
+        span.textContent = idx >= 0 ? String(numbers4orNull[idx]) : "";
+      });
 
       // Slots pixelgenau relativ zur Würfelgruppe platzieren
       const cubeRect = cubeEl.getBoundingClientRect();
@@ -600,78 +604,103 @@
         sc.style.top  = (origRect.top  - cubeRect.top)  + "px";
       });
 
-      g.appendChild(cubeClone);
-      slotClones.forEach(sc => g.appendChild(sc));
-      return g;
+      face.appendChild(cubeClone);
+      slotClones.forEach(sc => face.appendChild(sc));
+      return face;
     }
 
-    async function showIntermediate(fromQ, toQ, ms){
-      // Originale ausblenden (Overlay ist "Bild")
+    async function showIntermediateStatic(fromQ, toQ, numbers4, ms){
+      // Originale unsichtbar
       const prevCubeOpacity = cubeEl.style.opacity;
       const prevShadowOpacity = cubeShadowEl.style.opacity;
       const prevSlotOpacity = slotEls.map(s => s.style.opacity);
 
       cubeEl.style.opacity = "0";
       cubeShadowEl.style.opacity = "0";
-      slotEls.forEach(s => (s.style.opacity = "0"));
+      slotEls.forEach(s => s.style.opacity = "0");
 
       const overlay = document.createElement("div");
       overlay.className = "kippOverlay";
       boardEl.appendChild(overlay);
 
-      // W1 (mit Zahlen) + W2 (leer) als Snapshot
-      const w1 = buildSnapshotGroup(false);
-      const w2 = buildSnapshotGroup(true);
+      const size = cubeSizePx();
+      const step = getPxVar("--step");
+      const dir  = directionForClockwise(fromQ, toQ);
+
+      // Mittellinien im 8×8 (zwischen Spalte 4 und 5 / Zeile 4 und 5)
+      const midX = 4 * step;
+      const midY = 4 * step;
 
       const pFrom = posForQ(fromQ);
       const pTo   = posForQ(toQ);
 
-      // W1 -> Ziel, W2 -> Start
-      w1.style.left = pTo.left + "px";
-      w1.style.top  = pTo.top  + "px";
-
-      w2.style.left = pFrom.left + "px";
-      w2.style.top  = pFrom.top  + "px";
-
-      // 50% quetschen zur Mittellinie (Transform-Origin an innerer Kante)
-      const dir = directionForClockwise(fromQ, toQ);
+      // W1 = bestückt (ZIEL), W2 = leer (START)
+      const W1 = makeFace(toQ, numbers4);
+      const W2 = makeFace(fromQ, null);
 
       if (dir === "Right"){
-        w2.style.transformOrigin = "100% 50%";
-        w1.style.transformOrigin = "0% 50%";
-        w2.style.transform = "scaleX(0.5)";
-        w1.style.transform = "scaleX(0.5)";
-      } else if (dir === "Left"){
-        w2.style.transformOrigin = "0% 50%";
-        w1.style.transformOrigin = "100% 50%";
-        w2.style.transform = "scaleX(0.5)";
-        w1.style.transform = "scaleX(0.5)";
-      } else if (dir === "Down"){
-        w2.style.transformOrigin = "50% 100%";
-        w1.style.transformOrigin = "50% 0%";
-        w2.style.transform = "scaleY(0.5)";
-        w1.style.transform = "scaleY(0.5)";
-      } else { // Up
-        w2.style.transformOrigin = "50% 0%";
-        w1.style.transformOrigin = "50% 100%";
-        w2.style.transform = "scaleY(0.5)";
-        w1.style.transform = "scaleY(0.5)";
+        // W2 links an Achse, W1 rechts an Achse
+        W2.style.left = (midX - size) + "px";
+        W1.style.left = midX + "px";
+        W2.style.top  = pFrom.top + "px";
+        W1.style.top  = pTo.top + "px";
+
+        W2.style.transformOrigin = "100% 50%";
+        W1.style.transformOrigin = "0% 50%";
+        W2.style.transform = "scaleX(0.5)";
+        W1.style.transform = "scaleX(0.5)";
+      }
+      else if (dir === "Left"){
+        // W1 links an Achse, W2 rechts an Achse
+        W1.style.left = (midX - size) + "px";
+        W2.style.left = midX + "px";
+        W1.style.top  = pTo.top + "px";
+        W2.style.top  = pFrom.top + "px";
+
+        W1.style.transformOrigin = "100% 50%";
+        W2.style.transformOrigin = "0% 50%";
+        W1.style.transform = "scaleX(0.5)";
+        W2.style.transform = "scaleX(0.5)";
+      }
+      else if (dir === "Down"){
+        // W2 oben an Achse, W1 unten an Achse
+        W2.style.top  = (midY - size) + "px";
+        W1.style.top  = midY + "px";
+        W2.style.left = pFrom.left + "px";
+        W1.style.left = pTo.left + "px";
+
+        W2.style.transformOrigin = "50% 100%";
+        W1.style.transformOrigin = "50% 0%";
+        W2.style.transform = "scaleY(0.5)";
+        W1.style.transform = "scaleY(0.5)";
+      }
+      else { // Up
+        // W1 oben an Achse, W2 unten an Achse
+        W1.style.top  = (midY - size) + "px";
+        W2.style.top  = midY + "px";
+        W1.style.left = pTo.left + "px";
+        W2.style.left = pFrom.left + "px";
+
+        W1.style.transformOrigin = "50% 100%";
+        W2.style.transformOrigin = "50% 0%";
+        W1.style.transform = "scaleY(0.5)";
+        W2.style.transform = "scaleY(0.5)";
       }
 
-      overlay.appendChild(w2);
-      overlay.appendChild(w1);
+      overlay.appendChild(W2);
+      overlay.appendChild(W1);
 
       await sleep(ms);
 
       overlay.remove();
 
-      // Originale wieder einblenden
+      // Originale wieder sichtbar
       cubeEl.style.opacity = prevCubeOpacity || "";
       cubeShadowEl.style.opacity = prevShadowOpacity || "";
-      slotEls.forEach((s, i) => (s.style.opacity = prevSlotOpacity[i] || ""));
+      slotEls.forEach((s, i) => s.style.opacity = prevSlotOpacity[i] || "");
     }
 
-    // ---------- Ablauf: 3 Bilder ----------
+    // ---------- Ablauf ----------
     let busy = false;
 
     async function runBestueckung(){
@@ -681,21 +710,21 @@
 
       clearSlots();
 
-      // W1 random ziehen (4 Zahlen) und langsam einblenden (gesamt ~5s)
+      // W1 random (4 Zahlen)
       const nums = draw12();
       const W1 = nums.slice(0,4);
 
-      // 4 Zahlen * 1250ms = 5 Sekunden
+      // 4 Zahlen langsam einblenden (4×1250ms = 5s)
       await placeFour(W1, 1250);
 
       // 5 Sekunden stehen lassen
       await sleep(5000);
 
-      // Zwischenbild 5 Sekunden
-      const nextQ = (currentQ + 1) % 4; // Uhrzeigersinn
-      await showIntermediate(currentQ, nextQ, 5000);
+      // Zwischenbild: an Achse + 50% quetschen (5s)
+      const nextQ = (currentQ + 1) % 4;
+      await showIntermediateStatic(currentQ, nextQ, W1, 5000);
 
-      // Endbild: leere W2 im Zielquadranten (100%)
+      // Endbild: leere Fläche im Zielquadranten
       applyQuadrant(nextQ);
       clearSlots();
 
@@ -705,7 +734,7 @@
 
     btn.addEventListener("click", runBestueckung);
 
-    // ---------- Init ----------
+    // Init
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
@@ -713,7 +742,6 @@
 
       buildGridOnce();
 
-      // Start: random Ecke, leer
       applyQuadrant(Math.floor(Math.random() * 4));
       clearSlots();
     });
