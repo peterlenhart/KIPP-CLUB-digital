@@ -35,7 +35,6 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Vorzeichen-Schalter, falls jemals nötig */
       --rotSign: 1;
     }
 
@@ -95,12 +94,9 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      /* Achse zwischen D/E (wie gehabt) */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
-      /* Achse zwischen Zeile 4 / 5 (für W3/W2 vertikal) */
       --axis-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* W2 Basis links oben (B) */
       --cube-col: 1;
       --cube-row: 1;
 
@@ -178,9 +174,7 @@
       pointer-events: none;
     }
 
-    /* =========================================================
-       W2KIP + W1KIP (gespeichert, aber unsichtbar)
-       ========================================================= */
+    /* unsichtbar gespeichert */
     .pairLayer{
       position:absolute;
       inset:0;
@@ -194,9 +188,7 @@
       visibility: hidden;
     }
 
-    /* =========================================================
-       W3 + W2 BASIS (sichtbar): Q1 + Q2 (noch NICHT skaliert)
-       ========================================================= */
+    /* sichtbar */
     .w3w2BasisLayer{
       position:absolute;
       inset:0;
@@ -207,39 +199,56 @@
       transform: scaleY(var(--w3w2-scale-y, 1));
     }
 
-    /* Clip fürs Box-Innere (damit Schatten NIE auf Außenrahmen kommt) */
+    /* Clip fürs Box-Innere */
     .innerClip{
       position:absolute;
       inset:0;
-      z-index: 6;           /* unter Würfelflächen, über Boden */
+      z-index: 6;
       pointer-events:none;
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ Pseudo-Ebene: linke Schattenkante im Boxinneren (deutlich) */
+    /* ✅ Deutlicher linker Schatten im Innenraum */
     .leftContactShadow{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       pointer-events:none;
       border-radius: clamp(10px, 2.2vmin, 18px);
+
+      /* etwas nach links schieben, damit er sichtbar "anliegt" */
+      transform: translateX(-10px);
     }
     .leftContactShadow::before{
       content:"";
       position:absolute;
-      inset:0;
+      inset:-6px; /* größer als Fläche => mehr Schattenvolumen */
       border-radius: inherit;
+
       background: linear-gradient(
         90deg,
-        rgba(0,0,0,0.55),
-        rgba(0,0,0,0.18) 18%,
-        rgba(0,0,0,0.00) 36%
+        rgba(0,0,0,0.70),
+        rgba(0,0,0,0.34) 18%,
+        rgba(0,0,0,0.12) 32%,
+        rgba(0,0,0,0.00) 52%
       );
-      filter: blur(0.7px);
+
+      filter: blur(2.2px);
       opacity: 1;
     }
+    /* zusätzlicher schmaler Kern (kräftige Kante) */
+    .leftContactShadow::after{
+      content:"";
+      position:absolute;
+      left:-6px;
+      top: 8px;
+      bottom: 8px;
+      width: 22px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.28);
+      filter: blur(1.2px);
+    }
 
-    /* Positionen der Schatten exakt unter den Flächen */
     .shadow-w3{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); } /* Q1 */
     .shadow-w2{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); } /* Q2 */
 
@@ -275,31 +284,25 @@
       z-index: 6;
     }
 
-    /* W2 Basis (links, unsichtbar) */
     .pairLayer .cube{
       left: var(--cube-x);
       top:  var(--cube-y);
     }
-    /* W1 Basis (rechts, unsichtbar) */
     .pairLayer .cube2{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
     }
 
-    /* W3 in Q1 (2E–4G) */
     .w3w2BasisLayer .cubeW3{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
-      /* ✅ Innenkante (unten) scharf */
       border-bottom-left-radius: 0 !important;
       border-bottom-right-radius: 0 !important;
     }
 
-    /* W2 in Q2 (5E–7G) */
     .w3w2BasisLayer .cubeW2{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
-      /* ✅ Innenkante (oben) scharf */
       border-top-left-radius: 0 !important;
       border-top-right-radius: 0 !important;
     }
@@ -335,19 +338,17 @@
       user-select:none;
     }
 
-    /* ✅ extra Rotation (für 5/6 = 180°) via CSS Variable */
     .slot .num > span{
       display:inline-block;
       font-weight: 900;
       color: #111;
       font-size: clamp(18px, 4.2vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(calc(var(--num-rot, 0deg) + var(--extra-rot, 0deg)));
+      transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
       position: relative;
     }
 
-    /* Punkt für 6 und 9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
@@ -361,13 +362,12 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
-    /* Leserichtungen */
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
     .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ===== Slot-Positionen (W2KIP/W1KIP) ===== */
+    /* W2/W1 saved slots */
     .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
@@ -378,19 +378,19 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ===== W2 in Q2 (5E–7G): Slots wie vorher, nur +3 Zeilen ===== */
-    .w2q2-5e{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); }  /* 5E */
-    .w2q2-5f{ left: calc(5 * var(--step)); top: calc(4 * var(--step)); }  /* 5F */
-    .w2q2-6g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); }  /* 6G */
-    .w2q2-7g{ left: calc(6 * var(--step)); top: calc(6 * var(--step)); }  /* 7G */
+    /* W2 in Q2 */
+    .w2q2-5e{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); }
+    .w2q2-5f{ left: calc(5 * var(--step)); top: calc(4 * var(--step)); }
+    .w2q2-6g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); }
+    .w2q2-7g{ left: calc(6 * var(--step)); top: calc(6 * var(--step)); }
 
-    /* ===== W3 in Q1: Slots auf 4E,4F,2G,3G ===== */
-    .w3q1-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }  /* 4E */
-    .w3q1-4f{ left: calc(5 * var(--step)); top: calc(3 * var(--step)); }  /* 4F */
-    .w3q1-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }  /* 2G */
-    .w3q1-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }  /* 3G */
+    /* W3 in Q1 */
+    .w3q1-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    .w3q1-4f{ left: calc(5 * var(--step)); top: calc(3 * var(--step)); }
+    .w3q1-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+    .w3q1-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }
 
-    /* Divider horizontal zwischen Q1 und Q2 */
+    /* Divider horizontal */
     .divider-EG-cols{
       position:absolute;
       left: calc(4 * var(--step));
@@ -406,7 +406,6 @@
       pointer-events: none;
     }
 
-    /* alter Divider bleibt unsichtbar */
     .divider-DE-rows2to4{ display:none; }
 
     .controls{
@@ -439,9 +438,9 @@
     }
 
     @keyframes popIn {
-      0%   { transform: rotate(calc(var(--num-rot,0deg) + var(--extra-rot,0deg))) scale(0.70); filter: brightness(1.05); }
-      60%  { transform: rotate(calc(var(--num-rot,0deg) + var(--extra-rot,0deg))) scale(1.10); }
-      100% { transform: rotate(calc(var(--num-rot,0deg) + var(--extra-rot,0deg))) scale(1.00); filter: none; }
+      0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
+      60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
+      100% { transform: rotate(var(--num-rot, 0deg)) scale(1.00); filter: none; }
     }
     .slot.pop .num > span{
       animation: popIn 220ms ease-out;
@@ -456,14 +455,14 @@
 
       <!-- Schatten nur im Innenraum -->
       <div class="innerClip" aria-hidden="true">
-        <div class="leftContactShadow shadow-w3" aria-hidden="true"></div>
-        <div class="leftContactShadow shadow-w2" aria-hidden="true"></div>
+        <div class="leftContactShadow shadow-w3"></div>
+        <div class="leftContactShadow shadow-w2"></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W2KIP + W1KIP (unsichtbar, gespeichert) -->
+      <!-- unsichtbar gespeicherte Quelle -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
         <div class="cube" aria-label="W2 Basis/KIP"></div>
         <div class="cube2" aria-label="W1 Basis/KIP"></div>
@@ -479,28 +478,26 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- W3 + W2 BASIS sichtbar -->
+      <!-- sichtbare Basis: W3 oben (Q1) + W2 unten (Q2) -->
       <div class="w3w2BasisLayer" id="w3w2BasisLayer" aria-label="W3+W2 Basis (Q1/Q2)">
-        <!-- W3 Fläche (leer) -->
         <div class="cubeW3" aria-label="W3 Fläche (leer)"></div>
-
-        <!-- W2 Fläche (bestückt wie W2) -->
         <div class="cubeW2" aria-label="W2 Fläche (Q2)"></div>
 
-        <!-- W3 Blättchenpositionen: 4E,4F,2G,3G -->
-        <div class="slot w3q1-4e read-north" data-w3="U1" aria-label="W3 4E"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-4f read-north" data-w3="U2" aria-label="W3 4F"><div class="num"><span></span></div></div>
+        <!-- ✅ W3-Ausrichtung nach deiner Ansage:
+             Osten liest 2G/3G -> read-east
+             Süden liest 4E/4F -> read-south -->
+        <div class="slot w3q1-4e read-south" data-w3="U1" aria-label="W3 4E"><div class="num"><span></span></div></div>
+        <div class="slot w3q1-4f read-south" data-w3="U2" aria-label="W3 4F"><div class="num"><span></span></div></div>
         <div class="slot w3q1-2g read-east"  data-w3="U3" aria-label="W3 2G"><div class="num"><span></span></div></div>
         <div class="slot w3q1-3g read-east"  data-w3="U4" aria-label="W3 3G"><div class="num"><span></span></div></div>
 
-        <!-- W2 in Q2 (zeigt S1..S4) -->
+        <!-- W2 in Q2 (zeigt S1..S4, bleibt wie gehabt) -->
         <div class="slot w2q2-5e read-north" data-w2q2="S1" aria-label="W2 5E"><div class="num"><span></span></div></div>
         <div class="slot w2q2-5f read-north" data-w2q2="S2" aria-label="W2 5F"><div class="num"><span></span></div></div>
         <div class="slot w2q2-6g read-east"  data-w2q2="S3" aria-label="W2 6G"><div class="num"><span></span></div></div>
         <div class="slot w2q2-7g read-east"  data-w2q2="S4" aria-label="W2 7G"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Divider (horizontal) oben drüber -->
       <div class="divider-EG-cols" aria-hidden="true"></div>
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
@@ -587,13 +584,6 @@
       if (number === 6 || number === 9) span.classList.add("dot");
     }
 
-    // ✅ 5 und 6 immer 180° drehen (egal wo sie landen)
-    function setExtraRot(span, number){
-      if(!span) return;
-      const rot = (number === 5 || number === 6) ? "180deg" : "0deg";
-      span.style.setProperty("--extra-rot", rot);
-    }
-
     function getUniqueRandomNumbers(count, min, max){
       const pool = [];
       for(let i=min; i<=max; i++) pool.push(i);
@@ -611,14 +601,10 @@
         if(!src || !dst) return;
         dst.textContent = src.textContent;
         dst.classList.toggle("dot", src.classList.contains("dot"));
-
-        const n = parseInt(dst.textContent, 10);
-        setExtraRot(dst, n);
       });
     }
 
     function setRandomNumbers(withPop=false){
-      // 12 eindeutige Zahlen -> 8 für W2/W1-Basis, 4 Rest für W3
       const nums12 = getUniqueRandomNumbers(12, 1, 12);
 
       const keys8 = ["S1","S2","S3","S4","T1","T2","T3","T4"];
@@ -628,10 +614,8 @@
         const n = nums12[idx];
         span.textContent = String(n);
         setDot(span, n);
-        setExtraRot(span, n);
       });
 
-      // Rest 4 -> W3 U1..U4
       const w3Keys = ["U1","U2","U3","U4"];
       w3Keys.forEach((k, idx) => {
         const span = w3Span.get(k);
@@ -639,10 +623,8 @@
         const n = nums12[8 + idx];
         span.textContent = String(n);
         setDot(span, n);
-        setExtraRot(span, n);
       });
 
-      // W2 Q2 aktualisieren
       syncW2Q2FromKip();
 
       if (withPop){
