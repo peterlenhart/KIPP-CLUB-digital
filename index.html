@@ -36,11 +36,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Cube-Außenschatten (Richtung Kugel/Mitte) */
+      /* Cube-Außenschatten (Richtung Mitte/Oben-Links) */
       --cubeShadow1: rgba(0,0,0,0.34);
       --cubeShadow2: rgba(0,0,0,0.18);
-      --cubeShadowX: -16px;  /* Q2: nach links */
-      --cubeShadowY: -16px;  /* Q2: nach oben */
+      --cubeShadowX: -16px;  /* Nach links */
+      --cubeShadowY: -16px;  /* Nach oben */
       --cubeShadowBlur1: 26px;
       --cubeShadowBlur2: 14px;
     }
@@ -130,7 +130,6 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    /* Boxboden (clippt Schatten → NIE am Außenrahmen) */
     .floor{
       position:absolute;
       left: var(--step);
@@ -153,7 +152,6 @@
         inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
-    /* Overlay liegt IM Floor und wird vom Floor geclippt */
     .floorOverlay{
       position:absolute;
       inset:0;
@@ -178,13 +176,10 @@
       pointer-events: none;
     }
 
-    /* ===== PSEUDO-QUADRAT (Schatten-Träger) =====
-       FIX: Größe + Position so, dass es exakt der sichtbaren Würfel-Außenkante entspricht.
-       Da der Cube-Rahmen per box-shadow (+--cube-border-w) nach außen wächst,
-       muss das Pseudoquadrat ebenfalls um 2*border-w größer sein und um -border-w
-       verschoben werden. Sonst wirkt es „zu klein“ und nicht auf 5E–7G. */
+    /* FIX: Der Schatten-Träger */
     .floorShadow{
       position:absolute;
+      /* Größe des Würfels + Berücksichtigung der Rahmenbreite */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap) + (2 * var(--cube-border-w)));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap) + (2 * var(--cube-border-w)));
       pointer-events:none;
@@ -195,13 +190,12 @@
       position:absolute;
       inset:0;
       border-radius: clamp(10px, 2.2vmin, 18px);
-      background: rgba(0,0,0,0);
+      background: transparent;
       box-shadow:
         var(--cubeShadowX) var(--cubeShadowY) var(--cubeShadowBlur1) var(--cubeShadow1),
         calc(var(--cubeShadowX) * 0.55) calc(var(--cubeShadowY) * 0.55) var(--cubeShadowBlur2) var(--cubeShadow2);
     }
 
-    /* Würfelfläche FINAL – layout-genau 3×3 (Border als box-shadow, NICHT als border) */
     .cubeFinal{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -315,10 +309,6 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
   </style>
 </head>
 
@@ -332,7 +322,6 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- Speicher W3 -->
       <div class="view hidden" id="storeLayer" aria-hidden="true">
         <div class="slot" data-w3="U1"><div class="num"><span></span></div></div>
         <div class="slot" data-w3="U2"><div class="num"><span></span></div></div>
@@ -340,7 +329,6 @@
         <div class="slot" data-w3="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- FINAL W3 in Q2 -->
       <div class="view shown" id="finalView" aria-label="FINAL (W3 in Q2)">
         <div class="cubeFinal" id="w3Cube" aria-label="W3 Final Fläche"></div>
 
@@ -382,25 +370,10 @@
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
     const colorMap = new Map([
-      [key(3,"A"), "c-orange"],
-      [key(4,"A"), "c-gruen"],
-      [key(5,"A"), "c-violett"],
-      [key(6,"A"), "c-blau"],
-
-      [key(8,"C"), "c-gruen"],
-      [key(8,"D"), "c-orange"],
-      [key(8,"E"), "c-gruen"],
-      [key(8,"F"), "c-orange"],
-
-      [key(6,"H"), "c-violett"],
-      [key(5,"H"), "c-blau"],
-      [key(4,"H"), "c-orange"],
-      [key(3,"H"), "c-gruen"],
-
-      [key(1,"F"), "c-blau"],
-      [key(1,"E"), "c-violett"],
-      [key(1,"D"), "c-blau"],
-      [key(1,"C"), "c-violett"],
+      [key(3,"A"), "c-orange"], [key(4,"A"), "c-gruen"], [key(5,"A"), "c-violett"], [key(6,"A"), "c-blau"],
+      [key(8,"C"), "c-gruen"], [key(8,"D"), "c-orange"], [key(8,"E"), "c-gruen"], [key(8,"F"), "c-orange"],
+      [key(6,"H"), "c-violett"], [key(5,"H"), "c-blau"], [key(4,"H"), "c-orange"], [key(3,"H"), "c-gruen"],
+      [key(1,"F"), "c-blau"], [key(1,"E"), "c-violett"], [key(1,"D"), "c-blau"], [key(1,"C"), "c-violett"],
     ]);
 
     function buildGridOnce(){
@@ -433,7 +406,6 @@
       return pool.slice(0, count);
     }
 
-    // Schatten-Asset für W3 final (Q2) am Boxboden
     let w3FloorShadowEl = null;
     function ensureW3FloorShadow(){
       if (w3FloorShadowEl) return w3FloorShadowEl;
@@ -445,31 +417,26 @@
     }
 
     function layoutW3Final_Q2(){
-      // Q2 (3×3) startet bei 5E => (4*step, 4*step) im Board
-      const cubeStepLeft = 4;
-      const cubeStepTop  = 4;
+      const cubeStepLeft = 4; // Start bei E
+      const cubeStepTop  = 4; // Start bei Zeile 5
 
-      // Würfel exakt auf Q2 (5E–7G)
+      // Würfel auf Board
       w3Cube.style.left = `calc(${cubeStepLeft} * var(--step))`;
       w3Cube.style.top  = `calc(${cubeStepTop}  * var(--step))`;
 
-      // FIX: Pseudo-Quadrat muss die „sichtbare“ Cube-Außenkante treffen.
-      // Cube-Rahmen wächst per box-shadow um --cube-border-w nach außen,
-      // daher: gleicher Raster-Start (5E), aber zusätzlich um -border-w verschieben.
+      // FIX: Schatten-Positionierung relativ zum Floor
+      // Da der Floor bei Index 1 startet, ziehen wir diesen Versatz ab.
       const shadow = ensureW3FloorShadow();
       shadow.style.left = `calc(${cubeStepLeft - 1} * var(--step) - var(--cube-border-w))`;
-      shadow.style.top  = `calc(${cubeStepTop  - 1} * var(--step) - var(--cube-border-w))`;
+      shadow.style.top  = `calc(${cubeStepTop - 1}  * var(--step) - var(--cube-border-w))`;
 
-      // Slots: 5G,6G,7E,7F
+      // Slots
       document.querySelector(".w3-5g").style.left = "calc(6 * var(--step))";
       document.querySelector(".w3-5g").style.top  = "calc(4 * var(--step))";
-
       document.querySelector(".w3-6g").style.left = "calc(6 * var(--step))";
       document.querySelector(".w3-6g").style.top  = "calc(5 * var(--step))";
-
       document.querySelector(".w3-7e").style.left = "calc(4 * var(--step))";
       document.querySelector(".w3-7e").style.top  = "calc(6 * var(--step))";
-
       document.querySelector(".w3-7f").style.left = "calc(5 * var(--step))";
       document.querySelector(".w3-7f").style.top  = "calc(6 * var(--step))";
     }
@@ -486,8 +453,7 @@
 
     function setRandomNumbers(){
       const nums = getUniqueRandomNumbers(4, 1, 12);
-      const w3Keys = ["U1","U2","U3","U4"];
-      w3Keys.forEach((k, idx) => {
+      ["U1","U2","U3","U4"].forEach((k, idx) => {
         const span = storeSpanByW3.get(k);
         if(!span) return;
         const n = nums[idx];
@@ -501,9 +467,6 @@
 
     window.addEventListener("load", () => {
       setBoardSquare();
-      requestAnimationFrame(setBoardSquare);
-      setTimeout(setBoardSquare, 80);
-
       buildGridOnce();
       layoutW3Final_Q2();
       setRandomNumbers();
@@ -511,7 +474,6 @@
 
     window.addEventListener("resize", () => {
       setBoardSquare();
-      requestAnimationFrame(setBoardSquare);
       layoutW3Final_Q2();
     });
   </script>
