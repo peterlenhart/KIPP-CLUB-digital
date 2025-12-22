@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – Zwei Flächen (statisch)</title>
+  <title>KIPP – Zwei Flächen (Raster korrekt)</title>
 
   <style>
     :root{
@@ -65,7 +65,6 @@
       margin-top: 14vh;
       display:flex;
       flex-direction: column;
-      gap: 14px;
       justify-content:flex-start;
       align-items:center;
     }
@@ -84,9 +83,9 @@
 
       overflow: visible;
 
-      /* Zellmaß als Variable */
-      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
-      --step: calc(var(--cell) + var(--cell-gap));
+      /* Diese beiden Werte werden von JS in px gesetzt (robust!) */
+      --cell: 50px;
+      --step: 60px;
 
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
@@ -128,7 +127,6 @@
         linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
         var(--floor);
 
-      border-radius: 0;
       z-index: 2;
       pointer-events: none;
 
@@ -159,7 +157,6 @@
       pointer-events: none;
     }
 
-    /* Würfelfläche */
     .cube{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -190,7 +187,6 @@
       pointer-events: none;
     }
 
-    /* Slots */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -223,13 +219,13 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W1 in Q0 (B2) -->
+      <!-- W1 in Q0: B2 -->
       <div class="cube" id="cubeW1"></div>
 
-      <!-- W2 in Q1 (E2) -->
+      <!-- W2 in Q1: E2 -->
       <div class="cube" id="cubeW2"></div>
 
-      <!-- Slots werden per JS exakt auf Raster-Koordinaten gesetzt -->
+      <!-- 8 Slots exakt nach deinem Raster -->
       <div class="slot" data-pos="2C"></div>
       <div class="slot" data-pos="2D"></div>
 
@@ -252,7 +248,7 @@
     const cubeW2 = document.getElementById("cubeW2");
     const slotEls = Array.from(document.querySelectorAll(".slot"));
 
-    // Raster: Spalten A..H, Zeilen 1..8
+    // Rasterdefinition: 1..8 nach unten, A..H nach rechts
     const cols = ["A","B","C","D","E","F","G","H"];
     function colIndex(letter){ return cols.indexOf(letter); }
 
@@ -298,53 +294,65 @@
       boardEl.style.height = w + "px";
     }
 
-    function getPxVar(name){
-      const v = getComputedStyle(boardEl).getPropertyValue(name).trim();
-      return parseFloat(v) || 0;
+    function pxVar(name){
+      return parseFloat(getComputedStyle(boardEl).getPropertyValue(name)) || 0;
     }
 
-    function cellTopLeft(pos){
+    // WICHTIG: Raster-Metrik robust in JS berechnen + als px in CSS-Variablen setzen
+    function updateMetrics(){
+      const w = boardEl.getBoundingClientRect().width;
+      const gap = pxVar("--cell-gap");            // z.B. 6..10 px
+      const cell = (w - 7 * gap) / 8;             // echte Zellbreite
+      const step = cell + gap;                    // Raster-Schritt
+
+      boardEl.style.setProperty("--cell", cell + "px");
+      boardEl.style.setProperty("--step", step + "px");
+
+      return { cell, gap, step };
+    }
+
+    function cellTopLeft(pos, step){
       // pos z.B. "2E"
       const row = parseInt(pos.slice(0, -1), 10); // 2
       const col = pos.slice(-1);                  // E
-      const step = getPxVar("--step");
       const x = colIndex(col) * step;
       const y = (row - 1) * step;
       return { x, y };
     }
 
     function placeStatic(){
-      const step = getPxVar("--step");
+      const { step } = updateMetrics();
 
-      // Würfelfläche W1 in Q0 = B2
-      const pW1 = cellTopLeft("2B");
+      // W1 in Q0 = B2
+      const pW1 = cellTopLeft("2B", step);
       cubeW1.style.left = pW1.x + "px";
       cubeW1.style.top  = pW1.y + "px";
 
-      // Würfelfläche W2 in Q1 = E2
-      const pW2 = cellTopLeft("2E");
+      // W2 in Q1 = E2
+      const pW2 = cellTopLeft("2E", step);
       cubeW2.style.left = pW2.x + "px";
       cubeW2.style.top  = pW2.y + "px";
 
-      // Slots exakt aufs Raster
+      // Slots exakt auf Koordinaten
       for (const s of slotEls){
-        const p = cellTopLeft(s.dataset.pos);
+        const p = cellTopLeft(s.dataset.pos, step);
         s.style.left = p.x + "px";
         s.style.top  = p.y + "px";
       }
     }
 
-    window.addEventListener("load", () => {
+    function init(){
       setBoardSquare();
       buildGridOnce();
       placeStatic();
-      setTimeout(() => { setBoardSquare(); placeStatic(); }, 80);
       requestAnimationFrame(() => { setBoardSquare(); placeStatic(); });
-    });
+      setTimeout(() => { setBoardSquare(); placeStatic(); }, 120);
+    }
 
+    window.addEventListener("load", init);
     window.addEventListener("resize", () => {
       setBoardSquare();
-      requestAnimationFrame(() => { setBoardSquare(); placeStatic(); });
+      requestAnimationFrame(placeStatic);
     });
   </script>
 </body>
