@@ -35,6 +35,10 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
+      /* bestehende Würfel-Schattenwerte (werden 1:1 wiederverwendet) */
+      --cast-x: 18px;
+      --cast-y: 18px;
+
       --rotSign: 1;
     }
 
@@ -194,61 +198,37 @@
       inset:0;
       z-index: 7;
       pointer-events:none;
-
-      transform-origin: 50% var(--axis-y);
-      transform: scaleY(var(--w3w2-scale-y, 1));
     }
 
-    /* Clip fürs Box-Innere */
+    /* Clip fürs Box-Innere (damit NIE Schatten auf dem Außenrahmen landet) */
     .innerClip{
       position:absolute;
       inset:0;
-      z-index: 6;
+      z-index: 6; /* unter den Slots, über dem Boden */
       pointer-events:none;
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ Deutlicher linker Schatten im Innenraum */
-    .leftContactShadow{
+    /* ✅ Linker Innenschatten mit exakt denselben Werten wie cubeShadow,
+          nur nach links gerichtet */
+    .cubeShadowLeft{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      pointer-events:none;
       border-radius: clamp(10px, 2.2vmin, 18px);
+      background: transparent;
+      box-sizing: border-box;
 
-      /* etwas nach links schieben, damit er sichtbar "anliegt" */
-      transform: translateX(-10px);
-    }
-    .leftContactShadow::before{
-      content:"";
-      position:absolute;
-      inset:-6px; /* größer als Fläche => mehr Schattenvolumen */
-      border-radius: inherit;
+      /* 1:1 die alten Werte, nur X negativ und Y = 0 (links in den Innenraum) */
+      box-shadow:
+        calc(var(--cast-x) * -1) 0px 18px rgba(0,0,0,0.35),
+        calc(var(--cast-x) * -0.55) 0px 10px rgba(0,0,0,0.22);
 
-      background: linear-gradient(
-        90deg,
-        rgba(0,0,0,0.70),
-        rgba(0,0,0,0.34) 18%,
-        rgba(0,0,0,0.12) 32%,
-        rgba(0,0,0,0.00) 52%
-      );
-
-      filter: blur(2.2px);
+      filter: blur(1px);
       opacity: 1;
     }
-    /* zusätzlicher schmaler Kern (kräftige Kante) */
-    .leftContactShadow::after{
-      content:"";
-      position:absolute;
-      left:-6px;
-      top: 8px;
-      bottom: 8px;
-      width: 22px;
-      border-radius: 16px;
-      background: rgba(0,0,0,0.28);
-      filter: blur(1.2px);
-    }
 
+    /* Positionen: jeweils exakt auf den 3×3-Würfel in Q1 und Q2 */
     .shadow-w3{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); } /* Q1 */
     .shadow-w2{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); } /* Q2 */
 
@@ -390,7 +370,7 @@
     .w3q1-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
     .w3q1-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }
 
-    /* Divider horizontal */
+    /* Divider horizontal (ohne Schatten) */
     .divider-EG-cols{
       position:absolute;
       left: calc(4 * var(--step));
@@ -400,12 +380,16 @@
 
       background: rgba(234,215,190,0.5);
       border-radius: 999px;
-      filter: blur(0.1px);
+
+      /* ausdrücklich kein Schatten/Filter */
+      box-shadow: none !important;
+      filter: none !important;
 
       z-index: 9999;
       pointer-events: none;
     }
 
+    /* alter Divider unsichtbar */
     .divider-DE-rows2to4{ display:none; }
 
     .controls{
@@ -453,10 +437,10 @@
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
 
-      <!-- Schatten nur im Innenraum -->
+      <!-- Schatten nur im Innenraum (geclippt) -->
       <div class="innerClip" aria-hidden="true">
-        <div class="leftContactShadow shadow-w3"></div>
-        <div class="leftContactShadow shadow-w2"></div>
+        <div class="cubeShadowLeft shadow-w3"></div>
+        <div class="cubeShadowLeft shadow-w2"></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
@@ -483,21 +467,20 @@
         <div class="cubeW3" aria-label="W3 Fläche (leer)"></div>
         <div class="cubeW2" aria-label="W2 Fläche (Q2)"></div>
 
-        <!-- ✅ W3-Ausrichtung nach deiner Ansage:
-             Osten liest 2G/3G -> read-east
-             Süden liest 4E/4F -> read-south -->
+        <!-- W3-Ausrichtung nach deiner Ansage -->
         <div class="slot w3q1-4e read-south" data-w3="U1" aria-label="W3 4E"><div class="num"><span></span></div></div>
         <div class="slot w3q1-4f read-south" data-w3="U2" aria-label="W3 4F"><div class="num"><span></span></div></div>
         <div class="slot w3q1-2g read-east"  data-w3="U3" aria-label="W3 2G"><div class="num"><span></span></div></div>
         <div class="slot w3q1-3g read-east"  data-w3="U4" aria-label="W3 3G"><div class="num"><span></span></div></div>
 
-        <!-- W2 in Q2 (zeigt S1..S4, bleibt wie gehabt) -->
+        <!-- W2 in Q2 (zeigt S1..S4) -->
         <div class="slot w2q2-5e read-north" data-w2q2="S1" aria-label="W2 5E"><div class="num"><span></span></div></div>
         <div class="slot w2q2-5f read-north" data-w2q2="S2" aria-label="W2 5F"><div class="num"><span></span></div></div>
         <div class="slot w2q2-6g read-east"  data-w2q2="S3" aria-label="W2 6G"><div class="num"><span></span></div></div>
         <div class="slot w2q2-7g read-east"  data-w2q2="S4" aria-label="W2 7G"><div class="num"><span></span></div></div>
       </div>
 
+      <!-- Divider oben drüber, ohne Schatten -->
       <div class="divider-EG-cols" aria-hidden="true"></div>
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
