@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – 8×8 Raster</title>
+  <title>KIPP – Zwischenbild (ohne Zahlen)</title>
 
   <style>
     :root{
@@ -297,50 +297,15 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* ZAHLEN: Rotation über --num-rot */
+    /* Zahlen bleiben zwar strukturell vorhanden, aber wir zeigen sie nicht */
     .slot .num{
       position:absolute;
       inset:0;
-      display:flex;
+      display:none; /* <<< keine Zahlen anzeigen */
       align-items:center;
       justify-content:center;
       user-select:none;
     }
-    .slot .num > span{
-      display:inline-block;
-      font-weight: 900;
-      color: #111;
-      font-size: clamp(18px, 4.2vmin, 36px);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(var(--num-rot, 0deg));
-      transform-origin: 50% 50%;
-      will-change: transform;
-    }
-
-    /* Rotationslogik pro Quadrant: horizontal-edge = nach außen, vertical-edge = nach außen */
-    /* q0: außen = oben & links */
-    .board.q0 .slot-2c .num > span,
-    .board.q0 .slot-2d .num > span { --num-rot: 180deg; }  /* oben */
-    .board.q0 .slot-3b .num > span,
-    .board.q0 .slot-4b .num > span { --num-rot: -90deg; }  /* links */
-
-    /* q1: außen = oben & rechts */
-    .board.q1 .slot-2c .num > span,
-    .board.q1 .slot-2d .num > span { --num-rot: 180deg; }  /* oben */
-    .board.q1 .slot-3b .num > span,
-    .board.q1 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts */
-
-    /* q2: außen = unten & rechts */
-    .board.q2 .slot-2c .num > span,
-    .board.q2 .slot-2d .num > span { --num-rot: 0deg; }    /* unten */
-    .board.q2 .slot-3b .num > span,
-    .board.q2 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts */
-
-    /* q3: außen = unten & links */
-    .board.q3 .slot-2c .num > span,
-    .board.q3 .slot-2d .num > span { --num-rot: 0deg; }    /* unten */
-    .board.q3 .slot-3b .num > span,
-    .board.q3 .slot-4b .num > span { --num-rot: -90deg; }  /* links */
 
     /* Slots relativ zur Würfel-Position + je Quadrant richtig */
     .slot-2c{ left: calc(var(--cube-x) + var(--h-x1) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
@@ -382,21 +347,35 @@
       transform: none;
     }
 
-    @keyframes popIn {
-      0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
-      60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
-      100% { transform: rotate(var(--num-rot, 0deg)) scale(1.00); filter: none; }
-    }
-    .slot.pop .num > span{
-      animation: popIn 220ms ease-out;
-    }
-
     /* Overlay-Layer für Zwischenbild */
     .kippOverlay{
       position:absolute;
       inset:0;
       z-index: 50;
       pointer-events:none;
+    }
+
+    /* Zwischenbild: 2 Würfelflächen als EIN verbundenes Bild */
+    .kippMid{
+      position:absolute;
+      display:flex;
+      pointer-events:none;
+      z-index: 51;
+      transform-origin: 50% 50%;
+    }
+    .kippMid .face{
+      position:relative;
+      width: 50%;
+      height: 100%;
+    }
+    .kippMid .face .cube{
+      position:absolute;
+      left: 0;
+      top: 0;
+    }
+    .kippMid .face.mirror .cube{
+      transform: scaleX(-1); /* Spiegelung um senkrechte Achse */
+      transform-origin: 50% 50%;
     }
   </style>
 </head>
@@ -416,6 +395,7 @@
 
       <div class="cube" aria-label="Würfel"></div>
 
+      <!-- Slots bleiben als Optik (leer), Zahlen sind deaktiviert -->
       <div class="slot slot-2c" data-slot="F3" aria-label="Slot F3"><div class="num"><span></span></div></div>
       <div class="slot slot-2d" data-slot="F4" aria-label="Slot F4"><div class="num"><span></span></div></div>
       <div class="slot slot-3b" data-slot="F2" aria-label="Slot F2"><div class="num"><span></span></div></div>
@@ -423,7 +403,7 @@
     </div>
 
     <div class="controls">
-      <button id="btnBestuecken" class="btn">Würfel bestücken</button>
+      <button id="btnBestuecken" class="btn">Zwischenschritt zeigen</button>
     </div>
   </div>
 
@@ -436,7 +416,6 @@
     const cubeShadowEl = document.querySelector(".cubeShadow");
 
     const slotEls = Array.from(document.querySelectorAll(".slot"));
-    const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -504,46 +483,7 @@
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-    function clearSlots(){
-      for (const el of slotSpanEls.values()) el.textContent = "";
-      slotEls.forEach(s => s.classList.remove("pop"));
-    }
-
-    function shuffle(arr){
-      for (let i = arr.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-
-    function draw12(){
-      const nums = Array.from({length:12}, (_,i)=>i+1);
-      return shuffle(nums);
-    }
-
-    async function placeFour(numbers, tempoMs){
-      const order = ["F1","F2","F3","F4"];
-      for(let i=0;i<4;i++){
-        const slotKey = order[i];
-        const span = slotSpanEls.get(slotKey);
-        if(!span) continue;
-
-        span.textContent = String(numbers[i]);
-
-        const slotEl = slotEls.find(s => s.dataset.slot === slotKey);
-        if (slotEl){
-          slotEl.classList.remove("pop");
-          void slotEl.offsetWidth;
-          slotEl.classList.add("pop");
-        }
-
-        await sleep(tempoMs);
-      }
-      slotEls.forEach(s => s.classList.remove("pop"));
-    }
-
-    // ---------- Zwischenbild: 2 Faces an die Achse ziehen + 50% quetschen ----------
+    // ---------- Messwerte ----------
     function getPxVar(name){
       const v = getComputedStyle(boardEl).getPropertyValue(name).trim();
       return parseFloat(v) || 0;
@@ -565,52 +505,17 @@
       return "Right";
     }
 
-    function makeFace(q, numbers4orNull){
-      // Snapshot-Face: Würfel + Slots als "Bild"
-      const face = document.createElement("div");
-      face.style.position = "absolute";
-      face.style.width = cubeSizePx() + "px";
-      face.style.height = cubeSizePx() + "px";
-      face.style.pointerEvents = "none";
-
-      // Klasse qX drauf, damit die Zahlenrotation auch im Snapshot stimmt
-      face.className = "board " + Q[q].cls;
-
-      const cubeClone = cubeEl.cloneNode(true);
-      cubeClone.style.left = "0px";
-      cubeClone.style.top = "0px";
-
-      const slotClones = slotEls.map(s => s.cloneNode(true));
-
-      // Zahlen setzen (oder leer lassen)
-      const order = ["F1","F2","F3","F4"];
-      slotClones.forEach(sc => {
-        const slotKey = sc.dataset.slot;
-        const span = sc.querySelector(".num > span");
-        if (!span) return;
-        if (!numbers4orNull){
-          span.textContent = "";
-          return;
-        }
-        const idx = order.indexOf(slotKey);
-        span.textContent = idx >= 0 ? String(numbers4orNull[idx]) : "";
-      });
-
-      // Slots pixelgenau relativ zur Würfelgruppe platzieren
-      const cubeRect = cubeEl.getBoundingClientRect();
-      slotClones.forEach((sc, idx) => {
-        const origRect = slotEls[idx].getBoundingClientRect();
-        sc.style.left = (origRect.left - cubeRect.left) + "px";
-        sc.style.top  = (origRect.top  - cubeRect.top)  + "px";
-      });
-
-      face.appendChild(cubeClone);
-      slotClones.forEach(sc => face.appendChild(sc));
-      return face;
+    // ---------- Zwischenbild: W1 + Spiegel(W1) als EIN Bild, dann 50% quetschen ----------
+    function makeBlankCubeClone(){
+      const c = cubeEl.cloneNode(true);
+      c.style.left = "0px";
+      c.style.top  = "0px";
+      c.style.opacity = "1";
+      return c;
     }
 
-    async function showIntermediateStatic(fromQ, toQ, numbers4, ms){
-      // Originale unsichtbar
+    async function showIntermediateStatic(fromQ, toQ, ms){
+      // Originale unsichtbar (damit nur das Zwischenbild zählt)
       const prevCubeOpacity = cubeEl.style.opacity;
       const prevShadowOpacity = cubeShadowEl.style.opacity;
       const prevSlotOpacity = slotEls.map(s => s.style.opacity);
@@ -627,71 +532,50 @@
       const step = getPxVar("--step");
       const dir  = directionForClockwise(fromQ, toQ);
 
-      // Mittellinien im 8×8 (zwischen Spalte 4 und 5 / Zeile 4 und 5)
+      // Mittellinien im 8×8 (zwischen 4 und 5)
       const midX = 4 * step;
       const midY = 4 * step;
 
       const pFrom = posForQ(fromQ);
-      const pTo   = posForQ(toQ);
 
-      // W1 = bestückt (ZIEL), W2 = leer (START)
-      const W1 = makeFace(toQ, numbers4);
-      const W2 = makeFace(fromQ, null);
+      // Verbundbild (W1 links, W2 rechts = Spiegel von W1)
+      const mid = document.createElement("div");
+      mid.className = "kippMid";
+      mid.style.width  = (2 * size) + "px";
+      mid.style.height = size + "px";
 
-      if (dir === "Right"){
-        // W2 links an Achse, W1 rechts an Achse
-        W2.style.left = (midX - size) + "px";
-        W1.style.left = midX + "px";
-        W2.style.top  = pFrom.top + "px";
-        W1.style.top  = pTo.top + "px";
+      const leftFace = document.createElement("div");
+      leftFace.className = "face";
+      leftFace.style.width  = size + "px";
+      leftFace.style.height = size + "px";
+      leftFace.appendChild(makeBlankCubeClone());
 
-        W2.style.transformOrigin = "100% 50%";
-        W1.style.transformOrigin = "0% 50%";
-        W2.style.transform = "scaleX(0.5)";
-        W1.style.transform = "scaleX(0.5)";
-      }
-      else if (dir === "Left"){
-        // W1 links an Achse, W2 rechts an Achse
-        W1.style.left = (midX - size) + "px";
-        W2.style.left = midX + "px";
-        W1.style.top  = pTo.top + "px";
-        W2.style.top  = pFrom.top + "px";
+      const rightFace = document.createElement("div");
+      rightFace.className = "face mirror";
+      rightFace.style.width  = size + "px";
+      rightFace.style.height = size + "px";
+      rightFace.appendChild(makeBlankCubeClone());
 
-        W1.style.transformOrigin = "100% 50%";
-        W2.style.transformOrigin = "0% 50%";
-        W1.style.transform = "scaleX(0.5)";
-        W2.style.transform = "scaleX(0.5)";
-      }
-      else if (dir === "Down"){
-        // W2 oben an Achse, W1 unten an Achse
-        W2.style.top  = (midY - size) + "px";
-        W1.style.top  = midY + "px";
-        W2.style.left = pFrom.left + "px";
-        W1.style.left = pTo.left + "px";
+      mid.appendChild(leftFace);
+      mid.appendChild(rightFace);
 
-        W2.style.transformOrigin = "50% 100%";
-        W1.style.transformOrigin = "50% 0%";
-        W2.style.transform = "scaleY(0.5)";
-        W1.style.transform = "scaleY(0.5)";
-      }
-      else { // Up
-        // W1 oben an Achse, W2 unten an Achse
-        W1.style.top  = (midY - size) + "px";
-        W2.style.top  = midY + "px";
-        W1.style.left = pTo.left + "px";
-        W2.style.left = pFrom.left + "px";
-
-        W1.style.transformOrigin = "50% 100%";
-        W2.style.transformOrigin = "50% 0%";
-        W1.style.transform = "scaleY(0.5)";
-        W2.style.transform = "scaleY(0.5)";
+      // Position + Quetschen: an die Mittelachse ziehen, dann 50% in Kipprichtung
+      if (dir === "Right" || dir === "Left"){
+        // Gruppe symmetrisch an vertikale Mittelachse (zwei Würfelflächen nebeneinander)
+        mid.style.left = (midX - size) + "px";
+        mid.style.top  = pFrom.top + "px";
+        mid.style.transform = "scaleX(0.5)";
+      } else {
+        // Für Up/Down: selbes Prinzip, nur in Y quetschen und an horizontale Achse setzen
+        // (W1+Spiegel bleibt als „verbundene Ansicht“, ohne Verdrehung – so wie du’s wolltest)
+        mid.style.left = pFrom.left + "px";
+        mid.style.top  = (midY - (size / 2)) + "px"; // leicht zentriert um die Achse
+        mid.style.transform = "scaleY(0.5)";
       }
 
-      overlay.appendChild(W2);
-      overlay.appendChild(W1);
+      overlay.appendChild(mid);
 
       await sleep(ms);
-
       overlay.remove();
 
       // Originale wieder sichtbar
@@ -700,39 +584,27 @@
       slotEls.forEach((s, i) => s.style.opacity = prevSlotOpacity[i] || "");
     }
 
-    // ---------- Ablauf ----------
+    // ---------- Ablauf: nur Zwischenbild ----------
     let busy = false;
 
-    async function runBestueckung(){
+    async function run(){
       if (busy) return;
       busy = true;
       btn.disabled = true;
 
-      clearSlots();
-
-      // W1 random (4 Zahlen)
-      const nums = draw12();
-      const W1 = nums.slice(0,4);
-
-      // 4 Zahlen langsam einblenden (4×1250ms = 5s)
-      await placeFour(W1, 1250);
-
-      // 5 Sekunden stehen lassen
-      await sleep(5000);
-
-      // Zwischenbild: an Achse + 50% quetschen (5s)
       const nextQ = (currentQ + 1) % 4;
-      await showIntermediateStatic(currentQ, nextQ, W1, 5000);
 
-      // Endbild: leere Fläche im Zielquadranten
+      // 5 Sekunden Zwischenbild zeigen
+      await showIntermediateStatic(currentQ, nextQ, 5000);
+
+      // Danach ins nächste Quadrant „Endbild“ (leer)
       applyQuadrant(nextQ);
-      clearSlots();
 
       btn.disabled = false;
       busy = false;
     }
 
-    btn.addEventListener("click", runBestueckung);
+    btn.addEventListener("click", run);
 
     // Init
     window.addEventListener("load", () => {
@@ -743,7 +615,6 @@
       buildGridOnce();
 
       applyQuadrant(Math.floor(Math.random() * 4));
-      clearSlots();
     });
 
     window.addEventListener("resize", () => {
