@@ -35,8 +35,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Vorzeichen-Schalter, falls jemals nötig */
       --rotSign: 1;
+
+      /* Standard-Schatten (kann pro Shadow-Element überschrieben werden) */
+      --cast-x: 18px;
+      --cast-y: 18px;
     }
 
     html, body { height: 100%; }
@@ -104,10 +107,6 @@
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
-      /* Standard Cast (für normale Würfel-Schatten) */
-      --cast-x: 18px;
-      --cast-y: 18px;
-
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
@@ -137,22 +136,32 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    .floor{
+    /* =========================================================
+       BOX-INNENBEREICH (BODEN) + CLIP-FÜR-SCHATTEN
+       -> Schatten kann nie auf den Rahmen laufen
+       ========================================================= */
+    .pit{
       position:absolute;
       left: var(--step);
       top:  var(--step);
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      border-radius: 0;
+      overflow: hidden;          /* ✅ Clip */
+      z-index: 2;
+      pointer-events:none;
+    }
+
+    .floor{
+      position:absolute;
+      inset:0;
 
       background:
         linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
         var(--floor);
 
       border-radius: 0;
-      z-index: 2;
-      pointer-events: none;
 
-      /* ✅ Innenschatten im Box-Inneren (Boden) */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -161,6 +170,14 @@
         inset  26px 0 40px rgba(0,0,0,0.26),
         inset  0 -26px 40px rgba(0,0,0,0.30),
         inset  0  26px 40px rgba(0,0,0,0.30);
+    }
+
+    /* Shadow-Layer im Pit (geclippt) */
+    .pitShadows{
+      position:absolute;
+      inset:0;
+      z-index: 3; /* über Boden, unter Würfel */
+      pointer-events:none;
     }
 
     .ball{
@@ -192,14 +209,12 @@
       transform-origin: var(--axis-x) 50%;
       transform: scaleX(var(--pair-scale-x, 0.5));
 
-      /* ✅ im Hintergrund behalten */
       opacity: 0;
       visibility: hidden;
     }
 
     /* =========================================================
-       W2 FINAL (sichtbar): Q1, Slots: 2E 2F 3G 4G
-       (für später behalten – derzeit standardmäßig ausgeblendet)
+       W2 FINAL (gespeichert, aktuell ausgeblendet)
        ========================================================= */
     .w2FinalLayer{
       position:absolute;
@@ -207,13 +222,12 @@
       z-index: 7;
       pointer-events:none;
 
-      /* 👉 für diese Phase ausblenden (W3 FINAL steht im Fokus) */
       opacity: 0;
       visibility: hidden;
     }
 
     /* =========================================================
-       W3 FINAL (sichtbar): Q2, Slots: 5G 6G 7E 7F
+       W3 FINAL (sichtbar) in Q2
        ========================================================= */
     .w3FinalLayer{
       position:absolute;
@@ -222,6 +236,7 @@
       pointer-events:none;
     }
 
+    /* ========= Schatten-Primitive ========= */
     .cubeShadow{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -230,6 +245,7 @@
       background: transparent;
       box-sizing: border-box;
 
+      /* nutzt --cast-x / --cast-y */
       box-shadow:
         var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
         calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
@@ -237,22 +253,16 @@
       filter: blur(1px);
     }
 
-    /* Shadows in Basis/KIP (unsichtbar) */
-    .pairLayer .cubeShadow.w2{ left: var(--cube-x); top: var(--cube-y); }
-    .pairLayer .cubeShadow.w1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
-
-    /* Shadow in W2 Final (Q1) */
-    .w2FinalLayer .cubeShadow.w2final{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
+    /* ✅ W3 FINAL: Schatten MUSS links+oben (zur Kugel hin),
+       NICHT rechts+unten. */
+    .cubeShadow.w3finalClip{
+      --cast-x: -18px;
+      --cast-y: -18px;
     }
 
-    /* Shadow in W3 Final (Q2) */
-    .w3FinalLayer .cubeShadow.w3final{
-      left: calc(4 * var(--step));
-      top:  calc(4 * var(--step));
-    }
-
+    /* =========================================================
+       Würfel-Flächen
+       ========================================================= */
     .cube,
     .cube2,
     .cubeFinal{
@@ -262,8 +272,8 @@
       box-sizing: border-box;
 
       background:
-        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
-        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
+        radial-gradient(120% 90% at 15% 15%, rgba(249,150,30,0.10), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, rgba(155,70,110,0.10), transparent 60%),
         repeating-linear-gradient(
           20deg,
           rgba(0,0,0,0.02) 0px,
@@ -349,7 +359,7 @@
       position: relative;
     }
 
-    /* ✅ Punkt für 6 und 9: als "Satzpunkt" rechts daneben */
+    /* Punkt für 6 und 9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
@@ -383,32 +393,29 @@
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
     /* ===== Slot-Positionen (W2 FINAL: 2E 2F 3G 4G) ===== */
-    .w2f-2e{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }               /* 2E */
-    .w2f-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }               /* 2F */
-    .w2f-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }               /* 3G */
-    .w2f-4g{ left: calc(6 * var(--step)); top: calc(3 * var(--step)); }               /* 4G */
+    .w2f-2e{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+    .w2f-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    .w2f-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }
+    .w2f-4g{ left: calc(6 * var(--step)); top: calc(3 * var(--step)); }
 
     /* ===== Slot-Positionen (W3 FINAL in Q2: 5G 6G 7E 7F) ===== */
-    .w3f-5g{ left: calc(6 * var(--step)); top: calc(4 * var(--step)); }               /* 5G */
-    .w3f-6g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); }               /* 6G */
-    .w3f-7e{ left: calc(4 * var(--step)); top: calc(6 * var(--step)); }               /* 7E */
-    .w3f-7f{ left: calc(5 * var(--step)); top: calc(6 * var(--step)); }               /* 7F */
+    .w3f-5g{ left: calc(6 * var(--step)); top: calc(4 * var(--step)); } /* 5G */
+    .w3f-6g{ left: calc(6 * var(--step)); top: calc(5 * var(--step)); } /* 6G */
+    .w3f-7e{ left: calc(4 * var(--step)); top: calc(6 * var(--step)); } /* 7E */
+    .w3f-7f{ left: calc(5 * var(--step)); top: calc(6 * var(--step)); } /* 7F */
 
-    /* ✅ Divider bleibt im Code gespeichert, hier aber unsichtbar */
+    /* Divider bleibt gespeichert, aber unsichtbar */
     .divider-DE-rows2to4{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
       top:  calc(1 * var(--step));
       height: calc(2 * var(--step) + var(--cell));
       width: 2px;
-
       background: rgba(234,215,190,0.5);
       border-radius: 999px;
       filter: blur(0.1px);
-
       z-index: 9999;
       pointer-events: none;
-
       opacity: 0;
       visibility: hidden;
     }
@@ -456,45 +463,38 @@
 <body>
   <div class="stage">
     <div class="board" id="board">
-      <div class="floor" aria-hidden="true"></div>
-      <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
+
+      <!-- ✅ Boxinneres als Pit: Boden + geclipptes Shadow-Layer -->
+      <div class="pit" aria-hidden="true">
+        <div class="floor"></div>
+        <div class="pitShadows" id="pitShadows"></div>
+      </div>
+
+      <div class="ball" aria-label="Kugel"></div>
 
       <!-- =========================
            W2KIP + W1KIP (unsichtbar, gespeichert)
            ========================= -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
-        <div class="cubeShadow w2" aria-hidden="true"></div>
-        <div class="cubeShadow w1" aria-hidden="true"></div>
-
-        <!-- W2 (links) -->
         <div class="cube" aria-label="W2 Basis/KIP"></div>
-
-        <!-- W1 (rechts) -->
         <div class="cube2" aria-label="W1 Basis/KIP"></div>
 
-        <!-- ✅ Zeile 2: vom NORDEN lesbar -->
         <div class="slot slot-2b read-north" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
         <div class="slot slot-2c read-north" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
+        <div class="slot slot-3d read-east"  data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
+        <div class="slot slot-4d read-east"  data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
 
-        <!-- ✅ W2 Kontaktkante: Osten lesbar -->
-        <div class="slot slot-3d read-east" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
-        <div class="slot slot-4d read-east" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
-
-        <!-- ✅ Zeile 2 (W1): vom NORDEN lesbar -->
         <div class="slot slot2-2f read-north" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
         <div class="slot slot2-2g read-north" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
-
-        <!-- ✅ W1 Kontaktkante: Westen lesbar -->
-        <div class="slot slot2-3e read-west" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
-        <div class="slot slot2-4e read-west" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
+        <div class="slot slot2-3e read-west"  data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
+        <div class="slot slot2-4e read-west"  data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
       </div>
 
       <!-- =========================
-           W2 FINAL (im Code gespeichert, aktuell ausgeblendet)
+           W2 FINAL (gespeichert, ausgeblendet)
            ========================= -->
       <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 Final (Q1)">
-        <div class="cubeShadow w2final" aria-hidden="true"></div>
         <div class="cubeFinal" aria-label="W2 Final Fläche"></div>
 
         <div class="slot w2f-2e read-north" data-final="S1" aria-label="W2 Final 2E"><div class="num"><span></span></div></div>
@@ -505,22 +505,16 @@
 
       <!-- =========================
            W3 FINAL (sichtbar) in Q2
-           Slots: 5G, 6G, 7E, 7F
-           - 5G/6G: vom OSTEN lesbar
-           - 7E/7F: vom SÜDEN lesbar
            ========================= -->
       <div class="w3FinalLayer" id="w3FinalLayer" aria-label="W3 Final (Q2)">
-        <div class="cubeShadow w3final" aria-hidden="true"></div>
         <div class="cubeFinal" aria-label="W3 Final Fläche"></div>
 
-        <!-- Mapping: W3 Final nutzt U1..U4 (die 4 übrigen Random-Zahlen) -->
         <div class="slot w3f-5g read-east"  data-w3final="U1" aria-label="W3 Final 5G"><div class="num"><span></span></div></div>
         <div class="slot w3f-6g read-east"  data-w3final="U2" aria-label="W3 Final 6G"><div class="num"><span></span></div></div>
         <div class="slot w3f-7e read-south" data-w3final="U3" aria-label="W3 Final 7E"><div class="num"><span></span></div></div>
         <div class="slot w3f-7f read-south" data-w3final="U4" aria-label="W3 Final 7F"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Divider bleibt im Code, ist hier aber unsichtbar -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
@@ -533,12 +527,13 @@
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
+    const pitShadows = document.getElementById("pitShadows");
 
     // Slots in W2KIP/W1KIP (unsichtbar) => Quelle
     const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // Slots in W2 Final => Anzeige (gespeichert, aktuell ausgeblendet)
+    // Slots in W2 Final => Anzeige (gespeichert, ausgeblendet)
     const w2FinalSlotEls = Array.from(document.querySelectorAll(".w2FinalLayer .slot"));
     const w2FinalSpanEls = new Map(w2FinalSlotEls.map(s => [s.dataset.final, s.querySelector(".num > span")]));
 
@@ -617,7 +612,6 @@
     }
 
     function syncW2FinalFromKip(){
-      // W2 Final zeigt S1..S4 exakt 1:1
       ["S1","S2","S3","S4"].forEach(k => {
         const src = slotSpanEls.get(k);
         const dst = w2FinalSpanEls.get(k);
@@ -628,7 +622,6 @@
     }
 
     function syncW3FinalFromStore(store){
-      // store = Map(U1..U4 -> {text, dot})
       ["U1","U2","U3","U4"].forEach(k => {
         const dst = w3FinalSpanEls.get(k);
         const v = store.get(k);
@@ -638,8 +631,23 @@
       });
     }
 
+    // ✅ Schatten im Pit (geclippt) für W3 final in Q2:
+    // Board: W3 final liegt bei left=4*step, top=4*step
+    // Pit-Origin ist bei 1*step / 1*step => im Pit: 3*step / 3*step
+    function renderW3FinalShadow(){
+      pitShadows.innerHTML = "";
+
+      const sh = document.createElement("div");
+      sh.className = "cubeShadow w3finalClip";
+
+      // CSS calc in JS als string -> nutzt die bereits vorhandenen Variablen
+      sh.style.left = "calc(3 * var(--step))";
+      sh.style.top  = "calc(3 * var(--step))";
+
+      pitShadows.appendChild(sh);
+    }
+
     function setRandomNumbers(withPop=false){
-      // 12 eindeutige Zahlen: 8 für W2/W1 (S/T), 4 für W3 (U)
       const nums = getUniqueRandomNumbers(12, 1, 12);
 
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
@@ -651,25 +659,21 @@
         setDot(span, n);
       });
 
-      // W3-Store (U1..U4) – bleibt fix bis nächstes Mischen
       const w3Store = new Map();
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
         w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
       });
 
-      // Final-Ansichten aktualisieren
       syncW2FinalFromKip();
       syncW3FinalFromStore(w3Store);
 
       if (withPop){
-        // Pop auf sichtbaren Layern
         for (const el of w3FinalSlotEls){
           el.classList.remove("pop");
           void el.offsetWidth;
           el.classList.add("pop");
         }
-        // (W2 final ist aktuell ausgeblendet – Pop kann trotzdem drin bleiben)
         for (const el of w2FinalSlotEls){
           el.classList.remove("pop");
           void el.offsetWidth;
@@ -702,12 +706,14 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
+      renderW3FinalShadow();   // ✅ Schatten korrekt im Boxinneren (geclippt)
       setRandomNumbers(false);
     });
 
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
+      renderW3FinalShadow();
     });
   </script>
 </body>
