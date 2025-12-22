@@ -35,13 +35,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      --rotSign: 1;
-
       /* Schattenstärke (gemeinsam) */
       --shadow-soft: rgba(0,0,0,0.36);
       --shadow-soft2: rgba(0,0,0,0.22);
 
-      --shadow-w: 22px;      /* Schattenbreite */
+      --shadow-w: 22px;      /* „Breite“ der Schattenkante */
       --shadow-blur: 0.9px;  /* weiche Kante */
     }
 
@@ -101,9 +99,6 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
-      --axis-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
-
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
@@ -133,6 +128,10 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
+    /* =========================
+       BOXBODEN (Innenfläche)
+       wichtig: overflow hidden → Schatten darf NIE auf Rahmen außen liegen
+       ========================= */
     .floor{
       position:absolute;
       left: var(--step);
@@ -147,11 +146,8 @@
       border-radius: 0;
       z-index: 2;
       pointer-events: none;
-
-      /* wichtig: alles „Innen“ clippen → nie Schatten am Außenrahmen */
       overflow: hidden;
 
-      /* ✅ Innenschatten im Box-Inneren (Boden) */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -162,11 +158,13 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
+    /* Schatten-/Overlay-Layer IM Boden (clipped) */
     .floorOverlay{
       position:absolute;
       inset:0;
       pointer-events:none;
       z-index: 0;
+      overflow: visible; /* darf über seine Box gehen, aber floor clippt */
     }
 
     .ball{
@@ -182,50 +180,54 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 8;
+      z-index: 4;
       pointer-events: none;
     }
 
     /* =========================================================
-       SCHATTEN-PAD für FINAL (AUßEN an der Würfelfläche, nicht innen!)
-       - liegt unter der Würfelfläche
-       - exakt 3×3 Raster
-       - Schatten läuft links/oben ins Boxinnere
-       ========================================================= */
-    .finalShadowPad{
+       SCHATTEN ALS EIGENE EBENE AM BOXBODEN (NIE IM WÜRFEL)
+       =========================================================
+       - Schattenelement sitzt unter der Würfelfläche, im floorOverlay.
+       - Schatten wird außerhalb der Würfelfläche gezeichnet:
+         links (zur Mitte hin) und oben (zur Mitte hin) bei Q2.
+       - floor clippt alles → nie Schatten am Außenrahmen.
+    */
+    .floorShadow{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       pointer-events:none;
-      z-index: 3; /* unter Würfel/Slots, über Boxboden */
-      background: transparent;
+      z-index: 1; /* im floorOverlay */
+      overflow: visible;
     }
-    .finalShadowPad::before,
-    .finalShadowPad::after{
+    .floorShadow::before,
+    .floorShadow::after{
       content:"";
       position:absolute;
       pointer-events:none;
-      filter: blur(var(--shadow-blur));
     }
-    /* Schatten LINKS vom Würfel (dunkel direkt an der Würfelkante, nach links auslaufend) */
-    .finalShadow-left::before{
+
+    /* Schatten links (auf Boden, AUßERHALB der Würfelfläche) */
+    .shadow-left::before{
       left: calc(-1 * var(--shadow-w));
       top: 0;
       width: var(--shadow-w);
       height: 100%;
-      background: linear-gradient(90deg, rgba(0,0,0,0.00), var(--shadow-soft));
+      background: linear-gradient(90deg, var(--shadow-soft), rgba(0,0,0,0.00));
+      filter: blur(var(--shadow-blur));
     }
-    /* Schatten OBEN vom Würfel (dunkel direkt an der Würfelkante, nach oben auslaufend) */
-    .finalShadow-top::after{
+    /* Schatten oben (auf Boden, AUßERHALB der Würfelfläche) */
+    .shadow-top::after{
       left: 0;
       top: calc(-1 * var(--shadow-w));
       width: 100%;
       height: var(--shadow-w);
-      background: linear-gradient(180deg, rgba(0,0,0,0.00), var(--shadow-soft2));
+      background: linear-gradient(180deg, var(--shadow-soft2), rgba(0,0,0,0.00));
+      filter: blur(var(--shadow-blur));
     }
 
     /* =========================================================
-       FINAL: Würfelfläche (ohne innenliegende Schatten!)
+       FINAL – Würfelfläche (OHNE Schatten-Pseudos!)
        ========================================================= */
     .cubeFinal{
       position:absolute;
@@ -249,8 +251,10 @@
       border: 4px solid var(--cube-border);
       border-radius: clamp(10px, 2.2vmin, 18px);
 
+      /* nur leichter Innenglanz – aber KEIN Schatten! */
       box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset;
-      z-index: 5;
+
+      z-index: 6;
     }
 
     /* =========================================================
@@ -269,7 +273,7 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 6;
+      z-index: 7;
 
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
@@ -313,19 +317,15 @@
     }
 
     /* Leserichtungen */
-    .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
-    .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
-    .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
-    .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
+    .read-south { --num-rot: 0deg; }
+    .read-east  { --num-rot: -90deg; }
+    .read-west  { --num-rot: 90deg; }
+    .read-north { --num-rot: 180deg; }
 
-    /* =========================
-       VIEWS
-       ========================= */
+    /* Views */
     .view{ position:absolute; inset:0; pointer-events:none; }
     .hidden{ opacity:0; visibility:hidden; }
     .shown{ opacity:1; visibility:visible; }
-
-    .divider-DE-rows2to4{ display:none; }
 
     .controls{
       width: 100%;
@@ -368,55 +368,32 @@
 <body>
   <div class="stage">
     <div class="board" id="board">
-
-      <div id="grid" class="grid" aria-label="8×8 Raster"></div>
-
-      <!-- Boxboden (clippt alles im Inneren) -->
       <div class="floor" aria-hidden="true">
         <div class="floorOverlay" id="floorOverlay" aria-hidden="true"></div>
-
-        <!-- =========================================================
-             SPEICHER: Quellen für Random (unsichtbar)
-             ========================================================= -->
-        <div class="view hidden" id="storeLayer" aria-hidden="true">
-          <div class="slot" data-slot="S1"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="S2"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="S3"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="S4"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="T1"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="T2"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="T3"><div class="num"><span></span></div></div>
-          <div class="slot" data-slot="T4"><div class="num"><span></span></div></div>
-
-          <!-- W3-Zahlen (4 Stück) -->
-          <div class="slot" data-w3="U1"><div class="num"><span></span></div></div>
-          <div class="slot" data-w3="U2"><div class="num"><span></span></div></div>
-          <div class="slot" data-w3="U3"><div class="num"><span></span></div></div>
-          <div class="slot" data-w3="U4"><div class="num"><span></span></div></div>
-        </div>
-
-        <!-- =========================================================
-             FINAL – W3 FINAL in Q2 (sichtbar)  (JETZT IM FLOOR!)
-             ========================================================= -->
-        <div class="view shown" id="finalView" aria-label="FINAL (W3 in Q2)">
-          <!-- Shadow-Pad (3×3) unter dem Würfel: Schatten links+oben -->
-          <div class="finalShadowPad finalShadow-left finalShadow-top" id="w3Shadow" aria-hidden="true"></div>
-
-          <!-- Würfelfläche -->
-          <div class="cubeFinal" id="w3Cube" aria-label="W3 Final Fläche"></div>
-
-          <!-- Slots: 5G,6G,7E,7F (innerhalb floor-Koordinaten) -->
-          <div class="slot w3-5g read-east"  data-final-w3="U1" aria-label="W3 5G"><div class="num"><span></span></div></div>
-          <div class="slot w3-6g read-east"  data-final-w3="U2" aria-label="W3 6G"><div class="num"><span></span></div></div>
-          <div class="slot w3-7e read-south" data-final-w3="U3" aria-label="W3 7E"><div class="num"><span></span></div></div>
-          <div class="slot w3-7f read-south" data-final-w3="U4" aria-label="W3 7F"><div class="num"><span></span></div></div>
-        </div>
       </div>
 
-      <!-- Kugel bleibt über allem -->
       <div class="ball" aria-label="Kugel"></div>
+      <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div class="divider-DE-rows2to4" aria-hidden="true"></div>
+      <!-- SPEICHER: Random (unsichtbar) -->
+      <div class="view hidden" id="storeLayer" aria-hidden="true">
+        <!-- W3-Zahlen (4 Stück) -->
+        <div class="slot" data-w3="U1"><div class="num"><span></span></div></div>
+        <div class="slot" data-w3="U2"><div class="num"><span></span></div></div>
+        <div class="slot" data-w3="U3"><div class="num"><span></span></div></div>
+        <div class="slot" data-w3="U4"><div class="num"><span></span></div></div>
+      </div>
+
+      <!-- FINAL – W3 FINAL in Q2 -->
+      <div class="view shown" id="finalView" aria-label="FINAL (W3 in Q2)">
+        <div class="cubeFinal" id="w3Cube" aria-label="W3 Final Fläche"></div>
+
+        <!-- Slots: 5G,6G,7E,7F -->
+        <div class="slot w3-5g read-east"  data-final-w3="U1"><div class="num"><span></span></div></div>
+        <div class="slot w3-6g read-east"  data-final-w3="U2"><div class="num"><span></span></div></div>
+        <div class="slot w3-7e read-south" data-final-w3="U3"><div class="num"><span></span></div></div>
+        <div class="slot w3-7f read-south" data-final-w3="U4"><div class="num"><span></span></div></div>
+      </div>
     </div>
 
     <div class="controls">
@@ -428,24 +405,19 @@
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
+    const floorOverlay = document.getElementById("floorOverlay");
 
     const w3Cube = document.getElementById("w3Cube");
-    const w3Shadow = document.getElementById("w3Shadow");
 
-    // === Speicher (unsichtbar) ===
+    // Speicher (unsichtbar) für W3
     const storeSlots = Array.from(document.querySelectorAll("#storeLayer .slot"));
-    const storeSpanBySlot = new Map(
-      storeSlots
-        .filter(s => s.dataset.slot)
-        .map(s => [s.dataset.slot, s.querySelector(".num > span")])
-    );
     const storeSpanByW3 = new Map(
       storeSlots
         .filter(s => s.dataset.w3)
         .map(s => [s.dataset.w3, s.querySelector(".num > span")])
     );
 
-    // === Final W3 sichtbare Slots ===
+    // Final W3 sichtbare Slots
     const w3FinalSlots = Array.from(document.querySelectorAll("[data-final-w3]"));
     const w3FinalSpanByKey = new Map(
       w3FinalSlots.map(s => [s.dataset.finalW3, s.querySelector(".num > span")])
@@ -511,47 +483,51 @@
       return pool.slice(0, count);
     }
 
-    function clearPops(){
-      w3FinalSlots.forEach(s => s.classList.remove("pop"));
+    // ============ SCHATTEN-EBENE (nur Boxboden) ============
+    let w3FloorShadowEl = null;
+
+    function ensureW3FloorShadow(){
+      if (w3FloorShadowEl) return w3FloorShadowEl;
+      const el = document.createElement("div");
+      // Für W3 final Q2: innenliegende Kanten = links + oben
+      el.className = "floorShadow shadow-left shadow-top";
+      floorOverlay.appendChild(el);
+      w3FloorShadowEl = el;
+      return el;
     }
 
-    // ========= LAYOUT: W3 FINAL in Q2 =========
-    // WICHTIG: finalView liegt IM floor.
-    // floor startet bei (1*step, 1*step) im Board,
-    // daher sind alle Koordinaten innerhalb floor um 1*step kleiner.
+    // ============ LAYOUT: W3 FINAL in Q2 ============
     function layoutW3Final_Q2(){
-      // Board-Q2 Start wäre: 4*step / 4*step.
-      // Innerhalb floor: 3*step / 3*step.
-      const left = "calc(3 * var(--step))";
-      const top  = "calc(3 * var(--step))";
+      // Board-Koordinaten: Q2 Start = (row5,colE) = (4*step,4*step)
+      const cubeLeftStep = 4;
+      const cubeTopStep  = 4;
 
-      // ShadowPad genau unter Würfel (3×3)
-      w3Shadow.style.left = left;
-      w3Shadow.style.top  = top;
+      // Würfel (Board-Koordinatensystem)
+      w3Cube.style.left = `calc(${cubeLeftStep} * var(--step))`;
+      w3Cube.style.top  = `calc(${cubeTopStep} * var(--step))`;
 
-      // Würfel exakt gleich
-      w3Cube.style.left = left;
-      w3Cube.style.top  = top;
+      // Schatten (im floorOverlay, also RELATIV ZUM FLOOR)
+      // floor selbst startet bei (1*step,1*step) im Board.
+      // => relative Position = (cubeStep - 1)
+      const shadow = ensureW3FloorShadow();
+      shadow.style.left = `calc(${cubeLeftStep - 1} * var(--step))`;
+      shadow.style.top  = `calc(${cubeTopStep - 1} * var(--step))`;
 
-      // Slots innerhalb floor: ebenfalls -1*step gegenüber Board
-      // Board: 5G (6*step,4*step) => floor: (5*step,3*step)
-      document.querySelector(".w3-5g").style.left = "calc(5 * var(--step))";
-      document.querySelector(".w3-5g").style.top  = "calc(3 * var(--step))";
+      // Slots: 5G,6G,7E,7F (Board-Koordinaten)
+      document.querySelector(".w3-5g").style.left = "calc(6 * var(--step))";
+      document.querySelector(".w3-5g").style.top  = "calc(4 * var(--step))";
 
-      // Board: 6G (6*step,5*step) => floor: (5*step,4*step)
-      document.querySelector(".w3-6g").style.left = "calc(5 * var(--step))";
-      document.querySelector(".w3-6g").style.top  = "calc(4 * var(--step))";
+      document.querySelector(".w3-6g").style.left = "calc(6 * var(--step))";
+      document.querySelector(".w3-6g").style.top  = "calc(5 * var(--step))";
 
-      // Board: 7E (4*step,6*step) => floor: (3*step,5*step)
-      document.querySelector(".w3-7e").style.left = "calc(3 * var(--step))";
-      document.querySelector(".w3-7e").style.top  = "calc(5 * var(--step))";
+      document.querySelector(".w3-7e").style.left = "calc(4 * var(--step))";
+      document.querySelector(".w3-7e").style.top  = "calc(6 * var(--step))";
 
-      // Board: 7F (5*step,6*step) => floor: (4*step,5*step)
-      document.querySelector(".w3-7f").style.left = "calc(4 * var(--step))";
-      document.querySelector(".w3-7f").style.top  = "calc(5 * var(--step))";
+      document.querySelector(".w3-7f").style.left = "calc(5 * var(--step))";
+      document.querySelector(".w3-7f").style.top  = "calc(6 * var(--step))";
     }
 
-    // ========= Zahlen setzen =========
+    // ============ Zahlen setzen ============
     function syncFinalW3FromStore(){
       ["U1","U2","U3","U4"].forEach(k => {
         const src = storeSpanByW3.get(k);
@@ -562,31 +538,23 @@
       });
     }
 
-    function setRandomNumbers(withPop=false){
-      // 12 einzigartige Zahlen 1..12
-      const nums = getUniqueRandomNumbers(12, 1, 12);
+    function clearPops(){
+      w3FinalSlots.forEach(s => s.classList.remove("pop"));
+    }
 
-      // 8 Stück für W2/W1 (Speicher: S1..S4, T1..T4)
-      const kipKeys = ["S1","S2","S3","S4","T1","T2","T3","T4"];
-      kipKeys.forEach((k, idx) => {
-        const span = storeSpanBySlot.get(k);
+    function setRandomNumbers(withPop=false){
+      // 4 einzigartige Zahlen 1..12 (nur für W3 in diesem Stand)
+      const nums = getUniqueRandomNumbers(4, 1, 12);
+      const w3Keys = ["U1","U2","U3","U4"];
+
+      w3Keys.forEach((k, idx) => {
+        const span = storeSpanByW3.get(k);
         if(!span) return;
         const n = nums[idx];
         span.textContent = String(n);
         setDot(span, n);
       });
 
-      // 4 Stück für W3 (Speicher: U1..U4)
-      const w3Keys = ["U1","U2","U3","U4"];
-      w3Keys.forEach((k, idx) => {
-        const span = storeSpanByW3.get(k);
-        if(!span) return;
-        const n = nums[8 + idx];
-        span.textContent = String(n);
-        setDot(span, n);
-      });
-
-      // Final W3 anzeigen
       syncFinalW3FromStore();
 
       if (withPop){
@@ -608,6 +576,7 @@
       btn.disabled = true;
 
       setRandomNumbers(true);
+
       setTimeout(() => {
         btn.disabled = false;
         busy = false;
@@ -622,7 +591,6 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-
       layoutW3Final_Q2();
       setRandomNumbers(false);
     });
