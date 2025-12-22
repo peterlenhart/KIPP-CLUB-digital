@@ -198,8 +198,7 @@
     }
 
     /* =========================================================
-       W2 FINAL (sichtbar): Q1, Slots: 2E 2F 3G 4G
-       (für später behalten – derzeit standardmäßig ausgeblendet)
+       W2 FINAL (gespeichert, aktuell ausgeblendet)
        ========================================================= */
     .w2FinalLayer{
       position:absolute;
@@ -207,13 +206,12 @@
       z-index: 7;
       pointer-events:none;
 
-      /* 👉 für diese Phase ausblenden (W3 FINAL steht im Fokus) */
       opacity: 0;
       visibility: hidden;
     }
 
     /* =========================================================
-       W3 FINAL (sichtbar): Q2, Slots: 5G 6G 7E 7F
+       W3 FINAL (sichtbar)
        ========================================================= */
     .w3FinalLayer{
       position:absolute;
@@ -230,14 +228,12 @@
       background: transparent;
       box-sizing: border-box;
 
-      box-shadow:
-        var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
-        calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
-
-      filter: blur(1px);
+      /* ❌ SE-Schatten (Osten/Süden) komplett raus, damit am Rahmen nix mehr landet */
+      box-shadow: none;
+      filter: none;
     }
 
-    /* ✅ Neu: Schatten nach WEST + NORD (außen links/oben) – Werte aus bestehenden Schatten abgeleitet */
+    /* ✅ Schatten nach WEST + NORD (außen links/oben) – Werte aus bestehenden Schatten abgeleitet */
     .cubeShadow::before,
     .cubeShadow::after{
       content:"";
@@ -533,22 +529,17 @@
 
       <!-- =========================
            W3 FINAL (sichtbar) in Q2
-           Slots: 5G, 6G, 7E, 7F
-           - 5G/6G: vom OSTEN lesbar
-           - 7E/7F: vom SÜDEN lesbar
            ========================= -->
       <div class="w3FinalLayer" id="w3FinalLayer" aria-label="W3 Final (Q2)">
         <div class="cubeShadow w3final" aria-hidden="true"></div>
         <div class="cubeFinal" aria-label="W3 Final Fläche"></div>
 
-        <!-- Mapping: W3 Final nutzt U1..U4 (die 4 übrigen Random-Zahlen) -->
         <div class="slot w3f-5g read-east"  data-w3final="U1" aria-label="W3 Final 5G"><div class="num"><span></span></div></div>
         <div class="slot w3f-6g read-east"  data-w3final="U2" aria-label="W3 Final 6G"><div class="num"><span></span></div></div>
         <div class="slot w3f-7e read-south" data-w3final="U3" aria-label="W3 Final 7E"><div class="num"><span></span></div></div>
         <div class="slot w3f-7f read-south" data-w3final="U4" aria-label="W3 Final 7F"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Divider bleibt im Code, ist hier aber unsichtbar -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
@@ -562,15 +553,12 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
 
-    // Slots in W2KIP/W1KIP (unsichtbar) => Quelle
     const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // Slots in W2 Final => Anzeige (gespeichert, aktuell ausgeblendet)
     const w2FinalSlotEls = Array.from(document.querySelectorAll(".w2FinalLayer .slot"));
     const w2FinalSpanEls = new Map(w2FinalSlotEls.map(s => [s.dataset.final, s.querySelector(".num > span")]));
 
-    // Slots in W3 Final => Anzeige (sichtbar)
     const w3FinalSlotEls = Array.from(document.querySelectorAll(".w3FinalLayer .slot"));
     const w3FinalSpanEls = new Map(w3FinalSlotEls.map(s => [s.dataset.w3final, s.querySelector(".num > span")]));
 
@@ -645,7 +633,6 @@
     }
 
     function syncW2FinalFromKip(){
-      // W2 Final zeigt S1..S4 exakt 1:1
       ["S1","S2","S3","S4"].forEach(k => {
         const src = slotSpanEls.get(k);
         const dst = w2FinalSpanEls.get(k);
@@ -656,7 +643,6 @@
     }
 
     function syncW3FinalFromStore(store){
-      // store = Map(U1..U4 -> {text, dot})
       ["U1","U2","U3","U4"].forEach(k => {
         const dst = w3FinalSpanEls.get(k);
         const v = store.get(k);
@@ -667,7 +653,6 @@
     }
 
     function setRandomNumbers(withPop=false){
-      // 12 eindeutige Zahlen: 8 für W2/W1 (S/T), 4 für W3 (U)
       const nums = getUniqueRandomNumbers(12, 1, 12);
 
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
@@ -679,25 +664,21 @@
         setDot(span, n);
       });
 
-      // W3-Store (U1..U4) – bleibt fix bis nächstes Mischen
       const w3Store = new Map();
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
         w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
       });
 
-      // Final-Ansichten aktualisieren
       syncW2FinalFromKip();
       syncW3FinalFromStore(w3Store);
 
       if (withPop){
-        // Pop auf sichtbaren Layern
         for (const el of w3FinalSlotEls){
           el.classList.remove("pop");
           void el.offsetWidth;
           el.classList.add("pop");
         }
-        // (W2 final ist aktuell ausgeblendet – Pop kann trotzdem drin bleiben)
         for (const el of w2FinalSlotEls){
           el.classList.remove("pop");
           void el.offsetWidth;
