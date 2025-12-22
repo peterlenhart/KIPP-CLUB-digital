@@ -36,14 +36,6 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Schatten */
-      --shadow-soft: rgba(0,0,0,0.36);
-      --shadow-soft2: rgba(0,0,0,0.22);
-
-      /* (bleibt als Alt-Settings drin, wird aber für den Cube-Schatten nicht mehr gebraucht) */
-      --shadow-w: 22px;
-      --shadow-blur: 0.9px;
-
       /* Cube-Außenschatten (Richtung Kugel/Mitte) */
       --cubeShadow1: rgba(0,0,0,0.34);
       --cubeShadow2: rgba(0,0,0,0.18);
@@ -161,12 +153,12 @@
         inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
-    /* WICHTIG: Overlay MUSS ÜBER dem Floor-Background liegen, aber bleibt im Floor-Clip */
+    /* Overlay liegt IM Floor und wird vom Floor geclippt */
     .floorOverlay{
       position:absolute;
       inset:0;
       pointer-events:none;
-      z-index: 3; /* FIX: war 0 (damit lag der Schatten „hinter“ dem Boden) */
+      z-index: 3;
     }
 
     .ball{
@@ -186,25 +178,24 @@
       pointer-events: none;
     }
 
-    /* ===== Cube-Außenschatten AUF DEM BODEN (nicht am Außenrahmen) =====
-       Idee: Ein unsichtbares 3×3-„Schatten-Quadrat“ liegt im Floor und wirft
-       seinen Shadow Richtung Kugel/Mitte (Q2: links + oben). Der Floor clippt alles,
-       daher NIE Schatten am Außenrahmen. */
+    /* ===== PSEUDO-QUADRAT (Schatten-Träger) =====
+       FIX: Größe + Position so, dass es exakt der sichtbaren Würfel-Außenkante entspricht.
+       Da der Cube-Rahmen per box-shadow (+--cube-border-w) nach außen wächst,
+       muss das Pseudoquadrat ebenfalls um 2*border-w größer sein und um -border-w
+       verschoben werden. Sonst wirkt es „zu klein“ und nicht auf 5E–7G. */
     .floorShadow{
       position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));   /* exakt 3×3 Raster */
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));  /* exakt 3×3 Raster */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap) + (2 * var(--cube-border-w)));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap) + (2 * var(--cube-border-w)));
       pointer-events:none;
       z-index: 3;
     }
-
-    /* Das tatsächliche „Schatten-Shape“: 1:1 Würfelfläche, aber unsichtbar */
     .floorShadow::before{
       content:"";
       position:absolute;
       inset:0;
-      border-radius: clamp(10px, 2.2vmin, 18px); /* muss zur cubeFinal passen */
-      background: rgba(0,0,0,0);                 /* unsichtbar */
+      border-radius: clamp(10px, 2.2vmin, 18px);
+      background: rgba(0,0,0,0);
       box-shadow:
         var(--cubeShadowX) var(--cubeShadowY) var(--cubeShadowBlur1) var(--cubeShadow1),
         calc(var(--cubeShadowX) * 0.55) calc(var(--cubeShadowY) * 0.55) var(--cubeShadowBlur2) var(--cubeShadow2);
@@ -213,8 +204,8 @@
     /* Würfelfläche FINAL – layout-genau 3×3 (Border als box-shadow, NICHT als border) */
     .cubeFinal{
       position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));   /* exakt 3×3 Raster */
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));  /* exakt 3×3 Raster */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
 
       background:
@@ -232,7 +223,6 @@
 
       border-radius: clamp(10px, 2.2vmin, 18px);
 
-      /* KEIN Schatten hier. Nur Rahmen & leichter Innenglanz. */
       box-shadow:
         0 0 0 var(--cube-border-w) var(--cube-border),
         0 0 0 1px rgba(255,255,255,0.10) inset;
@@ -448,7 +438,7 @@
     function ensureW3FloorShadow(){
       if (w3FloorShadowEl) return w3FloorShadowEl;
       const el = document.createElement("div");
-      el.className = "floorShadow"; // FIX: keine Gradient-Klassen mehr, Schatten ist jetzt „echter“ Außenschatten
+      el.className = "floorShadow";
       floorOverlay.appendChild(el);
       w3FloorShadowEl = el;
       return el;
@@ -459,15 +449,16 @@
       const cubeStepLeft = 4;
       const cubeStepTop  = 4;
 
-      // Würfel exakt auf Q2
+      // Würfel exakt auf Q2 (5E–7G)
       w3Cube.style.left = `calc(${cubeStepLeft} * var(--step))`;
-      w3Cube.style.top  = `calc(${cubeStepTop} * var(--step))`;
+      w3Cube.style.top  = `calc(${cubeStepTop}  * var(--step))`;
 
-      // Schatten exakt unter Q2, aber im floor-Koordinatensystem:
-      // floor startet bei (1*step,1*step) => relative = (cubeStep - 1)
+      // FIX: Pseudo-Quadrat muss die „sichtbare“ Cube-Außenkante treffen.
+      // Cube-Rahmen wächst per box-shadow um --cube-border-w nach außen,
+      // daher: gleicher Raster-Start (5E), aber zusätzlich um -border-w verschieben.
       const shadow = ensureW3FloorShadow();
-      shadow.style.left = `calc(${cubeStepLeft - 1} * var(--step))`;
-      shadow.style.top  = `calc(${cubeStepTop  - 1} * var(--step))`;
+      shadow.style.left = `calc(${cubeStepLeft - 1} * var(--step) - var(--cube-border-w))`;
+      shadow.style.top  = `calc(${cubeStepTop  - 1} * var(--step) - var(--cube-border-w))`;
 
       // Slots: 5G,6G,7E,7F
       document.querySelector(".w3-5g").style.left = "calc(6 * var(--step))";
