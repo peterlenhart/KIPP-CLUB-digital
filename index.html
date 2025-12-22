@@ -17,6 +17,7 @@
 
       --floor: #7a4a34;
       --cube-border: #7a4a34;
+      --cube-border-w: 4px;
 
       --cube-wood-base: #d7c2a4;
       --cube-wood-deep: #c9b08f;
@@ -35,12 +36,12 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Schattenstärke (gemeinsam) */
+      /* Schatten */
       --shadow-soft: rgba(0,0,0,0.36);
       --shadow-soft2: rgba(0,0,0,0.22);
 
-      --shadow-w: 22px;      /* „Breite“ der Schattenkante */
-      --shadow-blur: 0.9px;  /* weiche Kante */
+      --shadow-w: 22px;
+      --shadow-blur: 0.9px;
     }
 
     html, body { height: 100%; }
@@ -128,10 +129,7 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    /* =========================
-       BOXBODEN (Innenfläche)
-       wichtig: overflow hidden → Schatten darf NIE auf Rahmen außen liegen
-       ========================= */
+    /* Boxboden (clippt Schatten → NIE am Außenrahmen) */
     .floor{
       position:absolute;
       left: var(--step);
@@ -151,20 +149,14 @@
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
-        inset 0 0 0 1px rgba(0,0,0,0.12),
-        inset -26px 0 40px rgba(0,0,0,0.26),
-        inset  26px 0 40px rgba(0,0,0,0.26),
-        inset  0 -26px 40px rgba(0,0,0,0.30),
-        inset  0  26px 40px rgba(0,0,0,0.30);
+        inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
-    /* Schatten-/Overlay-Layer IM Boden (clipped) */
     .floorOverlay{
       position:absolute;
       inset:0;
       pointer-events:none;
       z-index: 0;
-      overflow: visible; /* darf über seine Box gehen, aber floor clippt */
     }
 
     .ball{
@@ -184,21 +176,13 @@
       pointer-events: none;
     }
 
-    /* =========================================================
-       SCHATTEN ALS EIGENE EBENE AM BOXBODEN (NIE IM WÜRFEL)
-       =========================================================
-       - Schattenelement sitzt unter der Würfelfläche, im floorOverlay.
-       - Schatten wird außerhalb der Würfelfläche gezeichnet:
-         links (zur Mitte hin) und oben (zur Mitte hin) bei Q2.
-       - floor clippt alles → nie Schatten am Außenrahmen.
-    */
+    /* Schattenebene NUR am Boxboden */
     .floorShadow{
       position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));   /* exakt 3×3 Raster */
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));  /* exakt 3×3 Raster */
       pointer-events:none;
-      z-index: 1; /* im floorOverlay */
-      overflow: visible;
+      z-index: 1;
     }
     .floorShadow::before,
     .floorShadow::after{
@@ -207,7 +191,7 @@
       pointer-events:none;
     }
 
-    /* Schatten links (auf Boden, AUßERHALB der Würfelfläche) */
+    /* Q2: innenliegende Kanten (zur Kugel): links + oben */
     .shadow-left::before{
       left: calc(-1 * var(--shadow-w));
       top: 0;
@@ -216,7 +200,6 @@
       background: linear-gradient(90deg, var(--shadow-soft), rgba(0,0,0,0.00));
       filter: blur(var(--shadow-blur));
     }
-    /* Schatten oben (auf Boden, AUßERHALB der Würfelfläche) */
     .shadow-top::after{
       left: 0;
       top: calc(-1 * var(--shadow-w));
@@ -226,13 +209,11 @@
       filter: blur(var(--shadow-blur));
     }
 
-    /* =========================================================
-       FINAL – Würfelfläche (OHNE Schatten-Pseudos!)
-       ========================================================= */
+    /* Würfelfläche FINAL – layout-genau 3×3 (Border als box-shadow, NICHT als border) */
     .cubeFinal{
       position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));   /* exakt 3×3 Raster */
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));  /* exakt 3×3 Raster */
       box-sizing: border-box;
 
       background:
@@ -248,18 +229,16 @@
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
-      border: 4px solid var(--cube-border);
       border-radius: clamp(10px, 2.2vmin, 18px);
 
-      /* nur leichter Innenglanz – aber KEIN Schatten! */
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset;
+      /* KEIN Schatten hier. Nur Rahmen & leichter Innenglanz. */
+      box-shadow:
+        0 0 0 var(--cube-border-w) var(--cube-border),
+        0 0 0 1px rgba(255,255,255,0.10) inset;
 
       z-index: 6;
     }
 
-    /* =========================================================
-       SLOTS / NUM
-       ========================================================= */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -272,7 +251,6 @@
 
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
-
       z-index: 7;
 
       box-shadow:
@@ -302,7 +280,6 @@
       position: relative;
     }
 
-    /* Punkt für 6/9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
@@ -316,13 +293,9 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
-    /* Leserichtungen */
     .read-south { --num-rot: 0deg; }
     .read-east  { --num-rot: -90deg; }
-    .read-west  { --num-rot: 90deg; }
-    .read-north { --num-rot: 180deg; }
 
-    /* Views */
     .view{ position:absolute; inset:0; pointer-events:none; }
     .hidden{ opacity:0; visibility:hidden; }
     .shown{ opacity:1; visibility:visible; }
@@ -355,13 +328,6 @@
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
-
-    @keyframes popIn {
-      0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
-      60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
-      100% { transform: rotate(var(--num-rot, 0deg)) scale(1.00); filter: none; }
-    }
-    .slot.pop .num > span{ animation: popIn 220ms ease-out; }
   </style>
 </head>
 
@@ -375,20 +341,18 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- SPEICHER: Random (unsichtbar) -->
+      <!-- Speicher W3 -->
       <div class="view hidden" id="storeLayer" aria-hidden="true">
-        <!-- W3-Zahlen (4 Stück) -->
         <div class="slot" data-w3="U1"><div class="num"><span></span></div></div>
         <div class="slot" data-w3="U2"><div class="num"><span></span></div></div>
         <div class="slot" data-w3="U3"><div class="num"><span></span></div></div>
         <div class="slot" data-w3="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- FINAL – W3 FINAL in Q2 -->
+      <!-- FINAL W3 in Q2 -->
       <div class="view shown" id="finalView" aria-label="FINAL (W3 in Q2)">
         <div class="cubeFinal" id="w3Cube" aria-label="W3 Final Fläche"></div>
 
-        <!-- Slots: 5G,6G,7E,7F -->
         <div class="slot w3-5g read-east"  data-final-w3="U1"><div class="num"><span></span></div></div>
         <div class="slot w3-6g read-east"  data-final-w3="U2"><div class="num"><span></span></div></div>
         <div class="slot w3-7e read-south" data-final-w3="U3"><div class="num"><span></span></div></div>
@@ -406,18 +370,13 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
     const floorOverlay = document.getElementById("floorOverlay");
-
     const w3Cube = document.getElementById("w3Cube");
 
-    // Speicher (unsichtbar) für W3
     const storeSlots = Array.from(document.querySelectorAll("#storeLayer .slot"));
     const storeSpanByW3 = new Map(
-      storeSlots
-        .filter(s => s.dataset.w3)
-        .map(s => [s.dataset.w3, s.querySelector(".num > span")])
+      storeSlots.filter(s => s.dataset.w3).map(s => [s.dataset.w3, s.querySelector(".num > span")])
     );
 
-    // Final W3 sichtbare Slots
     const w3FinalSlots = Array.from(document.querySelectorAll("[data-final-w3]"));
     const w3FinalSpanByKey = new Map(
       w3FinalSlots.map(s => [s.dataset.finalW3, s.querySelector(".num > span")])
@@ -483,37 +442,33 @@
       return pool.slice(0, count);
     }
 
-    // ============ SCHATTEN-EBENE (nur Boxboden) ============
+    // Schatten-Asset für W3 final (Q2) am Boxboden
     let w3FloorShadowEl = null;
-
     function ensureW3FloorShadow(){
       if (w3FloorShadowEl) return w3FloorShadowEl;
       const el = document.createElement("div");
-      // Für W3 final Q2: innenliegende Kanten = links + oben
-      el.className = "floorShadow shadow-left shadow-top";
+      el.className = "floorShadow shadow-left shadow-top"; // Q2: links+oben innen
       floorOverlay.appendChild(el);
       w3FloorShadowEl = el;
       return el;
     }
 
-    // ============ LAYOUT: W3 FINAL in Q2 ============
     function layoutW3Final_Q2(){
-      // Board-Koordinaten: Q2 Start = (row5,colE) = (4*step,4*step)
-      const cubeLeftStep = 4;
-      const cubeTopStep  = 4;
+      // Q2 (3×3) startet bei 5E => (4*step, 4*step) im Board
+      const cubeStepLeft = 4;
+      const cubeStepTop  = 4;
 
-      // Würfel (Board-Koordinatensystem)
-      w3Cube.style.left = `calc(${cubeLeftStep} * var(--step))`;
-      w3Cube.style.top  = `calc(${cubeTopStep} * var(--step))`;
+      // Würfel exakt auf Q2
+      w3Cube.style.left = `calc(${cubeStepLeft} * var(--step))`;
+      w3Cube.style.top  = `calc(${cubeStepTop} * var(--step))`;
 
-      // Schatten (im floorOverlay, also RELATIV ZUM FLOOR)
-      // floor selbst startet bei (1*step,1*step) im Board.
-      // => relative Position = (cubeStep - 1)
+      // Schatten exakt unter Q2, aber im floor-Koordinatensystem:
+      // floor startet bei (1*step,1*step) => relative = (cubeStep - 1)
       const shadow = ensureW3FloorShadow();
-      shadow.style.left = `calc(${cubeLeftStep - 1} * var(--step))`;
-      shadow.style.top  = `calc(${cubeTopStep - 1} * var(--step))`;
+      shadow.style.left = `calc(${cubeStepLeft - 1} * var(--step))`;
+      shadow.style.top  = `calc(${cubeStepTop  - 1} * var(--step))`;
 
-      // Slots: 5G,6G,7E,7F (Board-Koordinaten)
+      // Slots: 5G,6G,7E,7F
       document.querySelector(".w3-5g").style.left = "calc(6 * var(--step))";
       document.querySelector(".w3-5g").style.top  = "calc(4 * var(--step))";
 
@@ -527,7 +482,6 @@
       document.querySelector(".w3-7f").style.top  = "calc(6 * var(--step))";
     }
 
-    // ============ Zahlen setzen ============
     function syncFinalW3FromStore(){
       ["U1","U2","U3","U4"].forEach(k => {
         const src = storeSpanByW3.get(k);
@@ -538,15 +492,9 @@
       });
     }
 
-    function clearPops(){
-      w3FinalSlots.forEach(s => s.classList.remove("pop"));
-    }
-
-    function setRandomNumbers(withPop=false){
-      // 4 einzigartige Zahlen 1..12 (nur für W3 in diesem Stand)
+    function setRandomNumbers(){
       const nums = getUniqueRandomNumbers(4, 1, 12);
       const w3Keys = ["U1","U2","U3","U4"];
-
       w3Keys.forEach((k, idx) => {
         const span = storeSpanByW3.get(k);
         if(!span) return;
@@ -554,36 +502,10 @@
         span.textContent = String(n);
         setDot(span, n);
       });
-
       syncFinalW3FromStore();
-
-      if (withPop){
-        for (const el of w3FinalSlots){
-          el.classList.remove("pop");
-          void el.offsetWidth;
-          el.classList.add("pop");
-        }
-        setTimeout(clearPops, 260);
-      } else {
-        clearPops();
-      }
     }
 
-    let busy = false;
-    async function runShuffle(){
-      if (busy) return;
-      busy = true;
-      btn.disabled = true;
-
-      setRandomNumbers(true);
-
-      setTimeout(() => {
-        btn.disabled = false;
-        busy = false;
-      }, 280);
-    }
-
-    btn.addEventListener("click", runShuffle);
+    btn.addEventListener("click", () => setRandomNumbers());
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -592,7 +514,7 @@
 
       buildGridOnce();
       layoutW3Final_Q2();
-      setRandomNumbers(false);
+      setRandomNumbers();
     });
 
     window.addEventListener("resize", () => {
