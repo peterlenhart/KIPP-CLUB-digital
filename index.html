@@ -35,12 +35,7 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* =========================================================
-         ✅ Rotations-Schalter (damit Vorzeichen nie wieder Chaos macht)
-         -------------------------------------------------------------
-         1  = Standard (so wie CSS es "fühlt" auf dem Screen)
-        -1  = Vorzeichen umdrehen (wenn West/Ost vertauscht wirkt)
-         ========================================================= */
+      /* Vorzeichen-Schalter, falls jemals nötig */
       --rotSign: 1;
     }
 
@@ -97,21 +92,17 @@
 
       overflow: visible;
 
-      /* Zellmaß als Variable */
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      /* ✅ Achse: Grenze zwischen Spalte D und E (Mitte im Gap) */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* ✅ W2 Basis (links) Fix in Q0 */
       --cube-col: 1;
       --cube-row: 1;
 
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
-      /* Cast-Shadow Offset */
       --cast-x: 18px;
       --cast-y: 18px;
 
@@ -159,7 +150,6 @@
       z-index: 2;
       pointer-events: none;
 
-      /* ✅ Innen-Schatten im Box-Boden */
       box-shadow:
         inset 14px 14px 26px rgba(255,255,255,0.14),
         inset -18px -18px 34px rgba(0,0,0,0.22),
@@ -187,13 +177,10 @@
       pointer-events: none;
     }
 
-    /* =========================================================
-       ✅ W2 KIP + W1 KIP als Gruppe (wird 50% in X gestaucht)
-       ========================================================= */
     .pairLayer{
       position:absolute;
       inset:0;
-      z-index: 6; /* unter Divider, über Boden/Grid */
+      z-index: 6;
       pointer-events:none;
 
       transform-origin: var(--axis-x) 50%;
@@ -215,12 +202,9 @@
 
       filter: blur(1px);
     }
-    /* W2 Basis/KIP = links */
     .cubeShadow.w2{ left: var(--cube-x); top: var(--cube-y); }
-    /* W1 Basis/KIP = rechts */
     .cubeShadow.w1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* W2 (Basis links) */
     .cube{
       position:absolute;
       left: var(--cube-x);
@@ -252,7 +236,6 @@
       z-index: 6;
     }
 
-    /* W1 (Basis rechts) */
     .cube2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -284,7 +267,6 @@
       z-index: 6;
     }
 
-    /* ===== Slots ===== */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -327,8 +309,8 @@
       position: relative;
     }
 
-    /* ✅ Punkt für die 9 */
-    .slot .num > span.n9::after{
+    /* ✅ Punkt für 6 und 9 (immer unten rechts relativ zur gedrehten Zahl) */
+    .slot .num > span.dot::after{
       content:"";
       position:absolute;
       width: clamp(3px, 0.55vmin, 6px);
@@ -340,34 +322,23 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
-    /* =========================================================
-       ✅ EINHEITLICHE LESEREGELN (SÜDEN / WESTEN / OSTEN / NORDEN)
-       ---------------------------------------------------------
-       Süden  = 0°
-       Westen = +90° (Uhrzeigersinn)
-       Osten  = -90° (gegen Uhrzeigersinn)
-       Norden = 180°
-       (Falls vertauscht wirkt: --rotSign auf -1)
-       ========================================================= */
+    /* Leserichtungen */
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
     .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ===== Slot-Positionen (fix, wie bisher im Code) ===== */
-    /* Linke Würfelfläche (W2 Basis/KIP) liegt bei --cube-x/--cube-y */
+    /* Slot-Positionen */
     .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
     .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
 
-    /* Rechte Würfelfläche (W1 Basis/KIP) liegt bei col4/row1 */
     .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
     .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ✅ Divider (bleibt NICHT skaliert!) */
     .divider-DE-rows2to4{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
@@ -375,7 +346,6 @@
       height: calc(2 * var(--step) + var(--cell));
       width: 2px;
 
-      /* DEINE Werte 그대로 */
       background: rgba(234,215,190,0.5);
       border-radius: 999px;
       filter: blur(0.1px);
@@ -431,42 +401,33 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ✅ W2KIP + W1KIP (unsichtbar im Spiel später möglich; hier sichtbar zum Prüfen) -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP)">
         <div class="cubeShadow w2" aria-hidden="true"></div>
         <div class="cubeShadow w1" aria-hidden="true"></div>
 
-        <!-- W2 Basis/KIP (links) -->
+        <!-- W2 (links) -->
         <div class="cube" aria-label="W2 Basis/KIP"></div>
 
-        <!-- W1 Basis/KIP (rechts) -->
+        <!-- W1 (rechts) -->
         <div class="cube2" aria-label="W1 Basis/KIP"></div>
 
-        <!-- =====================================================
-             Slots (8 Stück) + klare Leserichtung per Klasse:
-             - Zeile 2 (oben in der Würfelfläche): Süden lesbar
-             - W2 Kontaktkante (3D/4D): Osten lesbar
-             - W1 Kontaktkante (3E/4E): Westen lesbar
-             ===================================================== -->
+        <!-- ✅ Zeile 2: MUSS vom NORDEN lesbar sein => 180° -->
+        <div class="slot slot-2b read-north" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
+        <div class="slot slot-2c read-north" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
 
-        <!-- W2 (links): Zeile 2 => Süden lesbar -->
-        <div class="slot slot-2b read-south" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
-        <div class="slot slot-2c read-south" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
-
-        <!-- W2 (links): Kontaktkante => Osten lesbar -->
+        <!-- ✅ W2 Kontaktkante: Osten lesbar -->
         <div class="slot slot-3d read-east" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
         <div class="slot slot-4d read-east" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
 
-        <!-- W1 (rechts): Zeile 2 => Süden lesbar -->
-        <div class="slot slot2-2f read-south" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
-        <div class="slot slot2-2g read-south" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
+        <!-- ✅ Zeile 2 (W1): ebenfalls NORD lesbar -->
+        <div class="slot slot2-2f read-north" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
+        <div class="slot slot2-2g read-north" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
 
-        <!-- W1 (rechts): Kontaktkante => Westen lesbar -->
+        <!-- ✅ W1 Kontaktkante: Westen lesbar -->
         <div class="slot slot2-3e read-west" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
         <div class="slot slot2-4e read-west" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ Divider bleibt separat & oben drüber -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
@@ -535,16 +496,15 @@
       slotEls.forEach(s => s.classList.remove("pop"));
     }
 
-    function markNineDot(span, isNine){
+    function setDot(span, number){
       if(!span) return;
-      if(isNine) span.classList.add("n9");
-      else span.classList.remove("n9");
+      span.classList.remove("dot");
+      if (number === 6 || number === 9) span.classList.add("dot");
     }
 
     function getUniqueRandomNumbers(count, min, max){
       const pool = [];
       for(let i=min; i<=max; i++) pool.push(i);
-      // Fisher-Yates shuffle
       for(let i=pool.length-1; i>0; i--){
         const j = Math.floor(Math.random() * (i+1));
         [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -553,7 +513,6 @@
     }
 
     function setRandomNumbers(withPop=false){
-      // Reihenfolge der 8 Slots (fix):
       const keys = ["S1","S2","S3","S4","T1","T2","T3","T4"];
       const nums = getUniqueRandomNumbers(8, 1, 12);
 
@@ -562,7 +521,7 @@
         if(!span) return;
         const n = nums[idx];
         span.textContent = String(n);
-        markNineDot(span, n === 9);
+        setDot(span, n);
       });
 
       if (withPop){
@@ -598,8 +557,6 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-
-      // Start: gleich random belegen
       setRandomNumbers(false);
     });
 
