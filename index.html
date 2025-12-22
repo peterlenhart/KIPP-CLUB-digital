@@ -40,8 +40,17 @@
       --shadow-soft: rgba(0,0,0,0.36);
       --shadow-soft2: rgba(0,0,0,0.22);
 
+      /* (bleibt als Alt-Settings drin, wird aber für den Cube-Schatten nicht mehr gebraucht) */
       --shadow-w: 22px;
       --shadow-blur: 0.9px;
+
+      /* Cube-Außenschatten (Richtung Kugel/Mitte) */
+      --cubeShadow1: rgba(0,0,0,0.34);
+      --cubeShadow2: rgba(0,0,0,0.18);
+      --cubeShadowX: -16px;  /* Q2: nach links */
+      --cubeShadowY: -16px;  /* Q2: nach oben */
+      --cubeShadowBlur1: 26px;
+      --cubeShadowBlur2: 14px;
     }
 
     html, body { height: 100%; }
@@ -152,11 +161,12 @@
         inset 0 0 0 1px rgba(0,0,0,0.12);
     }
 
+    /* WICHTIG: Overlay MUSS ÜBER dem Floor-Background liegen, aber bleibt im Floor-Clip */
     .floorOverlay{
       position:absolute;
       inset:0;
       pointer-events:none;
-      z-index: 0;
+      z-index: 3; /* FIX: war 0 (damit lag der Schatten „hinter“ dem Boden) */
     }
 
     .ball{
@@ -176,37 +186,28 @@
       pointer-events: none;
     }
 
-    /* Schattenebene NUR am Boxboden */
+    /* ===== Cube-Außenschatten AUF DEM BODEN (nicht am Außenrahmen) =====
+       Idee: Ein unsichtbares 3×3-„Schatten-Quadrat“ liegt im Floor und wirft
+       seinen Shadow Richtung Kugel/Mitte (Q2: links + oben). Der Floor clippt alles,
+       daher NIE Schatten am Außenrahmen. */
     .floorShadow{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));   /* exakt 3×3 Raster */
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));  /* exakt 3×3 Raster */
       pointer-events:none;
-      z-index: 1;
-    }
-    .floorShadow::before,
-    .floorShadow::after{
-      content:"";
-      position:absolute;
-      pointer-events:none;
+      z-index: 3;
     }
 
-    /* Q2: innenliegende Kanten (zur Kugel): links + oben */
-    .shadow-left::before{
-      left: calc(-1 * var(--shadow-w));
-      top: 0;
-      width: var(--shadow-w);
-      height: 100%;
-      background: linear-gradient(90deg, var(--shadow-soft), rgba(0,0,0,0.00));
-      filter: blur(var(--shadow-blur));
-    }
-    .shadow-top::after{
-      left: 0;
-      top: calc(-1 * var(--shadow-w));
-      width: 100%;
-      height: var(--shadow-w);
-      background: linear-gradient(180deg, var(--shadow-soft2), rgba(0,0,0,0.00));
-      filter: blur(var(--shadow-blur));
+    /* Das tatsächliche „Schatten-Shape“: 1:1 Würfelfläche, aber unsichtbar */
+    .floorShadow::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: clamp(10px, 2.2vmin, 18px); /* muss zur cubeFinal passen */
+      background: rgba(0,0,0,0);                 /* unsichtbar */
+      box-shadow:
+        var(--cubeShadowX) var(--cubeShadowY) var(--cubeShadowBlur1) var(--cubeShadow1),
+        calc(var(--cubeShadowX) * 0.55) calc(var(--cubeShadowY) * 0.55) var(--cubeShadowBlur2) var(--cubeShadow2);
     }
 
     /* Würfelfläche FINAL – layout-genau 3×3 (Border als box-shadow, NICHT als border) */
@@ -447,7 +448,7 @@
     function ensureW3FloorShadow(){
       if (w3FloorShadowEl) return w3FloorShadowEl;
       const el = document.createElement("div");
-      el.className = "floorShadow shadow-left shadow-top"; // Q2: links+oben innen
+      el.className = "floorShadow"; // FIX: keine Gradient-Klassen mehr, Schatten ist jetzt „echter“ Außenschatten
       floorOverlay.appendChild(el);
       w3FloorShadowEl = el;
       return el;
