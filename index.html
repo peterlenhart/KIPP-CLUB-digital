@@ -309,23 +309,18 @@
       justify-content:center;
       user-select:none;
     }
-
-    /* ✅ Zusatz-Rotation: standard 0deg, nur bei .flip180 = 180deg */
     .slot .num > span{
       display:inline-block;
       font-weight: 900;
       color: #111;
       font-size: clamp(18px, 4.2vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(calc(var(--num-rot, 0deg) + var(--num-extra, 0deg)));
+      transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
       position: relative;
     }
-    .slot .num > span.flip180{
-      --num-extra: 180deg;
-    }
 
-    /* ✅ Punkt für die 9 (rechts unten) */
+    /* ✅ Punkt für die 9 */
     .slot .num > span.n9::after{
       content:"";
       position:absolute;
@@ -339,20 +334,16 @@
     }
 
     /* ===== Rotationen W1 (Q0) ===== */
-    /* 2B/2C: von oben lesbar => 180° */
     .board.q0 .slot-2b .num > span,
     .board.q0 .slot-2c .num > span { --num-rot: 180deg; }
 
-    /* 3D/4D: von rechts lesbar => 90° */
     .board.q0 .slot-3d .num > span,
     .board.q0 .slot-4d .num > span { --num-rot: 90deg; }
 
     /* ===== Rotationen W2 (Q1) ===== */
-    /* 3E/4E: von links lesbar => -90° */
     .slot2-3e .num > span,
     .slot2-4e .num > span { --num-rot: -90deg; }
 
-    /* 2F/2G: von oben lesbar => 180° */
     .slot2-2f .num > span,
     .slot2-2g .num > span { --num-rot: 180deg; }
 
@@ -362,11 +353,32 @@
     .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
     .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
 
-    /* ===== Positionen W2 (Q1): 2F,2G,3E,4E ===== */
+    /* ===== Positionen W2 ===== */
     .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
     .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
+
+    /* ✅ TRENNLINIE: zwischen Spalte D und E, nur Zeilen 2–4 */
+    .divider-DE-rows2to4{
+      position:absolute;
+      /* x: Grenze zwischen D(4) und E(5) => im Gap zentriert */
+      left: calc(4 * var(--step) - (var(--cell-gap) / 2) - 2px);
+      /* y: Zeile 2 (top) */
+      top:  calc(1 * var(--step));
+      /* Höhe: Zeilen 2–4 inkl. Gaps => 2*step + cell */
+      height: calc(2 * var(--step) + var(--cell));
+      width: 4px;
+
+      background: rgba(255,255,255,0.95);
+      border-radius: 999px;
+
+      /* 2px weiche Kante */
+      filter: blur(2px);
+
+      z-index: 9999;
+      pointer-events: none;
+    }
 
     .controls{
       width: 100%;
@@ -398,9 +410,9 @@
     }
 
     @keyframes popIn {
-      0%   { transform: rotate(calc(var(--num-rot, 0deg) + var(--num-extra, 0deg))) scale(0.70); filter: brightness(1.05); }
-      60%  { transform: rotate(calc(var(--num-rot, 0deg) + var(--num-extra, 0deg))) scale(1.10); }
-      100% { transform: rotate(calc(var(--num-rot, 0deg) + var(--num-extra, 0deg))) scale(1.00); filter: none; }
+      0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
+      60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
+      100% { transform: rotate(var(--num-rot, 0deg)) scale(1.00); filter: none; }
     }
     .slot.pop .num > span{
       animation: popIn 220ms ease-out;
@@ -438,6 +450,9 @@
       <div class="slot slot2-2g" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
       <div class="slot slot2-3e" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
       <div class="slot slot2-4e" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
+
+      <!-- ✅ Trennlinie oberste Ebene -->
+      <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
     <div class="controls">
@@ -499,7 +514,6 @@
       grid.dataset.built = "1";
     }
 
-    // FIX: W1 bleibt in Q0 (wie bisher)
     function applyQuadrant0(){
       boardEl.classList.remove("q1","q2","q3");
       boardEl.classList.add("q0");
@@ -511,13 +525,6 @@
 
     function clearPops(){
       slotEls.forEach(s => s.classList.remove("pop"));
-    }
-
-    function clearFlipClasses(){
-      // ✅ nur die Zusatzklasse entfernen, damit Neu-Setzen sauber ist
-      for (const span of slotSpanEls.values()){
-        span.classList.remove("flip180");
-      }
     }
 
     function setFixedNumbers(withPop=false){
@@ -533,20 +540,13 @@
       const t3 = slotSpanEls.get("T3"); // 3E
       const t4 = slotSpanEls.get("T4"); // 4E
 
-      clearFlipClasses();
-
-      // Zahlen setzen
       if (s1){ s1.textContent = "9";  s1.classList.add("n9"); }
       if (s2){ s2.textContent = "11"; s2.classList.remove("n9"); }
+      if (s3){ s3.textContent = "3";  s3.classList.remove("n9"); }
+      if (s4){ s4.textContent = "7";  s4.classList.remove("n9"); }
 
-      // ✅ 3 und 7 bekommen zusätzlich 180°
-      if (s3){ s3.textContent = "3";  s3.classList.remove("n9"); s3.classList.add("flip180"); }
-      if (s4){ s4.textContent = "7";  s4.classList.remove("n9"); s4.classList.add("flip180"); }
-
-      // ✅ 5 und 4 bekommen zusätzlich 180°
-      if (t4){ t4.textContent = "4";  t4.classList.remove("n9"); t4.classList.add("flip180"); } // 4E
-      if (t3){ t3.textContent = "5";  t3.classList.remove("n9"); t3.classList.add("flip180"); } // 3E
-
+      if (t4){ t4.textContent = "4";  t4.classList.remove("n9"); }
+      if (t3){ t3.textContent = "5";  t3.classList.remove("n9"); }
       if (t1){ t1.textContent = "12"; t1.classList.remove("n9"); }
       if (t2){ t2.textContent = "2";  t2.classList.remove("n9"); }
 
@@ -562,7 +562,6 @@
       }
     }
 
-    // Button: einfach nochmal "bestücken" (fixe Zahlen, optional mit Pop)
     let busy = false;
     async function runBestueckung(){
       if (busy) return;
