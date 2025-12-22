@@ -93,7 +93,7 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      /* Würfel darf NUR hier hin */
+      /* ✅ W1 FIX in Q0 */
       --cube-col: 1;
       --cube-row: 1;
 
@@ -107,40 +107,11 @@
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
-
-      /* Slot-Ausrichtung (Defaults für q0) */
-      --h-edge: 0;
-      --v-edge: 0;
-      --h-x1: 1;
-      --h-x2: 2;
-      --v-y1: 1;
-      --v-y2: 2;
     }
 
-    /* Quadranten */
+    /* Quadranten (wir bleiben jetzt fix auf q0) */
     .board.q0{
       --cast-x: 18px;  --cast-y: 18px;
-      --h-edge: 0; --v-edge: 0;
-      --h-x1: 1; --h-x2: 2;
-      --v-y1: 1; --v-y2: 2;
-    }
-    .board.q1{
-      --cast-x: -18px; --cast-y: 18px;
-      --h-edge: 0; --v-edge: 2;
-      --h-x1: 0; --h-x2: 1;
-      --v-y1: 1; --v-y2: 2;
-    }
-    .board.q2{
-      --cast-x: -18px; --cast-y: -18px;
-      --h-edge: 2; --v-edge: 2;
-      --h-x1: 0; --h-x2: 1;
-      --v-y1: 0; --v-y2: 1;
-    }
-    .board.q3{
-      --cast-x: 18px;  --cast-y: -18px;
-      --h-edge: 2; --v-edge: 0;
-      --h-x1: 1; --h-x2: 2;
-      --v-y1: 0; --v-y2: 1;
     }
 
     .grid{
@@ -239,6 +210,7 @@
       pointer-events: none;
     }
 
+    /* ✅ Würfelfläche W1 (ohne Random, fix Q0) */
     .cube{
       position:absolute;
       left: var(--cube-x);
@@ -272,6 +244,7 @@
       pointer-events: none;
     }
 
+    /* ===== Slots (Blättchen) ===== */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -295,10 +268,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* =========================
-       ✅ ZAHLEN: Drehung = "Boden" Richtung Farbfeld (nach außen)
-       Wir drehen NICHT den Slot (nur die Zahl).
-       ========================= */
+    /* ✅ ZAHLEN (Rotation bleibt drin, falls du gleich Zahlen testest) */
     .slot .num{
       position:absolute;
       inset:0;
@@ -315,46 +285,33 @@
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
-      will-change: transform;
     }
 
-    /* q0: oben & links außen */
-    .board.q0 .slot-2c .num > span,
-    .board.q0 .slot-2d .num > span { --num-rot: 180deg; }  /* oben -> Boden nach oben */
-    .board.q0 .slot-3b .num > span,
-    .board.q0 .slot-4b .num > span { --num-rot: -90deg; }  /* links -> Boden nach links */
+    /* ✅ Q0: 2B/2C liegen oben => Boden nach oben (180deg) */
+    .board.q0 .slot-2b .num > span,
+    .board.q0 .slot-2c .num > span { --num-rot: 180deg; }
 
-    /* q1: oben & rechts außen */
-    .board.q1 .slot-2c .num > span,
-    .board.q1 .slot-2d .num > span { --num-rot: 180deg; }  /* oben -> Boden nach oben */
-    .board.q1 .slot-3b .num > span,
-    .board.q1 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts -> Boden nach rechts */
+    /* ✅ Q0: 3D/4D liegen rechts => Boden nach rechts (90deg) */
+    .board.q0 .slot-3d .num > span,
+    .board.q0 .slot-4d .num > span { --num-rot: 90deg; }
 
-    /* q2: unten & rechts außen */
-    .board.q2 .slot-2c .num > span,
-    .board.q2 .slot-2d .num > span { --num-rot: 0deg; }    /* unten -> Boden nach unten */
-    .board.q2 .slot-3b .num > span,
-    .board.q2 .slot-4b .num > span { --num-rot: 90deg; }   /* rechts -> Boden nach rechts */
+    /* ===== NEUE SLOT-POSITIONEN (Rasterlogik in der 3×3 Würfelfläche) =====
+       W1 belegt in Q0 das Raster 2B..4D.
+       Daher (relativ zur cube-x/y):
+       2B = (0,0), 2C = (1,0), 3D = (2,1), 4D = (2,2)
+    */
+    .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
+    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
+    .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
+    .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
 
-    /* q3: unten & links außen */
-    .board.q3 .slot-2c .num > span,
-    .board.q3 .slot-2d .num > span { --num-rot: 0deg; }    /* unten -> Boden nach unten */
-    .board.q3 .slot-3b .num > span,
-    .board.q3 .slot-4b .num > span { --num-rot: -90deg; }  /* links -> Boden nach links */
-
-    /* Slots relativ zur Würfel-Position + je Quadrant richtig ausgerichtet */
-    .slot-2c{ left: calc(var(--cube-x) + var(--h-x1) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
-    .slot-2d{ left: calc(var(--cube-x) + var(--h-x2) * var(--step)); top: calc(var(--cube-y) + var(--h-edge) * var(--step)); }
-    .slot-3b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y1) * var(--step)); }
-    .slot-4b{ left: calc(var(--cube-x) + var(--v-edge) * var(--step)); top: calc(var(--cube-y) + var(--v-y2) * var(--step)); }
-
-    /* Controls: Button weiter runter (nur Abstand) */
+    /* Controls: Button weiter runter */
     .controls{
       width: 100%;
       display:flex;
       justify-content:center;
       padding: 0 6px;
-      margin-top: 18px; /* ✅ weiter weg von der Box */
+      margin-top: 18px;
     }
 
     .btn{
@@ -377,61 +334,8 @@
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
-    .btn[disabled]{
-      opacity: 0.65;
-      cursor: default;
-      transform: none;
-    }
 
-    /* =========================
-       Kipp-Animation (Zwischenzustand)
-       ========================= */
-    @keyframes kippRight {
-      0%   { transform: translate(0,0) scaleX(1); }
-      45%  { transform: translate(calc(1.5 * var(--step)), 0) scaleX(0.55); }
-      100% { transform: translate(calc(3 * var(--step)), 0) scaleX(1); }
-    }
-    @keyframes kippLeft {
-      0%   { transform: translate(0,0) scaleX(1); }
-      45%  { transform: translate(calc(-1.5 * var(--step)), 0) scaleX(0.55); }
-      100% { transform: translate(calc(-3 * var(--step)), 0) scaleX(1); }
-    }
-    @keyframes kippDown {
-      0%   { transform: translate(0,0) scaleY(1); }
-      45%  { transform: translate(0, calc(1.5 * var(--step))) scaleY(0.55); }
-      100% { transform: translate(0, calc(3 * var(--step))) scaleY(1); }
-    }
-    @keyframes kippUp {
-      0%   { transform: translate(0,0) scaleY(1); }
-      45%  { transform: translate(0, calc(-1.5 * var(--step))) scaleY(0.55); }
-      100% { transform: translate(0, calc(-3 * var(--step))) scaleY(1); }
-    }
-
-    .animRight .cube,
-    .animRight .slot,
-    .animRight .cubeShadow{
-      animation: kippRight 520ms ease-in-out forwards;
-    }
-
-    .animLeft .cube,
-    .animLeft .slot,
-    .animLeft .cubeShadow{
-      animation: kippLeft 520ms ease-in-out forwards;
-    }
-
-    .animDown .cube,
-    .animDown .slot,
-    .animDown .cubeShadow{
-      animation: kippDown 520ms ease-in-out forwards;
-    }
-
-    .animUp .cube,
-    .animUp .slot,
-    .animUp .cubeShadow{
-      animation: kippUp 520ms ease-in-out forwards;
-    }
-
-    /* ✅ Pop ("blup") NUR am inneren Span, damit Rotation erhalten bleibt */
+    /* kleiner "blup" */
     @keyframes popIn {
       0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
       60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
@@ -456,12 +360,13 @@
 
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div class="cube" aria-label="Würfel"></div>
+      <div class="cube" aria-label="Würfelfläche W1"></div>
 
-      <div class="slot slot-2c" data-slot="F3" aria-label="Slot 2C"><div class="num"><span></span></div></div>
-      <div class="slot slot-2d" data-slot="F4" aria-label="Slot 2D"><div class="num"><span></span></div></div>
-      <div class="slot slot-3b" data-slot="F2" aria-label="Slot 3B"><div class="num"><span></span></div></div>
-      <div class="slot slot-4b" data-slot="F1" aria-label="Slot 4B"><div class="num"><span></span></div></div>
+      <!-- ✅ Blättchen fix: 2B, 2C, 3D, 4D -->
+      <div class="slot slot-2b" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
+      <div class="slot slot-2c" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
+      <div class="slot slot-3d" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
+      <div class="slot slot-4d" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
     </div>
 
     <div class="controls">
@@ -523,29 +428,19 @@
       grid.dataset.built = "1";
     }
 
-    // Physische Ecken / Positionen
-    const Q = [
-      { cls: "q0", col: 1, row: 1 }, // oben links
-      { cls: "q1", col: 4, row: 1 }, // oben rechts
-      { cls: "q2", col: 4, row: 4 }, // unten rechts
-      { cls: "q3", col: 1, row: 4 }, // unten links
-    ];
-
-    let currentQ = 0;
-
-    function applyQuadrant(q){
-      currentQ = q;
-      boardEl.classList.remove("q0","q1","q2","q3");
-      boardEl.classList.add(Q[q].cls);
-      boardEl.style.setProperty("--cube-col", String(Q[q].col));
-      boardEl.style.setProperty("--cube-row", String(Q[q].row));
+    // ✅ FIX: immer Q0, kein Random mehr
+    function applyQuadrant0(){
+      boardEl.classList.remove("q1","q2","q3");
+      boardEl.classList.add("q0");
+      boardEl.style.setProperty("--cube-col", "1");
+      boardEl.style.setProperty("--cube-row", "1");
     }
 
-    // ---------- Zahlen / Bestückung ----------
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
     function clearSlots(){
       for (const el of slotSpanEls.values()) el.textContent = "";
+      slotEls.forEach(s => s.classList.remove("pop"));
     }
 
     function shuffle(arr){
@@ -556,13 +451,15 @@
       return arr;
     }
 
-    function draw12(){
+    function draw4(){
       const nums = Array.from({length:12}, (_,i)=>i+1);
-      return shuffle(nums);
+      shuffle(nums);
+      return nums.slice(0,4);
     }
 
+    // ✅ NUR W1 bestücken (fürs Testen dieser 1. Darstellung)
     async function placeFour(numbers, tempoMs){
-      const order = ["F1","F2","F3","F4"];
+      const order = ["S1","S2","S3","S4"]; // 2B,2C,3D,4D
       for(let i=0;i<4;i++){
         const slotKey = order[i];
         const span = slotSpanEls.get(slotKey);
@@ -577,73 +474,27 @@
           slotEl.classList.add("pop");
         }
 
-        await sleep(tempoMs);
+        await sleep(380);
       }
       slotEls.forEach(s => s.classList.remove("pop"));
     }
 
-    // ---------- Kipp-Animation (clockwise für Bestückung) ----------
-    function directionForMove(fromQ, toQ){
-      if (fromQ === 0 && toQ === 1) return "Right";
-      if (fromQ === 1 && toQ === 2) return "Down";
-      if (fromQ === 2 && toQ === 3) return "Left";
-      if (fromQ === 3 && toQ === 0) return "Up";
-      return "Right";
-    }
-
-    async function animateMoveTo(nextQ){
-      const dir = directionForMove(currentQ, nextQ);
-      const cls = "anim" + dir;
-
-      boardEl.classList.add(cls);
-      await sleep(540);
-
-      boardEl.classList.remove("animRight","animLeft","animDown","animUp");
-      applyQuadrant(nextQ);
-    }
-
     let busy = false;
-
     async function runBestueckung(){
       if (busy) return;
       busy = true;
       btn.disabled = true;
 
       clearSlots();
+      const W1 = draw4();
+      await placeFour(W1, 380);
 
-      const nums = draw12();
-      const W1 = nums.slice(0,4);
-      const W2 = nums.slice(4,8);
-      const W3 = nums.slice(8,12);
-
-      // ✅ etwas langsamer als vorher
-      const popTempo = 380;
-
-      // W1 setzen
-      await placeFour(W1, popTempo);
-
-      // Kipp zu W2
-      const qW2 = (currentQ + 1) % 4;
-      await animateMoveTo(qW2);
-      clearSlots();
-      await sleep(180);
-      await placeFour(W2, popTempo);
-
-      // Kipp zu W3
-      const qW3 = (currentQ + 1) % 4;
-      await animateMoveTo(qW3);
-      clearSlots();
-      await sleep(180);
-      await placeFour(W3, popTempo);
-
-      // Fertig: W3 liegt oben
       btn.disabled = false;
       busy = false;
     }
 
     btn.addEventListener("click", runBestueckung);
 
-    // ---------- Init ----------
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
@@ -651,15 +502,14 @@
 
       buildGridOnce();
 
-      // Würfel ist beim Start schon random in einer Ecke
-      applyQuadrant(Math.floor(Math.random() * 4));
+      applyQuadrant0();  // ✅ fix Q0
       clearSlots();
     });
 
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-      applyQuadrant(currentQ);
+      applyQuadrant0();  // ✅ bleibt fix
     });
   </script>
 </body>
