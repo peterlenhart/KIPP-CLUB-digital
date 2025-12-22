@@ -93,6 +93,9 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
+      /* ✅ Achse: Grenze zwischen Spalte D und E (Mitte im Gap) */
+      --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
+
       /* ✅ W1 FIX in Q0 */
       --cube-col: 1;
       --cube-row: 1;
@@ -162,36 +165,6 @@
         inset  0  22px 34px rgba(0,0,0,0.34);
     }
 
-    .shadowLayer{
-      position:absolute;
-      inset:0;
-      z-index: 3;
-      pointer-events:none;
-      clip-path: inset(
-        var(--step)
-        var(--step)
-        var(--step)
-        var(--step)
-      );
-    }
-
-    .cubeShadow{
-      position:absolute;
-      left: var(--cube-x);
-      top:  var(--cube-y);
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      border-radius: clamp(10px, 2.2vmin, 18px);
-      background: transparent;
-      box-sizing: border-box;
-
-      box-shadow:
-        var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
-        calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
-
-      filter: blur(1px);
-    }
-
     .ball{
       position:absolute;
       left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
@@ -207,6 +180,44 @@
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
       z-index: 4;
       pointer-events: none;
+    }
+
+    /* =========================================================
+       ✅ GRUPPE (W1 + W2 + Slots + Zahlen + Schatten) als "Canvas"
+       ========================================================= */
+    .pairLayer{
+      position:absolute;
+      inset:0;
+      z-index: 6; /* unter der weißen Linie, aber über Boden/Grid */
+      pointer-events:none;
+
+      /* Skalierung wie Photoshop: nur Breite (X) */
+      transform-origin: var(--axis-x) 50%;
+      transform: scaleX(var(--pair-scale-x, 0.5));
+    }
+
+    .cubeShadow{
+      position:absolute;
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      border-radius: clamp(10px, 2.2vmin, 18px);
+      background: transparent;
+      box-sizing: border-box;
+      z-index: 5;
+
+      box-shadow:
+        var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
+        calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
+
+      filter: blur(1px);
+    }
+    .cubeShadow.w1{
+      left: var(--cube-x);
+      top:  var(--cube-y);
+    }
+    .cubeShadow.w2{
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
     }
 
     /* W1 (Q0) */
@@ -239,7 +250,7 @@
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
-      z-index: 5;
+      z-index: 6;
       pointer-events: none;
     }
 
@@ -273,7 +284,7 @@
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
-      z-index: 5;
+      z-index: 6;
       pointer-events: none;
     }
 
@@ -320,7 +331,6 @@
       position: relative;
     }
 
-    /* ✅ Punkt für die 9 */
     .slot .num > span.n9::after{
       content:"";
       position:absolute;
@@ -359,21 +369,16 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ✅ TRENNLINIE: zwischen Spalte D und E, nur Zeilen 2–4 */
+    /* ✅ Trennlinie (nicht skalieren!) */
     .divider-DE-rows2to4{
       position:absolute;
-      /* x: Grenze zwischen D(4) und E(5) => im Gap zentriert */
-      left: calc(4 * var(--step) - (var(--cell-gap) / 2) - 2px);
-      /* y: Zeile 2 (top) */
+      left: calc(var(--axis-x) - 2px);
       top:  calc(1 * var(--step));
-      /* Höhe: Zeilen 2–4 inkl. Gaps => 2*step + cell */
       height: calc(2 * var(--step) + var(--cell));
       width: 4px;
 
       background: rgba(255,255,255,0.95);
       border-radius: 999px;
-
-      /* 2px weiche Kante */
       filter: blur(2px);
 
       z-index: 9999;
@@ -424,34 +429,31 @@
   <div class="stage">
     <div class="board q0" id="board">
       <div class="floor" aria-hidden="true"></div>
-
-      <div class="shadowLayer" aria-hidden="true">
-        <div class="cubeShadow"></div>
-      </div>
-
       <div class="ball" aria-label="Kugel"></div>
-
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W1 (Q0) -->
-      <div class="cube" aria-label="Würfelfläche W1"></div>
+      <!-- ✅ Alles was zusammen gehört -> in eine Gruppe -->
+      <div class="pairLayer" id="pairLayer" aria-label="W1+W2 als Gruppe">
+        <div class="cubeShadow w1" aria-hidden="true"></div>
+        <div class="cubeShadow w2" aria-hidden="true"></div>
 
-      <!-- W2 (Q1) -->
-      <div class="cube2" aria-label="Würfelfläche W2"></div>
+        <div class="cube" aria-label="Würfelfläche W1"></div>
+        <div class="cube2" aria-label="Würfelfläche W2"></div>
 
-      <!-- W1 Slots -->
-      <div class="slot slot-2b" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
-      <div class="slot slot-2c" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
-      <div class="slot slot-3d" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
-      <div class="slot slot-4d" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
+        <!-- W1 Slots -->
+        <div class="slot slot-2b" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
+        <div class="slot slot-2c" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
+        <div class="slot slot-3d" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
+        <div class="slot slot-4d" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
 
-      <!-- W2 Slots -->
-      <div class="slot slot2-2f" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
-      <div class="slot slot2-2g" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
-      <div class="slot slot2-3e" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
-      <div class="slot slot2-4e" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
+        <!-- W2 Slots -->
+        <div class="slot slot2-2f" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
+        <div class="slot slot2-2g" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
+        <div class="slot slot2-3e" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
+        <div class="slot slot2-4e" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
+      </div>
 
-      <!-- ✅ Trennlinie oberste Ebene -->
+      <!-- ✅ Linie bleibt separat & oben drüber -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
@@ -528,13 +530,11 @@
     }
 
     function setFixedNumbers(withPop=false){
-      // W1:
       const s1 = slotSpanEls.get("S1"); // 2B
       const s2 = slotSpanEls.get("S2"); // 2C
       const s3 = slotSpanEls.get("S3"); // 3D
       const s4 = slotSpanEls.get("S4"); // 4D
 
-      // W2:
       const t1 = slotSpanEls.get("T1"); // 2F
       const t2 = slotSpanEls.get("T2"); // 2G
       const t3 = slotSpanEls.get("T3"); // 3E
