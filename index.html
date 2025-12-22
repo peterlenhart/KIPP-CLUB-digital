@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – 8×8 Raster</title>
+  <title>KIPP – W2 final in Q1 (Kipp gespeichert, unsichtbar)</title>
 
   <style>
     :root{
@@ -16,6 +16,8 @@
       --cell-radius: clamp(6px, 1.1vmin, 12px);
 
       --floor: #7a4a34;
+
+      /* Rotbraun Rahmen */
       --cube-border: #7a4a34;
 
       --cube-wood-base: #d7c2a4;
@@ -34,6 +36,9 @@
       --btn-bg: #ead7be;
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
+
+      /* Divider-Farbe (deine Werte) */
+      --divider-color: rgba(122, 74, 52, 1); /* var(--cube-border) wäre auch ok */
     }
 
     html, body { height: 100%; }
@@ -96,24 +101,9 @@
       /* ✅ Achse: Grenze zwischen Spalte D und E (Mitte im Gap) */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* ✅ W1 FIX in Q0 */
-      --cube-col: 1;
-      --cube-row: 1;
-
-      --cube-x: calc(var(--cube-col) * var(--step));
-      --cube-y: calc(var(--cube-row) * var(--step));
-
-      /* Cast-Shadow Offset */
-      --cast-x: 18px;
-      --cast-y: 18px;
-
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
-    }
-
-    .board.q0{
-      --cast-x: 18px;  --cast-y: 18px;
     }
 
     .grid{
@@ -182,18 +172,37 @@
       pointer-events: none;
     }
 
+    /* ✅ Divider bleibt separat und immer oben */
+    .divider-DE-rows2to4{
+      position:absolute;
+      left: calc(var(--axis-x) - 2px);
+      top:  calc(1 * var(--step));
+      height: calc(2 * var(--step) + var(--cell));
+      width: 4px;
+
+      background: var(--divider-color);
+      border-radius: 0;
+      filter: blur(2px);
+
+      z-index: 9999;
+      pointer-events: none;
+    }
+
     /* =========================================================
-       ✅ GRUPPE (W1 + W2 + Slots + Zahlen + Schatten) als "Canvas"
+       ✅ GESPEICHERT (unsichtbar): W2 KIPP + W1 KIPP
        ========================================================= */
     .pairLayer{
       position:absolute;
       inset:0;
-      z-index: 6; /* unter Divider, aber über Boden/Grid */
+      z-index: 6;
       pointer-events:none;
 
-      /* Skalierung wie Photoshop: nur Breite (X) */
       transform-origin: var(--axis-x) 50%;
-      transform: scaleX(var(--pair-scale-x, 0.5));
+      transform: scaleX(0.5);
+
+      /* unsichtbar, aber vorhanden */
+      opacity: 0;
+      visibility: hidden;
     }
 
     .cubeShadow{
@@ -206,29 +215,24 @@
       z-index: 5;
 
       box-shadow:
-        var(--cast-x) var(--cast-y) 18px rgba(0,0,0,0.35),
-        calc(var(--cast-x) * 0.55) calc(var(--cast-y) * 0.55) 10px rgba(0,0,0,0.22);
+        18px 18px 18px rgba(0,0,0,0.35),
+        10px 10px 10px rgba(0,0,0,0.22);
 
       filter: blur(1px);
     }
     .cubeShadow.w1{
-      left: var(--cube-x);
-      top:  var(--cube-y);
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
     }
     .cubeShadow.w2{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
     }
 
-    /* ======================
-       W1 (Q0) – Innenkante eckig
-       innen = rechts oben / rechts unten => 0
-       ====================== */
-    .cube{
-      position:absolute;
-      left: var(--cube-x);
-      top:  var(--cube-y);
-
+    /* W1 Fläche (nur gespeichert) */
+    .cube,
+    .cube2,
+    .cubeFinal{
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
@@ -247,58 +251,46 @@
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
       border: 4px solid var(--cube-border);
-
-      /* TL TR BR BL */
-      border-radius: clamp(10px, 2.2vmin, 18px) 0 0 clamp(10px, 2.2vmin, 18px);
+      border-radius: clamp(10px, 2.2vmin, 18px);
 
       box-shadow:
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
-      z-index: 6;
       pointer-events: none;
     }
 
-    /* ======================
-       W2 (Q1) – Innenkante eckig
-       innen = links oben / links unten => 0
-       ====================== */
+    .cube{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      z-index: 6;
+    }
     .cube2{
       position:absolute;
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
-
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      box-sizing: border-box;
-
-      background:
-        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
-        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
-        repeating-linear-gradient(
-          20deg,
-          rgba(0,0,0,0.02) 0px,
-          rgba(0,0,0,0.02) 10px,
-          rgba(255,255,255,0.02) 10px,
-          rgba(255,255,255,0.02) 18px
-        ),
-        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
-        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
-
-      border: 4px solid var(--cube-border);
-
-      /* TL TR BR BL */
-      border-radius: 0 clamp(10px, 2.2vmin, 18px) clamp(10px, 2.2vmin, 18px) 0;
-
-      box-shadow:
-        0 12px 22px rgba(0,0,0,0.28),
-        0 0 0 1px rgba(255,255,255,0.10) inset;
-
       z-index: 6;
-      pointer-events: none;
     }
 
-    /* ===== Slots ===== */
+    /* =========================================================
+       ✅ W2 FINAL (sichtbar): 100% in Q1
+       ========================================================= */
+    .w2FinalLayer{
+      position:absolute;
+      inset:0;
+      z-index: 8; /* über Boden/Grid, unter Divider */
+      pointer-events:none;
+    }
+
+    .cubeFinal{
+      position:absolute;
+      left: calc(4 * var(--step)); /* Q1 */
+      top:  calc(1 * var(--step));
+      z-index: 8;
+    }
+
+    /* Slots */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -312,7 +304,7 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 7;
+      z-index: 9;
       pointer-events: none;
 
       box-shadow:
@@ -341,6 +333,7 @@
       position: relative;
     }
 
+    /* Punkt für 9 */
     .slot .num > span.n9::after{
       content:"";
       position:absolute;
@@ -353,133 +346,78 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
-    /* ===== Rotationen W1 (Q0) ===== */
-    .board.q0 .slot-2b .num > span,
-    .board.q0 .slot-2c .num > span { --num-rot: 180deg; }
+    /* ===== Rotation W2 FINAL: Orientierung wie bei W2 KIPP beibehalten =====
+       - 2E,2F (oben): 180°
+       - 3G,4G (rechts): 90°
+    */
+    .w2f-2e .num > span,
+    .w2f-2f .num > span { --num-rot: 180deg; }
 
-    .board.q0 .slot-3d .num > span,
-    .board.q0 .slot-4d .num > span { --num-rot: 90deg; }
+    .w2f-3g .num > span,
+    .w2f-4g .num > span { --num-rot: 90deg; }
 
-    /* ===== Rotationen W2 (Q1) ===== */
-    .slot2-3e .num > span,
-    .slot2-4e .num > span { --num-rot: -90deg; }
+    /* ===== Positionen W2 FINAL in Q1 =====
+       Q1-Basis links oben = (row=2,col=E) entspricht:
+       left: 4*step + 0*step
+       top : 1*step + 0*step
 
-    .slot2-2f .num > span,
-    .slot2-2g .num > span { --num-rot: 180deg; }
+       Innerhalb der 3x3 Fläche:
+       2E = (0,0)
+       2F = (1,0)
+       3G = (2,1)
+       4G = (2,2)
+    */
+    .w2f-2e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
+    .w2f-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
-    /* ===== Positionen W1 ===== */
-    .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
-    .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
+    .w2f-3g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
+    .w2f-4g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ===== Positionen W2 ===== */
-    .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-    .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-    .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
-    .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
-
-    /* ✅ Dein Divider bleibt separat & oben drüber (NICHT skalieren) */
-    .divider-DE-rows2to4{
-      position:absolute;
-      left: calc(var(--axis-x) - 1px);
-      top:  calc(1 * var(--step));
-      height: calc(2 * var(--step) + var(--cell));
-      width: 2px;
-
-      /* DEINE Werte 그대로 */
-      background: rgba(234,215,190,0.5);
-      border-radius: 999px;
-      filter: blur(0.1px);
-
-      z-index: 9999;
-      pointer-events: none;
-    }
-
-    .controls{
-      width: 100%;
-      display:flex;
-      justify-content:center;
-      padding: 0 6px;
-      margin-top: 18px;
-    }
-
-    .btn{
-      border: 1px solid var(--btn-border);
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 12px 16px;
-      border-radius: 14px;
-      cursor: pointer;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
-
-    @keyframes popIn {
-      0%   { transform: rotate(var(--num-rot, 0deg)) scale(0.70); filter: brightness(1.05); }
-      60%  { transform: rotate(var(--num-rot, 0deg)) scale(1.10); }
-      100% { transform: rotate(var(--num-rot, 0deg)) scale(1.00); filter: none; }
-    }
-    .slot.pop .num > span{
-      animation: popIn 220ms ease-out;
-    }
+    /* Controls verstecken (du wolltest nur W2 final sehen) */
+    .controls{ display:none; }
   </style>
 </head>
 
 <body>
   <div class="stage">
-    <div class="board q0" id="board">
+    <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ✅ Alles was zusammen gehört -> in eine Gruppe -->
-      <div class="pairLayer" id="pairLayer" aria-label="W1+W2 als Gruppe">
+      <!-- ✅ GESPEICHERT (unsichtbar): W2 KIPP + W1 KIPP -->
+      <div class="pairLayer" id="pairLayer" aria-label="W2KIPP+W1KIPP gespeichert (unsichtbar)">
         <div class="cubeShadow w1" aria-hidden="true"></div>
         <div class="cubeShadow w2" aria-hidden="true"></div>
 
-        <div class="cube" aria-label="Würfelfläche W1"></div>
-        <div class="cube2" aria-label="Würfelfläche W2"></div>
-
-        <!-- W1 Slots -->
-        <div class="slot slot-2b" data-slot="S1" aria-label="Slot 2B"><div class="num"><span></span></div></div>
-        <div class="slot slot-2c" data-slot="S2" aria-label="Slot 2C"><div class="num"><span></span></div></div>
-        <div class="slot slot-3d" data-slot="S3" aria-label="Slot 3D"><div class="num"><span></span></div></div>
-        <div class="slot slot-4d" data-slot="S4" aria-label="Slot 4D"><div class="num"><span></span></div></div>
-
-        <!-- W2 Slots -->
-        <div class="slot slot2-2f" data-slot="T1" aria-label="Slot 2F"><div class="num"><span></span></div></div>
-        <div class="slot slot2-2g" data-slot="T2" aria-label="Slot 2G"><div class="num"><span></span></div></div>
-        <div class="slot slot2-3e" data-slot="T3" aria-label="Slot 3E"><div class="num"><span></span></div></div>
-        <div class="slot slot2-4e" data-slot="T4" aria-label="Slot 4E"><div class="num"><span></span></div></div>
+        <div class="cube" aria-label="W1 (gespeichert)"></div>
+        <div class="cube2" aria-label="W2 (gespeichert)"></div>
+        <!-- (Slots/Zahlen für Kipp könnten hier auch drin bleiben – aktuell nicht nötig für die reine Anzeige) -->
       </div>
 
-      <!-- ✅ Divider bleibt separat & oben drüber -->
+      <!-- ✅ W2 FINAL (sichtbar) -->
+      <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 final in Q1">
+        <div class="cubeFinal" aria-label="W2 Fläche final"></div>
+
+        <!-- W2 FINAL Slots -->
+        <div class="slot w2f-2e" aria-label="W2 final Slot 2E"><div class="num"><span id="w2n_2e"></span></div></div>
+        <div class="slot w2f-2f" aria-label="W2 final Slot 2F"><div class="num"><span id="w2n_2f"></span></div></div>
+        <div class="slot w2f-3g" aria-label="W2 final Slot 3G"><div class="num"><span id="w2n_3g"></span></div></div>
+        <div class="slot w2f-4g" aria-label="W2 final Slot 4G"><div class="num"><span id="w2n_4g"></span></div></div>
+      </div>
+
+      <!-- ✅ Divider oben drüber -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
     <div class="controls">
-      <button id="btnBestuecken" class="btn">Würfel bestücken</button>
+      <button class="btn">—</button>
     </div>
   </div>
 
   <script>
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
-    const btn = document.getElementById("btnBestuecken");
-
-    const slotEls = Array.from(document.querySelectorAll(".slot"));
-    const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -527,66 +465,23 @@
       grid.dataset.built = "1";
     }
 
-    function applyQuadrant0(){
-      boardEl.classList.remove("q1","q2","q3");
-      boardEl.classList.add("q0");
-      boardEl.style.setProperty("--cube-col", "1");
-      boardEl.style.setProperty("--cube-row", "1");
+    function setW2FinalNumbers(){
+      // W2 final in Q1:
+      // 2E = 9 (mit Punkt)
+      // 2F = 11
+      // 3G = 3
+      // 4G = 7
+
+      const n2e = document.getElementById("w2n_2e");
+      const n2f = document.getElementById("w2n_2f");
+      const n3g = document.getElementById("w2n_3g");
+      const n4g = document.getElementById("w2n_4g");
+
+      if (n2e){ n2e.textContent = "9";  n2e.classList.add("n9"); }
+      if (n2f){ n2f.textContent = "11"; n2f.classList.remove("n9"); }
+      if (n3g){ n3g.textContent = "3";  n3g.classList.remove("n9"); }
+      if (n4g){ n4g.textContent = "7";  n4g.classList.remove("n9"); }
     }
-
-    function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
-
-    function clearPops(){
-      slotEls.forEach(s => s.classList.remove("pop"));
-    }
-
-    function setFixedNumbers(withPop=false){
-      const s1 = slotSpanEls.get("S1"); // 2B
-      const s2 = slotSpanEls.get("S2"); // 2C
-      const s3 = slotSpanEls.get("S3"); // 3D
-      const s4 = slotSpanEls.get("S4"); // 4D
-
-      const t1 = slotSpanEls.get("T1"); // 2F
-      const t2 = slotSpanEls.get("T2"); // 2G
-      const t3 = slotSpanEls.get("T3"); // 3E
-      const t4 = slotSpanEls.get("T4"); // 4E
-
-      if (s1){ s1.textContent = "9";  s1.classList.add("n9"); }
-      if (s2){ s2.textContent = "11"; s2.classList.remove("n9"); }
-      if (s3){ s3.textContent = "3";  s3.classList.remove("n9"); }
-      if (s4){ s4.textContent = "7";  s4.classList.remove("n9"); }
-
-      if (t4){ t4.textContent = "4";  t4.classList.remove("n9"); }
-      if (t3){ t3.textContent = "5";  t3.classList.remove("n9"); }
-      if (t1){ t1.textContent = "12"; t1.classList.remove("n9"); }
-      if (t2){ t2.textContent = "2";  t2.classList.remove("n9"); }
-
-      if (withPop){
-        for (const el of slotEls){
-          el.classList.remove("pop");
-          void el.offsetWidth;
-          el.classList.add("pop");
-        }
-        setTimeout(clearPops, 260);
-      } else {
-        clearPops();
-      }
-    }
-
-    let busy = false;
-    async function runBestueckung(){
-      if (busy) return;
-      busy = true;
-      btn.disabled = true;
-
-      setFixedNumbers(true);
-      await sleep(260);
-
-      btn.disabled = false;
-      busy = false;
-    }
-
-    btn.addEventListener("click", runBestueckung);
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -594,14 +489,12 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      applyQuadrant0();
-      setFixedNumbers(false);
+      setW2FinalNumbers();
     });
 
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-      applyQuadrant0();
     });
   </script>
 </body>
