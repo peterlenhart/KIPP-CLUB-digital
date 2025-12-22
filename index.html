@@ -104,6 +104,7 @@
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
+      /* (bleiben drin, aber werden für den äußeren Schatten nicht mehr benutzt) */
       --cast-x: 18px;
       --cast-y: 18px;
 
@@ -162,6 +163,86 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
+    /* =========================================================
+       ✅ NEU: Clip-Fläche für WÜRFE-Schatten (nur im Inneren!)
+       - verhindert Schatten am Außenrahmen
+       ========================================================= */
+    .floorClip{
+      position:absolute;
+      left: var(--step);
+      top:  var(--step);
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      overflow: hidden;
+      z-index: 3;        /* über Boden, unter Würfel */
+      pointer-events:none;
+
+      /* W2 Final steht bei left=4*step, top=1*step
+         Boden beginnt bei left=1*step, top=1*step
+         => innerhalb Boden: x = 3*step, y = 0*step
+      */
+      --cube-in-x: calc(3 * var(--step));
+      --cube-in-y: calc(0 * var(--step));
+    }
+
+    /* Schatten-Objekt unter dem Würfel (ins Innere geklippt) */
+    .cubeCastInner{
+      position:absolute;
+      left: var(--cube-in-x);
+      top:  var(--cube-in-y);
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      border-radius: clamp(10px, 2.2vmin, 18px);
+      background: transparent;
+
+      /* ✅ Schatten nach LINKS + UNTEN (ins Innere), nicht nach rechts außen */
+      box-shadow:
+        -18px 18px 18px rgba(0,0,0,0.34),
+        -10px 10px 10px rgba(0,0,0,0.22);
+
+      filter: blur(1px);
+    }
+
+    /* ✅ Gleicher Kanten-Schatten links & unten (Kontaktkante) */
+    .cubeCastInner::before,
+    .cubeCastInner::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      pointer-events:none;
+    }
+
+    /* Linke Kante -> Schatten nach links (innen) */
+    .cubeCastInner::before{
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0,0,0,0.34),
+          rgba(0,0,0,0.00) 28%
+        );
+      opacity: 0.85;
+      filter: blur(0.6px);
+      mix-blend-mode: multiply;
+    }
+
+    /* Untere Kante -> Schatten nach unten (innen) */
+    .cubeCastInner::after{
+      background:
+        linear-gradient(
+          180deg,
+          rgba(0,0,0,0.00) 72%,
+          rgba(0,0,0,0.34) 100%
+        );
+      opacity: 0.85;
+      filter: blur(0.6px);
+      mix-blend-mode: multiply;
+    }
+
     .ball{
       position:absolute;
       left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
@@ -202,8 +283,13 @@
     .w2FinalLayer{
       position:absolute;
       inset:0;
-      z-index: 7; /* über Boden, unter Divider */
+      z-index: 7; /* über Boden/ClipShadow, unter Divider */
       pointer-events:none;
+    }
+
+    /* ✅ WICHTIG: Der alte "Außen"-Schatten darf in W2 FINAL NICHT mehr wirken */
+    .w2FinalLayer .cubeShadow{
+      display: none;
     }
 
     .cubeShadow{
@@ -224,12 +310,6 @@
     /* Shadows in Basis/KIP (unsichtbar) */
     .pairLayer .cubeShadow.w2{ left: var(--cube-x); top: var(--cube-y); }
     .pairLayer .cubeShadow.w1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
-
-    /* Shadow in W2 Final (Q1 = col E, row 2 => left 4*step, top 1*step) */
-    .w2FinalLayer .cubeShadow.w2final{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-    }
 
     .cube,
     .cube2,
@@ -255,8 +335,8 @@
       border: 4px solid var(--cube-border);
       border-radius: clamp(10px, 2.2vmin, 18px);
 
+      /* ✅ Kein "Außenwurf" mehr, weil der jetzt über .floorClip kommt */
       box-shadow:
-        0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
       z-index: 6;
@@ -361,7 +441,7 @@
     .w2f-3g{ left: calc(6 * var(--step)); top: calc(2 * var(--step)); }               /* 3G */
     .w2f-4g{ left: calc(6 * var(--step)); top: calc(3 * var(--step)); }               /* 4G */
 
-    /* ✅ Divider bleibt unverändert (DEINE Werte) */
+    /* ✅ Divider bleibt inhaltlich gleich, aber wird jetzt UNSICHTBAR */
     .divider-DE-rows2to4{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
@@ -375,6 +455,10 @@
 
       z-index: 9999;
       pointer-events: none;
+
+      /* ✅ UNSICHTBAR in dieser Ansicht */
+      opacity: 0;
+      visibility: hidden;
     }
 
     .controls{
@@ -421,6 +505,12 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
+
+      <!-- ✅ NEU: Schatten-Clip nur fürs Box-Innere -->
+      <div class="floorClip" aria-hidden="true">
+        <div class="cubeCastInner" aria-hidden="true"></div>
+      </div>
+
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -460,6 +550,7 @@
            Zahlen-Ausrichtung bleibt 1:1 wie in W2KIP
            ========================= -->
       <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 Final (Q1)">
+        <!-- cubeShadow w2final entfernt/unterdrückt per CSS -->
         <div class="cubeShadow w2final" aria-hidden="true"></div>
         <div class="cubeFinal" aria-label="W2 Final Fläche"></div>
 
@@ -470,7 +561,7 @@
         <div class="slot w2f-4g read-east"  data-final="S4" aria-label="W2 Final 4G"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Divider bleibt oben drüber -->
+      <!-- Divider bleibt im DOM, aber unsichtbar -->
       <div class="divider-DE-rows2to4" aria-hidden="true"></div>
     </div>
 
