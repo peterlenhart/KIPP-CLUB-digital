@@ -94,10 +94,9 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      /* Achse zwischen D/E */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* W2 Basis links oben (B) */
+      /* Quelle: W2W1 Basis */
       --cube-col: 1;
       --cube-row: 1;
       --cube-x: calc(var(--cube-col) * var(--step));
@@ -174,111 +173,87 @@
       pointer-events: none;
     }
 
-    /* =========================================================
-       W2W1-Basis bleibt Quelle (unsichtbar)
-       ========================================================= */
+    /* ========= QUELLE: W2W1 Basis (unsichtbar) ========= */
     .pairLayer{
       position:absolute;
       inset:0;
       z-index: 6;
       pointer-events:none;
-
       opacity: 0;
       visibility: hidden;
     }
 
-    /* =========================================================
-       W3W1 KIP (sichtbar, gefixt)
-       - KEIN scaleX auf ganzer Layer!
-       - Stattdessen: linke Hälfte und rechte Hälfte einzeln 50% skaliert zur Achse hin
-       ========================================================= */
-    .w3w1KipLayer{
+    /* ========= SLOT ========= */
+    .slot{
       position:absolute;
-      inset:0;
-      z-index: 8;
-      pointer-events:none;
-    }
-
-    /* gemeinsamer, waagrechter Bodenschatten */
-    .w3w1FloorShadow{
-      position:absolute;
-      left: var(--step);
-      top:  calc(6 * var(--step));
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: calc(1 * var(--step));
-      pointer-events: none;
-      z-index: 3;
-
-      background: rgba(0,0,0,0.00);
+      width: var(--cell);
+      height: var(--cell);
+      box-sizing: border-box;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
+        var(--slot-fill);
+      border: var(--slot-border-w) solid var(--slot-border);
+      border-radius: var(--cell-radius);
+      z-index: 7;
       box-shadow:
-        0 18px 28px rgba(0,0,0,0.34),
-        0 8px 14px rgba(0,0,0,0.22);
-      filter: blur(1px);
+        1px 1px 0 rgba(255,255,255,0.18) inset,
+        -1px -1px 0 rgba(0,0,0,0.08) inset,
+        0 3px 5px rgba(0,0,0,0.22),
+        2px 2px 3px -1px rgba(0,0,0,0.20);
     }
-
-    /* stabile Trennlinie (nicht skaliert) */
-    .divider-DE-rows5to7{
-      position:absolute;
-      left: calc(var(--axis-x) - 1px);
-      top:  calc(4 * var(--step));
-      height: calc(2 * var(--step) + var(--cell));
-      width: 2px;
-
-      background: rgba(234,215,190,0.50);
-      border-radius: 999px;
-      filter: blur(0.1px);
-
-      z-index: 9999;
-      pointer-events: none;
-
-      opacity: 1;
-      visibility: visible;
-    }
-
-    /* Jede Hälfte wird zur Achse hin skaliert */
-    .half{
-      position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      transform: scaleX(0.5);
-    }
-    .half.left{
-      /* zur Achse hin: rechter Rand bleibt "Hinge" */
-      transform-origin: 100% 50%;
-    }
-    .half.right{
-      /* zur Achse hin: linker Rand bleibt "Hinge" */
-      transform-origin: 0% 50%;
-    }
-
-    /* W3 liegt in Q3: 5B..7D => left=1*step, top=4*step */
-    .w3Half{
-      left: calc(1 * var(--step));
-      top:  calc(4 * var(--step));
-    }
-
-    /* W1 liegt in Q2: 5E..7G => left=4*step, top=4*step */
-    .w1Half{
-      left: calc(4 * var(--step));
-      top:  calc(4 * var(--step));
-    }
-
-    /* Wrapper innerhalb jeder Hälfte */
-    .wrap{
+    .slot .num{
       position:absolute;
       inset:0;
-      transform-origin: 50% 50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
     }
-    /* W1: -90° CCW um eigenen Mittelpunkt */
-    .wrap.w1rot{
-      transform: rotate(-90deg);
+    .slot .num > span{
+      display:inline-block;
+      font-weight: 900;
+      color: #111;
+      font-size: clamp(18px, 4.2vmin, 36px);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      transform: rotate(var(--num-rot, 0deg));
+      transform-origin: 50% 50%;
+      position: relative;
+    }
+    .slot .num > span.dot::after{
+      content:"";
+      position:absolute;
+      width: clamp(3px, 0.55vmin, 6px);
+      height: clamp(3px, 0.55vmin, 6px);
+      border-radius: 50%;
+      background: #111;
+      left: 100%;
+      top: 72%;
+      transform: translate(25%, -50%);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
-    .cubeFinal{
+    .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
+    .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
+    .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
+    .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
+
+    /* Quelle-Positionen W2/W1 (nur fürs Random vergeben) */
+    .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
+    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
+    .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
+    .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
+
+    .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
+    .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
+    .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
+    .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
+
+    /* ========= HOLZFLÄCHE ========= */
+    .woodFace{
       position:absolute;
       left:0; top:0;
-      width: 100%;
-      height: 100%;
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
 
       background:
@@ -301,93 +276,109 @@
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
-      z-index: 6;
+      z-index: 1;
     }
 
-    .slot{
+    /* ========= W3W1 BASIS-PACK (sichtbar zum Testen) =========
+       -> DAS ist dein "Foto": alles drin, 1 Paket.
+       -> Dieses Paket wird dann als Ganzes in KIP skaliert.
+    */
+    .w3w1BasisPack{
       position:absolute;
-      width: var(--cell);
-      height: var(--cell);
-      box-sizing: border-box;
-
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
-        var(--slot-fill);
-
-      border: var(--slot-border-w) solid var(--slot-border);
-      border-radius: var(--cell-radius);
-
-      z-index: 7;
-
-      box-shadow:
-        1px 1px 0 rgba(255,255,255,0.18) inset,
-        -1px -1px 0 rgba(0,0,0,0.08) inset,
-        0 3px 5px rgba(0,0,0,0.22),
-        2px 2px 3px -1px rgba(0,0,0,0.20);
+      left: 0;
+      top:  0;
+      inset:0;
+      z-index: 8;
+      pointer-events:none;
     }
 
-    .slot .num{
+    /* Position der gesamten Basis-Kombi (dein Bereich 5B..7D und Q2/Q3 etc.):
+       Wir setzen sie in die unteren 3×3 Reihen (wie dein Screenshot KIP-Zone) */
+    .w3w1BasisPack .pack{
+      position:absolute;
+      left: 0;
+      top:  0;
+      width: 100%;
+      height: 100%;
+      transform-origin: var(--axis-x) 50%;
+    }
+
+    /* ======= hier ist die KIP-Ansicht: NUR dieses Element wird skaliert ======= */
+    .w3w1BasisPack .pack.kip{
+      transform: scaleX(0.5);
+    }
+
+    /* Gemeinsamer Schatten (im Paket!) */
+    .w3w1BasisPack .sharedShadow{
+      position:absolute;
+      left: var(--step);
+      top:  calc(4 * var(--step)); /* Bereich der KIP-Zone */
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 0;
+      background: transparent;
+      box-shadow:
+        0 18px 28px rgba(0,0,0,0.34),
+        0 8px 14px rgba(0,0,0,0.22);
+      filter: blur(1px);
+      pointer-events:none;
+    }
+
+    /* W3 Block links (Q3) – an Achse angedockt */
+    .w3Block{
+      position:absolute;
+      top:  calc(4 * var(--step));
+      left: calc(var(--axis-x) - (3 * var(--cell) + 2 * var(--cell-gap))); /* rechter Rand an Achse */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 2;
+    }
+
+    /* W1 Block rechts (Q2) – an Achse angedockt */
+    .w1Block{
+      position:absolute;
+      top:  calc(4 * var(--step));
+      left: var(--axis-x); /* linker Rand an Achse */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 2;
+    }
+
+    /* Rotation passiert INNEN drin, bleibt aber Teil des Pakets */
+    .w1Block .rot{
       position:absolute;
       inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-    }
-
-    .slot .num > span{
-      display:inline-block;
-      font-weight: 900;
-      color: #111;
-      font-size: clamp(18px, 4.2vmin, 36px);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(var(--num-rot, 0deg));
+      transform: rotate(-90deg);
       transform-origin: 50% 50%;
-      position: relative;
     }
 
-    .slot .num > span.dot::after{
-      content:"";
-      position:absolute;
-      width: clamp(3px, 0.55vmin, 6px);
-      height: clamp(3px, 0.55vmin, 6px);
-      border-radius: 50%;
-      background: #111;
-
-      left: 100%;
-      top: 72%;
-      transform: translate(25%, -50%);
-      box-shadow: 0 1px 0 rgba(255,255,255,0.25);
-    }
-
-    /* Leserichtungen */
-    .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
-    .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
-    .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
-    .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
-
-    /* Quelle: Slot-Positionen (W2W1 Basis) */
-    .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
-    .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
-
-    .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-    .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-    .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
-    .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
-
-    /* Slots in W3-Hälfte (relativ zur 3×3-Fläche) */
+    /* Slots relativ innerhalb 3×3 Fläche (W3: U1..U4) */
     .w3s-u1{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
     .w3s-u2{ left: calc(2 * var(--step)); top:  calc(1 * var(--step)); }
     .w3s-u3{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
     .w3s-u4{ left: calc(1 * var(--step)); top:  calc(2 * var(--step)); }
 
-    /* Slots in W1-Hälfte (relativ zur 3×3-Fläche) */
+    /* Slots relativ innerhalb 3×3 Fläche (W1: T1..T4) */
     .w1s-t1{ left: calc(1 * var(--step)); top:  calc(0 * var(--step)); }
     .w1s-t2{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
     .w1s-t3{ left: calc(0 * var(--step)); top:  calc(1 * var(--step)); }
     .w1s-t4{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
+
+    /* Trennlinie: NICHT Teil des Pakets */
+    .divider-W3W1{
+      position:absolute;
+      left: calc(var(--axis-x) - 1px);
+      top:  calc(4 * var(--step));
+      height: calc(2 * var(--step) + var(--cell));
+      width: 2px;
+      background: rgba(234,215,190,0.50);
+      border-radius: 999px;
+      filter: blur(0.1px);
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 1;
+      visibility: visible;
+    }
 
     .controls{
       width: 100%;
@@ -425,16 +416,10 @@
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
       <div class="ball" aria-label="Kugel"></div>
-
-      <!-- Schattenband (gemeinsam, Bodenwurf) -->
-      <div class="w3w1FloorShadow" aria-hidden="true"></div>
-
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- =========================
-           W2W1-Basis (Quelle, unsichtbar)
-           ========================= -->
-      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 Basis (Quelle)">
+      <!-- QUELLE (unsichtbar): W2W1 Basis nur zum Randomisieren -->
+      <div class="pairLayer" id="pairLayer">
         <div class="slot slot-2b read-north" data-slot="S1"><div class="num"><span></span></div></div>
         <div class="slot slot-2c read-north" data-slot="S2"><div class="num"><span></span></div></div>
         <div class="slot slot-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
@@ -446,39 +431,38 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- =========================
-           W3W1 KIP (sichtbar, gefixt)
-           ========================= -->
-      <div class="w3w1KipLayer" id="w3w1KipLayer" aria-label="W3W1 KIP (sichtbar)">
+      <!-- W3W1 KIP = "Foto-Paket" + scaleX(0.5) -->
+      <div class="w3w1BasisPack" id="w3w1BasisPack">
+        <div class="pack kip" id="w3w1Pack">
 
-        <!-- linke Hälfte: W3 in Q3 -->
-        <div class="half left w3Half">
-          <div class="wrap">
-            <div class="cubeFinal" aria-hidden="true"></div>
+          <!-- Schatten IST Teil des Pakets -->
+          <div class="sharedShadow" aria-hidden="true"></div>
 
-            <div class="slot w3s-u1 read-east"  data-w3kip="U1"><div class="num"><span></span></div></div>
-            <div class="slot w3s-u2 read-east"  data-w3kip="U2"><div class="num"><span></span></div></div>
-            <div class="slot w3s-u3 read-south" data-w3kip="U3"><div class="num"><span></span></div></div>
-            <div class="slot w3s-u4 read-south" data-w3kip="U4"><div class="num"><span></span></div></div>
+          <!-- W3 Block -->
+          <div class="w3Block">
+            <div class="woodFace" aria-hidden="true"></div>
+            <div class="slot w3s-u1 read-east"  data-w3="U1"><div class="num"><span></span></div></div>
+            <div class="slot w3s-u2 read-east"  data-w3="U2"><div class="num"><span></span></div></div>
+            <div class="slot w3s-u3 read-south" data-w3="U3"><div class="num"><span></span></div></div>
+            <div class="slot w3s-u4 read-south" data-w3="U4"><div class="num"><span></span></div></div>
           </div>
-        </div>
 
-        <!-- rechte Hälfte: W1 in Q2, -90° CCW -->
-        <div class="half right w1Half">
-          <div class="wrap w1rot">
-            <div class="cubeFinal" aria-hidden="true"></div>
-
-            <div class="slot w1s-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
-            <div class="slot w1s-t2 read-north" data-w1kip="T2"><div class="num"><span></span></div></div>
-            <div class="slot w1s-t3 read-west"  data-w1kip="T3"><div class="num"><span></span></div></div>
-            <div class="slot w1s-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
+          <!-- W1 Block -->
+          <div class="w1Block">
+            <div class="rot">
+              <div class="woodFace" aria-hidden="true"></div>
+              <div class="slot w1s-t1 read-north" data-w1="T1"><div class="num"><span></span></div></div>
+              <div class="slot w1s-t2 read-north" data-w1="T2"><div class="num"><span></span></div></div>
+              <div class="slot w1s-t3 read-west"  data-w1="T3"><div class="num"><span></span></div></div>
+              <div class="slot w1s-t4 read-west"  data-w1="T4"><div class="num"><span></span></div></div>
+            </div>
           </div>
-        </div>
 
+        </div>
       </div>
 
-      <!-- Trennlinie: stabil, oberste Ebene -->
-      <div class="divider-DE-rows5to7" aria-hidden="true"></div>
+      <!-- Trennlinie NICHT Teil des Pakets -->
+      <div class="divider-W3W1" aria-hidden="true"></div>
     </div>
 
     <div class="controls">
@@ -491,16 +475,21 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
 
-    // Quelle: W2W1 Slots
+    // Quelle: Slots in W2W1 Basis (unsichtbar)
     const srcSlotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
     const srcSpans = new Map(srcSlotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // Ziele: W3W1 KIP
-    const w3kipEls = Array.from(document.querySelectorAll("[data-w3kip]"));
-    const w3kipSpans = new Map(w3kipEls.map(s => [s.dataset.w3kip, s.querySelector(".num > span")]));
+    // Sichtbar: W3 Slots U1..U4 im Paket
+    const w3Spans = new Map(
+      Array.from(document.querySelectorAll("[data-w3]"))
+        .map(el => [el.dataset.w3, el.querySelector(".num > span")])
+    );
 
-    const w1kipEls = Array.from(document.querySelectorAll("[data-w1kip]"));
-    const w1kipSpans = new Map(w1kipEls.map(s => [s.dataset.w1kip, s.querySelector(".num > span")]));
+    // Sichtbar: W1 Slots T1..T4 im Paket
+    const w1Spans = new Map(
+      Array.from(document.querySelectorAll("[data-w1]"))
+        .map(el => [el.dataset.w1, el.querySelector(".num > span")])
+    );
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -564,30 +553,11 @@
       return pool.slice(0, count);
     }
 
-    function syncW3W1Kip(w3Store){
-      // W3: U1..U4 aus Store
-      ["U1","U2","U3","U4"].forEach(k => {
-        const dst = w3kipSpans.get(k);
-        const v = w3Store.get(k);
-        if(!dst || !v) return;
-        dst.textContent = v.text;
-        dst.classList.toggle("dot", !!v.dot);
-      });
-
-      // W1: T1..T4 aus Quelle
-      ["T1","T2","T3","T4"].forEach(k => {
-        const src = srcSpans.get(k);
-        const dst = w1kipSpans.get(k);
-        if(!src || !dst) return;
-        dst.textContent = src.textContent;
-        dst.classList.toggle("dot", src.classList.contains("dot"));
-      });
-    }
-
     function setRandomNumbers(){
-      // 12 eindeutige Zahlen: 8 für Quelle (S/T), 4 für W3 (U)
+      // 12 eindeutige Zahlen: 8 für Quelle (S/T) + 4 für W3 (U)
       const nums = getUniqueRandomNumbers(12, 1, 12);
 
+      // Quelle bestücken (S/T)
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
       keysST.forEach((k, idx) => {
         const span = srcSpans.get(k);
@@ -597,13 +567,23 @@
         setDot(span, n);
       });
 
-      const w3Store = new Map();
+      // W3 (U1..U4) sichtbar
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
-        w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
+        const span = w3Spans.get(k);
+        if(!span) return;
+        span.textContent = String(n);
+        setDot(span, n);
       });
 
-      syncW3W1Kip(w3Store);
+      // W1 (T1..T4) sichtbar aus Quelle übernehmen
+      ["T1","T2","T3","T4"].forEach(k => {
+        const src = srcSpans.get(k);
+        const dst = w1Spans.get(k);
+        if(!src || !dst) return;
+        dst.textContent = src.textContent;
+        dst.classList.toggle("dot", src.classList.contains("dot"));
+      });
     }
 
     btn.addEventListener("click", setRandomNumbers);
