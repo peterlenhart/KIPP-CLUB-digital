@@ -105,6 +105,13 @@
       --cast-x: 18px;
       --cast-y: 18px;
 
+      /* ===== Feintuning für Mitte (dein Wunsch) =====
+         Linie: 4px nach Norden  => -4px
+         Paket: 2px nach Norden  => -2px
+      */
+      --seam-nudge-y: -4px;
+      --bundle-nudge-y: -2px;
+
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
@@ -223,9 +230,11 @@
       position:absolute;
       inset:0;
 
-      /* Skalierachse = Trennlinie (Grenze Q1/Q2) */
+      /* ✅ Paket 2px nach Norden (dein Wunsch) */
+      transform: translateY(var(--bundle-nudge-y)) scaleY(0.5);
+
+      /* ✅ Skalierachse = Trennlinie (Grenze Q1/Q2) */
       transform-origin: 50% calc(4 * var(--step));
-      transform: scaleY(0.5);
     }
 
     /* W2 FINAL (gespeichert, ausgeblendet) */
@@ -397,10 +406,11 @@
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
-      top:  calc(4 * var(--step));
-      transform: translateY(calc(-50% -2));
+      top:  calc(4 * var(--step) + var(--seam-nudge-y)); /* ✅ 4px nach Norden */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: 2px;
+
+      height: 1px;                      /* ✅ Hairline */
+      transform: translateY(-0.5px);    /* ✅ sauber mittig auf Pixelraster */
 
       background: rgba(234,215,190,0.55);
       border-radius: 999px;
