@@ -202,32 +202,30 @@
       pointer-events:none;
 
       opacity: 0;
-      visibility: hidden; /* Basis bleibt unsichtbar */
+      visibility: hidden;
     }
 
-    /* ✅ NEU: W3–W2 KIP (sichtbar für Spieler)
-       - entspricht W3–W2 Basis
-       - aber als "fixes Bildpaket" vertikal um 50% zur Achse skaliert
-       - Achse = hellbeige Linie zwischen Q1/Q2 (y = 4*step)
-    */
+    /* =========================
+       W3–W2 KIP (sichtbar)
+       ========================= */
     .w3w2KipLayer{
       position:absolute;
       inset:0;
-      z-index: 8;          /* über Final-Layern */
+      z-index: 8;
       pointer-events:none;
 
       opacity: 1;
       visibility: visible;
     }
 
-    /* Das "Bildpaket" – hier darf sich innen nichts mehr relativ bewegen */
+    /* Das "Bildpaket" – innen darf sich nichts relativ bewegen */
     .w3w2Bundle{
       position:absolute;
       inset:0;
 
       /* Skalierachse = hellbeige Linie (Grenze Q1/Q2) */
       transform-origin: 50% calc(4 * var(--step));
-      transform: scaleY(0.5); /* ✅ vertikal 50% zur Achse */
+      transform: scaleY(0.5);
     }
 
     /* W2 FINAL (gespeichert, ausgeblendet) */
@@ -240,8 +238,7 @@
       visibility: hidden;
     }
 
-    /* W3 FINAL (bisher sichtbar) -> jetzt für diese Phase ausblenden,
-       weil die Spieleransicht W3–W2 KIP ist */
+    /* W3 FINAL (im Code vorhanden, aktuell ausgeblendet) */
     .w3FinalLayer{
       position:absolute;
       inset:0;
@@ -261,8 +258,8 @@
       box-sizing: border-box;
 
       background:
-        radial-gradient(120% 90% at 15% 15%, rgba(249, 150, 30, 0.10), transparent 55%),
-        radial-gradient(120% 90% at 25% 25%, rgba(155, 70, 110, 0.10), transparent 60%),
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
         repeating-linear-gradient(
           20deg,
           rgba(0,0,0,0.02) 0px,
@@ -281,6 +278,16 @@
         0 0 0 1px rgba(255,255,255,0.10) inset;
 
       z-index: 6;
+    }
+
+    /* ✅ Kontaktkante: Radius dort entfernen (nur innen) */
+    .cubeFinal.joinTop{
+      border-top-left-radius: 0 !important;
+      border-top-right-radius: 0 !important;
+    }
+    .cubeFinal.joinBottom{
+      border-bottom-left-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
     }
 
     /* W2 Basis (links) */
@@ -374,7 +381,7 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ===== W2-Kopie in Q2 (Basis) ===== */
+    /* ===== W2-Kopie in Q2 ===== */
     .w2q2-2b{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-2c{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-3d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
@@ -386,11 +393,12 @@
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
-    /* ✅ hellbeige Trennlinie Q1/Q2 (Würfelkante / Skalierachse) */
+    /* ✅ hellbeige Trennlinie Q1/Q2 – exakt mittig auf der Kante */
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
-      top:  calc(4 * var(--step) - 1px);
+      top:  calc(4 * var(--step));
+      transform: translateY(-50%);
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: 2px;
 
@@ -460,13 +468,15 @@
       <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W3–W2 Basis (unsichtbar)">
         <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-        <div class="cubeFinal w2copy" aria-label="W2 auf Q2"></div>
+        <!-- W2 unten: oben eckig -->
+        <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
         <div class="slot w2q2-2b read-north" data-w2q2="S1"><div class="num"><span></span></div></div>
         <div class="slot w2q2-2c read-north" data-w2q2="S2"><div class="num"><span></span></div></div>
         <div class="slot w2q2-3d read-east"  data-w2q2="S3"><div class="num"><span></span></div></div>
         <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
 
-        <div class="cubeFinal w3mirror" aria-label="W3 gespiegelt auf Q1"></div>
+        <!-- W3 oben: unten eckig -->
+        <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
 
         <div class="slot w3q1-botL read-south" data-w3base="U1"><div class="num"><span></span></div></div>
         <div class="slot w3q1-botR read-south" data-w3base="U2"><div class="num"><span></span></div></div>
@@ -474,18 +484,20 @@
         <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ W3–W2 KIP (sichtbar) = fixiertes Paket + Skalierung -->
+      <!-- W3–W2 KIP (sichtbar) = fixes Paket + Skalierung -->
       <div class="w3w2KipLayer" id="w3w2KipLayer" aria-label="W3–W2 KIP (sichtbar)">
         <div class="w3w2Bundle" id="w3w2Bundle">
           <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-          <div class="cubeFinal w2copy" aria-label="W2 auf Q2"></div>
+          <!-- W2 unten: oben eckig -->
+          <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
           <div class="slot w2q2-2b read-north" data-w2kip="S1"><div class="num"><span></span></div></div>
           <div class="slot w2q2-2c read-north" data-w2kip="S2"><div class="num"><span></span></div></div>
           <div class="slot w2q2-3d read-east"  data-w2kip="S3"><div class="num"><span></span></div></div>
           <div class="slot w2q2-4d read-east"  data-w2kip="S4"><div class="num"><span></span></div></div>
 
-          <div class="cubeFinal w3mirror" aria-label="W3 gespiegelt auf Q1"></div>
+          <!-- W3 oben: unten eckig -->
+          <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
 
           <div class="slot w3q1-botL read-south" data-w3kip="U1"><div class="num"><span></span></div></div>
           <div class="slot w3q1-botR read-south" data-w3kip="U2"><div class="num"><span></span></div></div>
@@ -637,7 +649,6 @@
     }
 
     function setRandomNumbers(){
-      // 12 eindeutige Zahlen: 8 für W2/W1 (S/T), 4 für W3 (U)
       const nums = getUniqueRandomNumbers(12, 1, 12);
 
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
@@ -649,14 +660,12 @@
         setDot(span, n);
       });
 
-      // Übrige 4 Zahlen: U1..U4
       const w3Store = new Map();
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
         w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
       });
 
-      // Kopieren in Basis + KIP (fixes Paket)
       syncW2BaseAndKipFromKipSource();
       syncW3BaseAndKipFromStore(w3Store);
     }
