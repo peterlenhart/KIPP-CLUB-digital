@@ -18,11 +18,6 @@
       --floor: #7a4a34;
       --cube-border: #7a4a34;
 
-      --cube-wood-base: #d7c2a4;
-      --cube-wood-deep: #c9b08f;
-      --cube-wood-warm: rgba(155, 70, 110, 0.10);
-      --cube-wood-gold: rgba(249, 150, 30, 0.10);
-
       --slot-border: rgba(0,0,0,0.55);
       --slot-border-w: 2px;
       --slot-fill: #ead7be;
@@ -36,6 +31,9 @@
       --btn-border: rgba(0,0,0,0.35);
 
       --rotSign: 1;
+
+      /* NEW: Kompensation für Gruppenrotation */
+      --comp-rot: 0deg;
     }
 
     html, body { height: 100%; }
@@ -165,9 +163,7 @@
       pointer-events: none;
     }
 
-    /* =========================
-       Quelle (unsichtbar): W2/W1 Basis zum Randomisieren
-       ========================= */
+    /* Quelle (unsichtbar) */
     .pairLayer{
       position:absolute;
       inset:0;
@@ -177,9 +173,7 @@
       visibility: hidden;
     }
 
-    /* =========================================================
-       ✅ W3W1-KIP (sichtbar) – gebaut wie deine bestehenden KIP-Layer
-       ========================================================= */
+    /* W3W1-KIP */
     .w3w1KipLayer{
       position:absolute;
       inset:0;
@@ -194,7 +188,6 @@
       transform: scaleX(0.5);
     }
 
-    /* Gemeinsamer Schatten – Teil des Pakets */
     .w3w1SharedShadow{
       position:absolute;
       left: var(--step);
@@ -244,9 +237,7 @@
     /* W3 Basis in Q3: 5B..7D => left=1*step, top=4*step */
     .w3w1Pack .cubeFinal.w3b{ left: calc(1 * var(--step)); top: calc(4 * var(--step)); }
 
-    /* ✅ W1 Basis in Q2 (NICHT gedreht als Fläche!) */
-    .w3w1Pack .cubeFinal.w1b{ left: calc(4 * var(--step)); top: calc(4 * var(--step)); }
-
+    /* Slots / Zahlen */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -284,7 +275,9 @@
       color: #111;
       font-size: clamp(18px, 4.2vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(var(--num-rot, 0deg));
+
+      /* NEW: kompensierbare Rotation */
+      transform: rotate(calc(var(--num-rot, 0deg) + var(--comp-rot)));
       transform-origin: 50% 50%;
       position: relative;
     }
@@ -308,7 +301,6 @@
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
     /* ===== Quelle Slots (unsichtbar intern) ===== */
-    /* (Positionswerte sind egal, weil unsichtbar – bleiben aber wie gehabt konsistent) */
     .slot-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
     .slot-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .slot-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
@@ -319,22 +311,47 @@
     .slot2-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
 
-    /* ===== W3 Slots in Q3 (global, passend zum Cube w3b) ===== */
-    .w3k-u1{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); } /* 5D */
-    .w3k-u2{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); } /* 6D */
-    .w3k-u3{ left: calc(1 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); } /* 7B */
-    .w3k-u4{ left: calc(1 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); } /* 7C */
+    /* ===== W3 Slots in Q3 (global) ===== */
+    .w3k-u1{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
+    .w3k-u2{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
+    .w3k-u3{ left: calc(1 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
+    .w3k-u4{ left: calc(1 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
 
-    /* ===== W1 Slots in Q2 (global, passend zum Cube w1b) =====
-       WICHTIG: Cube bleibt ungedreht -> Slots werden wie bei W1-Basis gesetzt,
-       Leserichtung über read-* geregelt.
+    /* ==========================================================
+       ✅ W1 für W3W1:
+       - kommt aus W2W1-Basis (Q1)
+       - als kompaktes Paket nach Q2
+       - dann 90° CCW um eigenen Mittelpunkt rotieren
+       ========================================================== */
+
+    .w1Group{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(4 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      transform-origin: 50% 50%;
+      transform: rotate(-90deg); /* 90° gegen Uhrzeigersinn */
+      z-index: 6;
+      /* NEW: Zahlen sollen nach Rotation wieder gleich lesbar bleiben */
+      --comp-rot: 90deg; /* kompensiert die Gruppenrotation für die Zahlendrehung */
+    }
+
+    .w1Group .cubeFinal{
+      left: 0;
+      top:  0;
+    }
+
+    /* W1-Slots in "Basis-Logik" (wie sie in W2W1-Basis liegen):
+       (col1,row0) (col2,row0) (col0,row1) (col0,row2)
+       -> danach rotiert die Gruppe als Ganzes.
     */
-    .w1k-t1{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); } /* wie 2F */
-    .w1k-t2{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); } /* wie 2G */
-    .w1k-t3{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); } /* wie 3E */
-    .w1k-t4{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); } /* wie 4E */
+    .w1l-t1{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); } /* wie 2F */
+    .w1l-t2{ left: calc(2 * var(--step)); top: calc(0 * var(--step)); } /* wie 2G */
+    .w1l-t3{ left: calc(0 * var(--step)); top: calc(1 * var(--step)); } /* wie 3E */
+    .w1l-t4{ left: calc(0 * var(--step)); top: calc(2 * var(--step)); } /* wie 4E */
 
-    /* ✅ Trennlinie (oberste Ebene, NICHT skaliert) */
+    /* Trennlinie (oberste Ebene, NICHT skaliert) */
     .divider-W3W1{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
@@ -401,7 +418,7 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ W3W1 KIP (sichtbar) -->
+      <!-- W3W1 KIP (sichtbar) -->
       <div class="w3w1KipLayer" id="w3w1KipLayer">
         <div class="w3w1Pack" id="w3w1Pack">
           <div class="w3w1SharedShadow" aria-hidden="true"></div>
@@ -413,16 +430,18 @@
           <div class="slot w3k-u3 read-south" data-w3kip="U3"><div class="num"><span></span></div></div>
           <div class="slot w3k-u4 read-south" data-w3kip="U4"><div class="num"><span></span></div></div>
 
-          <!-- ✅ W1 in Q2 (Quadrat ungedreht; nur Zahlenrotation) -->
-          <div class="cubeFinal w1b" aria-hidden="true"></div>
-          <div class="slot w1k-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
-          <div class="slot w1k-t2 read-north" data-w1kip="T2"><div class="num"><span></span></div></div>
-          <div class="slot w1k-t3 read-west"  data-w1kip="T3"><div class="num"><span></span></div></div>
-          <div class="slot w1k-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
+          <!-- ✅ W1: aus Q1 kopiert, nach Q2, dann 90° CCW rotiert (als Paket) -->
+          <div class="w1Group" id="w1Group">
+            <div class="cubeFinal" aria-hidden="true"></div>
+
+            <div class="slot w1l-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
+            <div class="slot w1l-t2 read-north" data-w1kip="T2"><div class="num"><span></span></div></div>
+            <div class="slot w1l-t3 read-west"  data-w1kip="T3"><div class="num"><span></span></div></div>
+            <div class="slot w1l-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
+          </div>
 
         </div>
 
-        <!-- Trennlinie oben drüber, nicht skaliert -->
         <div class="divider-W3W1" aria-hidden="true"></div>
       </div>
     </div>
@@ -524,21 +543,15 @@
       });
 
       // W3: U1..U4
-      const w3Store = new Map();
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
-        w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
-      });
-
-      ["U1","U2","U3","U4"].forEach(k => {
         const dst = w3KipSpans.get(k);
-        const v = w3Store.get(k);
-        if(!dst || !v) return;
-        dst.textContent = v.text;
-        dst.classList.toggle("dot", !!v.dot);
+        if(!dst) return;
+        dst.textContent = String(n);
+        dst.classList.toggle("dot", (n === 6 || n === 9));
       });
 
-      // W1: T1..T4 (aus Quelle)
+      // W1: T1..T4 (direkt aus Quelle kopiert)
       ["T1","T2","T3","T4"].forEach(k => {
         const src = srcSpans.get(k);
         const dst = w1KipSpans.get(k);
