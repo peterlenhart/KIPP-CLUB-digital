@@ -18,6 +18,11 @@
       --floor: #7a4a34;
       --cube-border: #7a4a34;
 
+      --cube-wood-base: #d7c2a4;
+      --cube-wood-deep: #c9b08f;
+      --cube-wood-warm: rgba(155, 70, 110, 0.10);
+      --cube-wood-gold: rgba(249, 150, 30, 0.10);
+
       --slot-border: rgba(0,0,0,0.55);
       --slot-border-w: 2px;
       --slot-fill: #ead7be;
@@ -31,9 +36,6 @@
       --btn-border: rgba(0,0,0,0.35);
 
       --rotSign: 1;
-
-      /* NEW: Kompensation für Gruppenrotation */
-      --comp-rot: 0deg;
     }
 
     html, body { height: 100%; }
@@ -92,6 +94,7 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
+      /* Achse: zwischen Spalte D und E (mit halbem Gap) */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
       box-shadow:
@@ -129,9 +132,11 @@
       top:  var(--step);
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(6 * var(--cell) + 5 * var(--cell-gap));
+
       background:
         linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
         var(--floor);
+
       border-radius: 0;
       z-index: 2;
       pointer-events: none;
@@ -163,57 +168,33 @@
       pointer-events: none;
     }
 
-    /* Quelle (unsichtbar) */
-    .pairLayer{
+    /* ===== Schatten-Defaults ===== */
+    .cubeShadow{
       position:absolute;
-      inset:0;
-      z-index: 6;
-      pointer-events:none;
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* W3W1-KIP */
-    .w3w1KipLayer{
-      position:absolute;
-      inset:0;
-      z-index: 9;
-      pointer-events:none;
-    }
-
-    .w3w1Pack{
-      position:absolute;
-      inset:0;
-      transform-origin: var(--axis-x) 50%;
-      transform: scaleX(0.5);
-    }
-
-    .w3w1SharedShadow{
-      position:absolute;
-      left: var(--step);
-      top:  calc(4 * var(--step));
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       border-radius: clamp(10px, 2.2vmin, 18px);
       background: transparent;
+      box-sizing: border-box;
+
+      /* Standard */
       box-shadow:
-        0  18px 28px rgba(0,0,0,0.30),
-        0   8px 14px rgba(0,0,0,0.22),
-        0 -18px 28px rgba(0,0,0,0.24),
-        0  -8px 14px rgba(0,0,0,0.16);
+        18px 18px 18px rgba(0,0,0,0.35),
+        10px 10px 10px rgba(0,0,0,0.22);
+
       filter: blur(1px);
-      pointer-events:none;
     }
 
-    .cubeFinal{
+    /* ===== Cube-Fläche ===== */
+    .cube{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
 
       background:
-        radial-gradient(120% 90% at 15% 15%, rgba(249, 150, 30, 0.10), transparent 55%),
-        radial-gradient(120% 90% at 25% 25%, rgba(155, 70, 110, 0.10), transparent 60%),
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
         repeating-linear-gradient(
           20deg,
           rgba(0,0,0,0.02) 0px,
@@ -222,7 +203,7 @@
           rgba(255,255,255,0.02) 18px
         ),
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
-        linear-gradient(180deg, #d7c2a4, #c9b08f);
+        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
       border: 4px solid var(--cube-border);
       border-radius: clamp(10px, 2.2vmin, 18px);
@@ -234,10 +215,7 @@
       z-index: 6;
     }
 
-    /* W3 Basis in Q3: 5B..7D => left=1*step, top=4*step */
-    .w3w1Pack .cubeFinal.w3b{ left: calc(1 * var(--step)); top: calc(4 * var(--step)); }
-
-    /* Slots / Zahlen */
+    /* ===== Slot ===== */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -275,9 +253,7 @@
       color: #111;
       font-size: clamp(18px, 4.2vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-
-      /* NEW: kompensierbare Rotation */
-      transform: rotate(calc(var(--num-rot, 0deg) + var(--comp-rot)));
+      transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
       position: relative;
     }
@@ -300,71 +276,114 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ===== Quelle Slots (unsichtbar intern) ===== */
-    .slot-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
-    .slot-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
-    .slot-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
-    .slot-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
+    /* =========================================================
+       W2W1 BASIS (gespeichert, aber unsichtbar)
+       ========================================================= */
+    .pairLayer{
+      position:absolute;
+      inset:0;
+      z-index: 6;
+      pointer-events:none;
+      opacity: 0;
+      visibility: hidden;
+    }
 
-    .slot2-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
-    .slot2-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
-    .slot2-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
-    .slot2-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    /* W1 Basis (im pairLayer) steht in Q1:
+       left = 4*step, top = 1*step
+       Slots sind relativ dazu definiert (wie bei dir)
+    */
+    .pairLayer .w1Cube{
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+    }
 
-    /* ===== W3 Slots in Q3 (global) ===== */
-    .w3k-u1{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
-    .w3k-u2{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
-    .w3k-u3{ left: calc(1 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
-    .w3k-u4{ left: calc(1 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
+    .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
+    .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
+    .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
+    .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ==========================================================
-       ✅ W1 für W3W1:
-       - kommt aus W2W1-Basis (Q1)
-       - als kompaktes Paket nach Q2
-       - dann 90° CCW um eigenen Mittelpunkt rotieren
-       ========================================================== */
+    /* =========================================================
+       ✅ W3W1 KIP (SICHTBAR) – genau nach deiner Anweisung
+       - W3 Basis nach Q3: 5B–7D => left=1*step, top=4*step
+       - W1 aus W2W1-Basis: runter nach Q2 => left=4*step, top=4*step
+       - W1 als Paket um 90° CCW um eigenen Mittelpunkt drehen
+       - W3 + W1 + PseudoShadow als Paket verankern
+       - Paket um Achse (hellbeige Linie) scaleX(0.5)
+       - Trennlinie NICHT mitskalieren (liegt außerhalb)
+       ========================================================= */
+    .w3w1KipLayer{
+      position:absolute;
+      inset:0;
+      z-index: 8;
+      pointer-events:none;
+    }
 
-    .w1Group{
+    /* Paket, das gestaucht wird */
+    .w3w1Pack{
+      position:absolute;
+      inset:0;
+      transform-origin: var(--axis-x) 50%;
+      transform: scaleX(0.5);
+    }
+
+    /* breite Pseudo-Schattenfläche unter beiden Würfeln (als EIN Teil des Pakets) */
+    .w3w1WideShadow{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(4 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      border-radius: clamp(12px, 2.2vmin, 18px);
+      background: transparent;
+
+      box-shadow:
+        18px 18px 22px rgba(0,0,0,0.32),
+        10px 10px 14px rgba(0,0,0,0.22);
+
+      filter: blur(1px);
+    }
+
+    /* W3 Basis links in Q3 (nur Fläche – Slots kommen später wieder rein, wenn du sie ansagst) */
+    .w3Base{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(4 * var(--step));
+    }
+
+    /* W1 Paket: aus Q1 übernommen, nach Q2 verschoben und 90° CCW gedreht */
+    .w1FromBasis{
       position:absolute;
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      transform: rotate(-90deg);
       transform-origin: 50% 50%;
-      transform: rotate(-90deg); /* 90° gegen Uhrzeigersinn */
-      z-index: 6;
-      /* NEW: Zahlen sollen nach Rotation wieder gleich lesbar bleiben */
-      --comp-rot: 90deg; /* kompensiert die Gruppenrotation für die Zahlendrehung */
     }
 
-    .w1Group .cubeFinal{
-      left: 0;
-      top:  0;
-    }
+    /* Innerhalb des W1-Pakets liegt der Cube bei (0,0) */
+    .w1FromBasis .cube{ left: 0; top: 0; }
 
-    /* W1-Slots in "Basis-Logik" (wie sie in W2W1-Basis liegen):
-       (col1,row0) (col2,row0) (col0,row1) (col0,row2)
-       -> danach rotiert die Gruppe als Ganzes.
-    */
-    .w1l-t1{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); } /* wie 2F */
-    .w1l-t2{ left: calc(2 * var(--step)); top: calc(0 * var(--step)); } /* wie 2G */
-    .w1l-t3{ left: calc(0 * var(--step)); top: calc(1 * var(--step)); } /* wie 3E */
-    .w1l-t4{ left: calc(0 * var(--step)); top: calc(2 * var(--step)); } /* wie 4E */
+    /* Innerhalb des W1-Pakets liegen die Slots GENAU wie in der W1-Basis (nur relativ) */
+    .w1FromBasis .slot2-2f{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); }
+    .w1FromBasis .slot2-2g{ left: calc(2 * var(--step)); top: calc(0 * var(--step)); }
+    .w1FromBasis .slot2-3e{ left: calc(0 * var(--step)); top: calc(1 * var(--step)); }
+    .w1FromBasis .slot2-4e{ left: calc(0 * var(--step)); top: calc(2 * var(--step)); }
 
-    /* Trennlinie (oberste Ebene, NICHT skaliert) */
-    .divider-W3W1{
+    /* Achse / Trennlinie: OBERE EBENE, nicht mitskalieren */
+    .axisDivider{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
       top:  calc(4 * var(--step));
-      height: calc(2 * var(--step) + var(--cell));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       width: 2px;
-      background: rgba(234,215,190,0.50);
+
+      background: rgba(234,215,190,0.55);
       border-radius: 999px;
       filter: blur(0.1px);
+
       z-index: 9999;
       pointer-events: none;
-      opacity: 1;
-      visibility: visible;
     }
 
     .controls{
@@ -405,44 +424,38 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- Quelle (unsichtbar) -->
+      <!-- gespeicherte Basis (unsichtbar) -->
       <div class="pairLayer" id="pairLayer">
-        <div class="slot slot-2b read-north" data-slot="S1"><div class="num"><span></span></div></div>
-        <div class="slot slot-2c read-north" data-slot="S2"><div class="num"><span></span></div></div>
-        <div class="slot slot-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
-        <div class="slot slot-4d read-east"  data-slot="S4"><div class="num"><span></span></div></div>
-
+        <div class="cube w1Cube" aria-hidden="true"></div>
         <div class="slot slot2-2f read-north" data-slot="T1"><div class="num"><span></span></div></div>
         <div class="slot slot2-2g read-north" data-slot="T2"><div class="num"><span></span></div></div>
         <div class="slot slot2-3e read-west"  data-slot="T3"><div class="num"><span></span></div></div>
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- W3W1 KIP (sichtbar) -->
-      <div class="w3w1KipLayer" id="w3w1KipLayer">
-        <div class="w3w1Pack" id="w3w1Pack">
-          <div class="w3w1SharedShadow" aria-hidden="true"></div>
+      <!-- ✅ W3W1 KIP (sichtbar) -->
+      <div class="w3w1KipLayer" id="w3w1KipLayer" aria-label="W3W1 KIP (sichtbar)">
+        <!-- Trennlinie / Achse bleibt oben und wird NICHT mitskaliert -->
+        <div class="axisDivider" aria-hidden="true"></div>
 
-          <!-- W3 in Q3 -->
-          <div class="cubeFinal w3b" aria-hidden="true"></div>
-          <div class="slot w3k-u1 read-east"  data-w3kip="U1"><div class="num"><span></span></div></div>
-          <div class="slot w3k-u2 read-east"  data-w3kip="U2"><div class="num"><span></span></div></div>
-          <div class="slot w3k-u3 read-south" data-w3kip="U3"><div class="num"><span></span></div></div>
-          <div class="slot w3k-u4 read-south" data-w3kip="U4"><div class="num"><span></span></div></div>
+        <!-- Das Paket, das 50% waagrecht gestaucht wird -->
+        <div class="w3w1Pack">
+          <!-- breiter Schatten als Teil des Pakets -->
+          <div class="w3w1WideShadow" aria-hidden="true"></div>
 
-          <!-- ✅ W1: aus Q1 kopiert, nach Q2, dann 90° CCW rotiert (als Paket) -->
-          <div class="w1Group" id="w1Group">
-            <div class="cubeFinal" aria-hidden="true"></div>
+          <!-- W3 Basis (links in Q3) -->
+          <div class="cube w3Base" aria-label="W3 Basis (Q3)"></div>
 
-            <div class="slot w1l-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
-            <div class="slot w1l-t2 read-north" data-w1kip="T2"><div class="num"><span></span></div></div>
-            <div class="slot w1l-t3 read-west"  data-w1kip="T3"><div class="num"><span></span></div></div>
-            <div class="slot w1l-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
+          <!-- W1 aus W2W1-Basis: runter + 90° CCW als EIN Paket -->
+          <div class="w1FromBasis" aria-label="W1 aus Basis (Q2, gedreht)">
+            <div class="cube" aria-hidden="true"></div>
+
+            <div class="slot slot2-2f read-north" data-w1="T1"><div class="num"><span></span></div></div>
+            <div class="slot slot2-2g read-north" data-w1="T2"><div class="num"><span></span></div></div>
+            <div class="slot slot2-3e read-west"  data-w1="T3"><div class="num"><span></span></div></div>
+            <div class="slot slot2-4e read-west"  data-w1="T4"><div class="num"><span></span></div></div>
           </div>
-
         </div>
-
-        <div class="divider-W3W1" aria-hidden="true"></div>
       </div>
     </div>
 
@@ -455,22 +468,6 @@
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
-
-    // Quelle
-    const srcSlotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
-    const srcSpans = new Map(srcSlotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
-
-    // Sichtbar: W3W1-KIP
-    const w3KipEls = Array.from(document.querySelectorAll("[data-w3kip]"));
-    const w3KipSpans = new Map(w3KipEls.map(s => [s.dataset.w3kip, s.querySelector(".num > span")]));
-
-    const w1KipEls = Array.from(document.querySelectorAll("[data-w1kip]"));
-    const w1KipSpans = new Map(w1KipEls.map(s => [s.dataset.w1kip, s.querySelector(".num > span")]));
-
-    function setBoardSquare(){
-      const w = Math.round(boardEl.getBoundingClientRect().width);
-      boardEl.style.height = w + "px";
-    }
 
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
@@ -496,6 +493,11 @@
       [key(1,"D"), "c-blau"],
       [key(1,"C"), "c-violett"],
     ]);
+
+    function setBoardSquare(){
+      const w = Math.round(boardEl.getBoundingClientRect().width);
+      boardEl.style.height = w + "px";
+    }
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
@@ -529,39 +531,57 @@
       return pool.slice(0, count);
     }
 
-    function setRandomNumbers(){
-      const nums = getUniqueRandomNumbers(12, 1, 12);
+    // W1 Slots in zwei Stellen gleichzeitig setzen:
+    // - in der gespeicherten Basis (unsichtbar) -> data-slot="T1..T4"
+    // - in der sichtbaren W1FromBasis -> data-w1="T1..T4"
+    const baseW1Spans = new Map(
+      Array.from(document.querySelectorAll('.pairLayer [data-slot]'))
+        .map(s => [s.dataset.slot, s.querySelector('.num > span')])
+    );
+    const viewW1Spans = new Map(
+      Array.from(document.querySelectorAll('.w1FromBasis [data-w1]'))
+        .map(s => [s.dataset.w1, s.querySelector('.num > span')])
+    );
 
-      // Quelle S/T
-      const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
-      keysST.forEach((k, idx) => {
-        const span = srcSpans.get(k);
-        if(!span) return;
-        const n = nums[idx];
-        span.textContent = String(n);
-        setDot(span, n);
-      });
-
-      // W3: U1..U4
-      ["U1","U2","U3","U4"].forEach((k, i) => {
-        const n = nums[8 + i];
-        const dst = w3KipSpans.get(k);
-        if(!dst) return;
-        dst.textContent = String(n);
-        dst.classList.toggle("dot", (n === 6 || n === 9));
-      });
-
-      // W1: T1..T4 (direkt aus Quelle kopiert)
+    function syncW1ViewFromBase(){
       ["T1","T2","T3","T4"].forEach(k => {
-        const src = srcSpans.get(k);
-        const dst = w1KipSpans.get(k);
+        const src = baseW1Spans.get(k);
+        const dst = viewW1Spans.get(k);
         if(!src || !dst) return;
         dst.textContent = src.textContent;
         dst.classList.toggle("dot", src.classList.contains("dot"));
       });
     }
 
-    btn.addEventListener("click", setRandomNumbers);
+    function setRandomNumbers(){
+      const nums = getUniqueRandomNumbers(12, 1, 12);
+
+      // Nur die 4 W1 Zahlen (T1..T4) für diesen Test
+      const keysT = ["T1","T2","T3","T4"];
+      keysT.forEach((k, idx) => {
+        const span = baseW1Spans.get(k);
+        if(!span) return;
+        const n = nums[idx];
+        span.textContent = String(n);
+        setDot(span, n);
+      });
+
+      syncW1ViewFromBase();
+    }
+
+    let busy = false;
+    async function runShuffle(){
+      if (busy) return;
+      busy = true;
+      btn.disabled = true;
+
+      setRandomNumbers();
+
+      btn.disabled = false;
+      busy = false;
+    }
+
+    btn.addEventListener("click", runShuffle);
 
     window.addEventListener("load", () => {
       setBoardSquare();
