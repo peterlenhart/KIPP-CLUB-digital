@@ -175,7 +175,7 @@
     }
 
     /* =========================================================
-       W2KIP + W1KIP (gespeichert, aber unsichtbar)
+       W2W1-Basis bleibt Quelle (unsichtbar)
        ========================================================= */
     .pairLayer{
       position:absolute;
@@ -183,62 +183,45 @@
       z-index: 6;
       pointer-events:none;
 
-      transform-origin: var(--axis-x) 50%;
-      transform: scaleX(var(--pair-scale-x, 0.5));
-
       opacity: 0;
       visibility: hidden;
     }
 
     /* =========================================================
-       W2 FINAL (gespeichert, aktuell ausgeblendet)
-       ========================================================= */
-    .w2FinalLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* =========================================================
-       W3 FINAL (bisher sichtbar) – jetzt AUSBLENDEN, damit KIP sichtbar ist
-       ========================================================= */
-    .w3FinalLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* =========================================================
-       ✅ NEU: W3W1 KIP (sichtbar)
-       - W3 links (Q3: 5B..7D), ohne Verdrehung
-       - W1 rechts (Q2: 5E..7G), -90° CCW um eigenen Mittelpunkt
-       - Beide zusammen waagrecht 50% skaliert um Achse --axis-x
-       - Gemeinsamer waagrechter Schatten auf Boxboden
+       W3W1 KIP (sichtbar, gefixt)
+       - KEIN scaleX auf ganzer Layer!
+       - Stattdessen: linke Hälfte und rechte Hälfte einzeln 50% skaliert zur Achse hin
        ========================================================= */
     .w3w1KipLayer{
       position:absolute;
       inset:0;
       z-index: 8;
       pointer-events:none;
-
-      transform-origin: var(--axis-x) 50%;
-      transform: scaleX(0.5);
     }
 
-    /* stabile Trennlinie OBEN drüber (nicht skaliert!) */
+    /* gemeinsamer, waagrechter Bodenschatten */
+    .w3w1FloorShadow{
+      position:absolute;
+      left: var(--step);
+      top:  calc(6 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(1 * var(--step));
+      pointer-events: none;
+      z-index: 3;
+
+      background: rgba(0,0,0,0.00);
+      box-shadow:
+        0 18px 28px rgba(0,0,0,0.34),
+        0 8px 14px rgba(0,0,0,0.22);
+      filter: blur(1px);
+    }
+
+    /* stabile Trennlinie (nicht skaliert) */
     .divider-DE-rows5to7{
       position:absolute;
       left: calc(var(--axis-x) - 1px);
-      top:  calc(4 * var(--step));                   /* Zeile 5 */
-      height: calc(2 * var(--step) + var(--cell));   /* 3 Zeilen */
+      top:  calc(4 * var(--step));
+      height: calc(2 * var(--step) + var(--cell));
       width: 2px;
 
       background: rgba(234,215,190,0.50);
@@ -252,52 +235,50 @@
       visibility: visible;
     }
 
-    /* Wrapper je Würfelfläche, damit Rotation die Slots mitnimmt */
-    .kipWrap{
+    /* Jede Hälfte wird zur Achse hin skaliert */
+    .half{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      transform-origin: 50% 50%;
+      transform: scaleX(0.5);
+    }
+    .half.left{
+      /* zur Achse hin: rechter Rand bleibt "Hinge" */
+      transform-origin: 100% 50%;
+    }
+    .half.right{
+      /* zur Achse hin: linker Rand bleibt "Hinge" */
+      transform-origin: 0% 50%;
     }
 
-    /* W3 nach Q3: 5B..7D -> left=1*step, top=4*step */
-    .w3w1KipLayer .w3Kip{
+    /* W3 liegt in Q3: 5B..7D => left=1*step, top=4*step */
+    .w3Half{
       left: calc(1 * var(--step));
       top:  calc(4 * var(--step));
-      transform: none;
     }
 
-    /* W1 nach Q2: 5E..7G -> left=4*step, top=4*step, dann -90° CCW */
-    .w3w1KipLayer .w1Kip{
+    /* W1 liegt in Q2: 5E..7G => left=4*step, top=4*step */
+    .w1Half{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
+    }
+
+    /* Wrapper innerhalb jeder Hälfte */
+    .wrap{
+      position:absolute;
+      inset:0;
+      transform-origin: 50% 50%;
+    }
+    /* W1: -90° CCW um eigenen Mittelpunkt */
+    .wrap.w1rot{
       transform: rotate(-90deg);
     }
 
-    /* gemeinsamer, waagrechter Bodenschatten über Boxbreite */
-    .w3w1FloorShadow{
-      position:absolute;
-      left: var(--step);
-      top:  calc(6 * var(--step)); /* ungefähr unterhalb der 3×3-Flächen */
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: calc(1 * var(--step));
-      pointer-events: none;
-      z-index: 3;
-
-      background: rgba(0,0,0,0.00);
-      box-shadow:
-        0 18px 28px rgba(0,0,0,0.34),
-        0 8px 14px rgba(0,0,0,0.22);
-
-      filter: blur(1px);
-    }
-
-    .cube,
-    .cube2,
     .cubeFinal{
       position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      left:0; top:0;
+      width: 100%;
+      height: 100%;
       box-sizing: border-box;
 
       background:
@@ -385,7 +366,7 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ===== Slot-Positionen (W2KIP/W1KIP) – bleibt als Quelle ===== */
+    /* Quelle: Slot-Positionen (W2W1 Basis) */
     .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
@@ -396,41 +377,17 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* =========================================================
-       ✅ Slots INSIDE der W3W1-KIP-Wraps (relativ zum Wrap)
-       W3 (entspricht Muster aus W3 FINAL):
-         U1: (2,0)  U2:(2,1)  U3:(0,2)  U4:(1,2)
-       W1 (entspricht Muster aus W1 Basis):
-         T1:(1,0)  T2:(2,0)  T3:(0,1)  T4:(0,2)
-       ========================================================= */
-    .w3w1KipLayer .w3s-u1{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
-    .w3w1KipLayer .w3s-u2{ left: calc(2 * var(--step)); top:  calc(1 * var(--step)); }
-    .w3w1KipLayer .w3s-u3{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
-    .w3w1KipLayer .w3s-u4{ left: calc(1 * var(--step)); top:  calc(2 * var(--step)); }
+    /* Slots in W3-Hälfte (relativ zur 3×3-Fläche) */
+    .w3s-u1{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
+    .w3s-u2{ left: calc(2 * var(--step)); top:  calc(1 * var(--step)); }
+    .w3s-u3{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
+    .w3s-u4{ left: calc(1 * var(--step)); top:  calc(2 * var(--step)); }
 
-    .w3w1KipLayer .w1s-t1{ left: calc(1 * var(--step)); top:  calc(0 * var(--step)); }
-    .w3w1KipLayer .w1s-t2{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
-    .w3w1KipLayer .w1s-t3{ left: calc(0 * var(--step)); top:  calc(1 * var(--step)); }
-    .w3w1KipLayer .w1s-t4{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
-
-    /* alte Divider bleibt im Code, unsichtbar */
-    .divider-DE-rows2to4{
-      position:absolute;
-      left: calc(var(--axis-x) - 1px);
-      top:  calc(1 * var(--step));
-      height: calc(2 * var(--step) + var(--cell));
-      width: 2px;
-
-      background: rgba(234,215,190,0.5);
-      border-radius: 999px;
-      filter: blur(0.1px);
-
-      z-index: 9999;
-      pointer-events: none;
-
-      opacity: 0;
-      visibility: hidden;
-    }
+    /* Slots in W1-Hälfte (relativ zur 3×3-Fläche) */
+    .w1s-t1{ left: calc(1 * var(--step)); top:  calc(0 * var(--step)); }
+    .w1s-t2{ left: calc(2 * var(--step)); top:  calc(0 * var(--step)); }
+    .w1s-t3{ left: calc(0 * var(--step)); top:  calc(1 * var(--step)); }
+    .w1s-t4{ left: calc(0 * var(--step)); top:  calc(2 * var(--step)); }
 
     .controls{
       width: 100%;
@@ -468,16 +425,16 @@
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
       <div class="ball" aria-label="Kugel"></div>
+
+      <!-- Schattenband (gemeinsam, Bodenwurf) -->
       <div class="w3w1FloorShadow" aria-hidden="true"></div>
+
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
       <!-- =========================
-           W2KIP + W1KIP (unsichtbar, gespeicherte Quelle)
+           W2W1-Basis (Quelle, unsichtbar)
            ========================= -->
-      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
-        <div class="cube" aria-label="W2 Basis/KIP"></div>
-        <div class="cube2" aria-label="W1 Basis/KIP"></div>
-
+      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 Basis (Quelle)">
         <div class="slot slot-2b read-north" data-slot="S1"><div class="num"><span></span></div></div>
         <div class="slot slot-2c read-north" data-slot="S2"><div class="num"><span></span></div></div>
         <div class="slot slot-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
@@ -490,39 +447,38 @@
       </div>
 
       <!-- =========================
-           ✅ W3W1 KIP (sichtbar)
+           W3W1 KIP (sichtbar, gefixt)
            ========================= -->
       <div class="w3w1KipLayer" id="w3w1KipLayer" aria-label="W3W1 KIP (sichtbar)">
-        <!-- W3 links (Q3) -->
-        <div class="kipWrap w3Kip">
-          <div class="cubeFinal" style="left:0; top:0;"></div>
-          <div class="slot w3s-u1 read-east"  data-w3kip="U1"><div class="num"><span></span></div></div>
-          <div class="slot w3s-u2 read-east"  data-w3kip="U2"><div class="num"><span></span></div></div>
-          <div class="slot w3s-u3 read-south" data-w3kip="U3"><div class="num"><span></span></div></div>
-          <div class="slot w3s-u4 read-south" data-w3kip="U4"><div class="num"><span></span></div></div>
+
+        <!-- linke Hälfte: W3 in Q3 -->
+        <div class="half left w3Half">
+          <div class="wrap">
+            <div class="cubeFinal" aria-hidden="true"></div>
+
+            <div class="slot w3s-u1 read-east"  data-w3kip="U1"><div class="num"><span></span></div></div>
+            <div class="slot w3s-u2 read-east"  data-w3kip="U2"><div class="num"><span></span></div></div>
+            <div class="slot w3s-u3 read-south" data-w3kip="U3"><div class="num"><span></span></div></div>
+            <div class="slot w3s-u4 read-south" data-w3kip="U4"><div class="num"><span></span></div></div>
+          </div>
         </div>
 
-        <!-- W1 rechts (Q2) – -90° CCW -->
-        <div class="kipWrap w1Kip">
-          <div class="cubeFinal" style="left:0; top:0;"></div>
-          <div class="slot w1s-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
-          <div class="slot w1s-t2 read-north" data-w1kip="T2"><div class="num"><span></span></div></div>
-          <div class="slot w1s-t3 read-west"  data-w1kip="T3"><div class="num"><span></span></div></div>
-          <div class="slot w1s-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
+        <!-- rechte Hälfte: W1 in Q2, -90° CCW -->
+        <div class="half right w1Half">
+          <div class="wrap w1rot">
+            <div class="cubeFinal" aria-hidden="true"></div>
+
+            <div class="slot w1s-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
+            <div class="slot w1s-t2 read-north" data-w1kip="T2"><div class="num"><span></span></div></div>
+            <div class="slot w1s-t3 read-west"  data-w1kip="T3"><div class="num"><span></span></div></div>
+            <div class="slot w1s-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
+          </div>
         </div>
+
       </div>
 
-      <!-- ✅ Trennlinie: stabil, nicht skaliert -->
+      <!-- Trennlinie: stabil, oberste Ebene -->
       <div class="divider-DE-rows5to7" aria-hidden="true"></div>
-
-      <!-- alte Divider bleibt im Code -->
-      <div class="divider-DE-rows2to4" aria-hidden="true"></div>
-
-      <!-- W2 FINAL (hidden, bleibt gespeichert) -->
-      <div class="w2FinalLayer" id="w2FinalLayer" aria-label="W2 Final (Q1)"></div>
-
-      <!-- W3 FINAL (hidden, bleibt gespeichert) -->
-      <div class="w3FinalLayer" id="w3FinalLayer" aria-label="W3 Final (Q2)"></div>
     </div>
 
     <div class="controls">
@@ -536,10 +492,10 @@
     const btn = document.getElementById("btnBestuecken");
 
     // Quelle: W2W1 Slots
-    const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
-    const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
+    const srcSlotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
+    const srcSpans = new Map(srcSlotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // Ziel: W3W1 KIP Slots
+    // Ziele: W3W1 KIP
     const w3kipEls = Array.from(document.querySelectorAll("[data-w3kip]"));
     const w3kipSpans = new Map(w3kipEls.map(s => [s.dataset.w3kip, s.querySelector(".num > span")]));
 
@@ -608,8 +564,8 @@
       return pool.slice(0, count);
     }
 
-    function syncW3W1KipFromStores(w3Store){
-      // W3 KIP: U1..U4 aus Store
+    function syncW3W1Kip(w3Store){
+      // W3: U1..U4 aus Store
       ["U1","U2","U3","U4"].forEach(k => {
         const dst = w3kipSpans.get(k);
         const v = w3Store.get(k);
@@ -618,9 +574,9 @@
         dst.classList.toggle("dot", !!v.dot);
       });
 
-      // W1 KIP: T1..T4 aus Quelle (PairLayer)
+      // W1: T1..T4 aus Quelle
       ["T1","T2","T3","T4"].forEach(k => {
-        const src = slotSpanEls.get(k);
+        const src = srcSpans.get(k);
         const dst = w1kipSpans.get(k);
         if(!src || !dst) return;
         dst.textContent = src.textContent;
@@ -629,27 +585,25 @@
     }
 
     function setRandomNumbers(){
-      // 12 eindeutige Zahlen: 8 für W2/W1 (S/T), 4 für W3 (U)
+      // 12 eindeutige Zahlen: 8 für Quelle (S/T), 4 für W3 (U)
       const nums = getUniqueRandomNumbers(12, 1, 12);
 
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
       keysST.forEach((k, idx) => {
-        const span = slotSpanEls.get(k);
+        const span = srcSpans.get(k);
         if(!span) return;
         const n = nums[idx];
         span.textContent = String(n);
         setDot(span, n);
       });
 
-      // Store U1..U4
       const w3Store = new Map();
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
         w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
       });
 
-      // Sichtbare KIP-Ansicht befüllen
-      syncW3W1KipFromStores(w3Store);
+      syncW3W1Kip(w3Store);
     }
 
     btn.addEventListener("click", setRandomNumbers);
