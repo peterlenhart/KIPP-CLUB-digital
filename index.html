@@ -223,7 +223,7 @@
       position:absolute;
       inset:0;
 
-      /* Skalierachse = hellbeige Linie (Grenze Q1/Q2) */
+      /* Skalierachse = Trennlinie (Grenze Q1/Q2) */
       transform-origin: 50% calc(4 * var(--step));
       transform: scaleY(0.5);
     }
@@ -393,7 +393,7 @@
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
-    /* ✅ hellbeige Trennlinie Q1/Q2 – exakt mittig auf der Kante */
+    /* ✅ Trennlinie Q1/Q2 – LOSE Ebene, NICHT im skalierten Bundle */
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -406,7 +406,7 @@
       border-radius: 999px;
       filter: blur(0.1px);
 
-      z-index: 9999;
+      z-index: 20000; /* immer über allem */
       pointer-events:none;
     }
 
@@ -486,9 +486,10 @@
 
       <!-- W3–W2 KIP (sichtbar) = fixes Paket + Skalierung -->
       <div class="w3w2KipLayer" id="w3w2KipLayer" aria-label="W3–W2 KIP (sichtbar)">
-        <div class="w3w2Bundle" id="w3w2Bundle">
-          <div class="divider-Q1Q2" aria-hidden="true"></div>
+        <!-- ✅ LOSE Trennlinie: NICHT im skalierten Bundle -->
+        <div class="divider-Q1Q2" aria-hidden="true"></div>
 
+        <div class="w3w2Bundle" id="w3w2Bundle">
           <!-- W2 unten: oben eckig -->
           <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
           <div class="slot w2q2-2b read-north" data-w2kip="S1"><div class="num"><span></span></div></div>
