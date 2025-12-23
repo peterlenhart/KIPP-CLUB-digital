@@ -216,9 +216,7 @@
       transform: scaleX(0.5);
     }
 
-    /* Gemeinsamer Schatten (Teil des Pakets!)
-       ✅ inklusive NORD-Schatten
-    */
+    /* Gemeinsamer Schatten (Teil des Pakets!) */
     .w3w1SharedShadow{
       position:absolute;
       left: var(--step);
@@ -264,17 +262,17 @@
       z-index: 6;
     }
 
-    /* W3 Basis in Q3: 5B..7D => left=1*step, top=4*step */
+    /* W3 Basis in Q3 */
     .w3w1Pack .cubeFinal.w3b{
       left: calc(1 * var(--step));
       top:  calc(4 * var(--step));
     }
 
-    /* ✅ FIX: W1-Rotation NICHT mehr auf dem gleichen Element, das im skalierten Pack sitzt.
-       -> w1rotWrap bleibt "neutral"
-       -> Rotation liegt in w1rotInner (verhindert den 25%-Effekt)
-    */
-    .w3w1Pack .w1rotWrap{
+    /* =========================================================
+       ✅ DER FIX: W1 bekommt eine feste "Plane-Box".
+       Phantom + Inhalt teilen dieselbe Box => kann NICHT mehr anders skalieren.
+       ========================================================= */
+    .w3w1Pack .w1PlaneWrap{
       position:absolute;
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
@@ -284,13 +282,28 @@
       transform: none;
       transform-origin: 50% 50%;
     }
-    .w3w1Pack .w1rotWrap .w1rotInner{
+
+    /* Phantomfläche (die "Schatten wirft") – exakt gleiche Kanten wie die Slots */
+    .w3w1Pack .w1PlaneWrap .w1Phantom{
       position:absolute;
       inset:0;
-      transform: rotate(-90deg) scaleX(0.5); /* ✅ EINZIGE ÄNDERUNG HIER */
+      border-radius: clamp(10px, 2.2vmin, 18px);
+      background: transparent;
+      /* Wenn du hier KEINEN Extra-Schatten willst: lass box-shadow leer.
+         Ich lasse es transparent, damit NUR die Fläche gekoppelt ist. */
+      pointer-events:none;
+    }
+
+    /* Rotation nur INHALT, nicht die Plane-Box */
+    .w3w1Pack .w1PlaneWrap .w1rotInner{
+      position:absolute;
+      inset:0;
+      transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
-    .w3w1Pack .w1rotWrap .w1rotInner .cubeFinal{
+
+    /* der Würfel-Hintergrund bleibt wie gehabt innerhalb der rotierten Ebene */
+    .w3w1Pack .w1PlaneWrap .w1rotInner .cubeFinal{
       position:absolute;
       left:0; top:0;
     }
@@ -367,10 +380,10 @@
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
     /* ===== W3 Slots in Q3 ===== */
-    .w3k-u1{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); } /* 5D */
-    .w3k-u2{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); } /* 6D */
-    .w3k-u3{ left: calc(1 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); } /* 7B */
-    .w3k-u4{ left: calc(1 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); } /* 7C */
+    .w3k-u1{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
+    .w3k-u2{ left: calc(1 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
+    .w3k-u3{ left: calc(1 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
+    .w3k-u4{ left: calc(1 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
 
     /* ===== W1 Slots lokal im Rot-Container ===== */
     .w1k-t1{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); }
@@ -460,8 +473,9 @@
           <div class="slot w3k-u3 read-south" data-w3kip="U3"><div class="num"><span></span></div></div>
           <div class="slot w3k-u4 read-south" data-w3kip="U4"><div class="num"><span></span></div></div>
 
-          <!-- ✅ W1 Basis nach Q2, Rotation jetzt in w1rotInner -->
-          <div class="w1rotWrap">
+          <!-- ✅ W1: Plane-Wrapper (fixe Box) + Phantom + Rotation nur innen -->
+          <div class="w1PlaneWrap">
+            <div class="w1Phantom" aria-hidden="true"></div>
             <div class="w1rotInner">
               <div class="cubeFinal" aria-hidden="true"></div>
               <div class="slot w1k-t1 read-north" data-w1kip="T1"><div class="num"><span></span></div></div>
@@ -470,6 +484,7 @@
               <div class="slot w1k-t4 read-west"  data-w1kip="T4"><div class="num"><span></span></div></div>
             </div>
           </div>
+
         </div>
 
         <!-- Trennlinie oben drüber, nicht skaliert -->
