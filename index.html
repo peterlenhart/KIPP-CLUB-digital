@@ -96,8 +96,7 @@
 
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* ✅ Absolut saubere Mitte zwischen Q1 und Q2:
-         das ist die MITTE des GAPS zwischen Zeile 4 und 5 */
+      /* ✅ perfekte Mitte */
       --seam-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
       /* W2 Basis links oben */
@@ -106,10 +105,7 @@
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
-      --cast-x: 18px;
-      --cast-y: 18px;
-
-      /* Helfer */
+      /* Hilfen für Schatten */
       --cubeSize: calc(3 * var(--cell) + 2 * var(--cell-gap));
       --pairHeight: calc(2 * var(--cubeSize) + var(--cell-gap));
 
@@ -214,7 +210,8 @@
     }
 
     /* =========================
-       W3–W2 KIP (Original, jetzt ausgeblendet)
+       ✅ W3–W2 KIP (sichtbar) – jetzt als "eine Ebene"
+       - wir rotieren die GRUPPE, nicht Einzelteile
        ========================= */
     .w3w2KipLayer{
       position:absolute;
@@ -222,95 +219,65 @@
       z-index: 8;
       pointer-events:none;
 
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* Das "Bildpaket" – innen darf sich nichts relativ bewegen */
-    .w3w2Bundle{
-      position:absolute;
-      inset:0;
-
-      /* ✅ Skalierachse = exakt MITTE des GAPS (perfekt) */
-      transform-origin: 50% var(--seam-y);
-      transform: scaleY(0.5);
-    }
-
-    /* =========================
-       ✅ W3–W2 KIP FLAT (sichtbar)
-       - alles (inkl. Schatten + Trennlinie) = 1 Paket
-       - Zahlen sind in dieser Ansicht AUS
-       - Paket wird 90° CCW um Box-Mittelpunkt gedreht
-       ========================= */
-    .w3w2KipFlatRotLayer{
-      position:absolute;
-      inset:0;
-      z-index: 50;
-      pointer-events:none;
       opacity: 1;
       visibility: visible;
     }
 
-    .w3w2KipFlatRotPack{
+    /* ✅ DIE "Flatten"-Gruppe: Schatten + Linie + Bundle */
+    .w3w2KipGroup{
       position:absolute;
       inset:0;
 
-      /* ✅ Rotation um Box-Mittelpunkt */
+      /* 90° gegen Uhrzeigersinn um Board-Mittelpunkt */
       transform-origin: 50% 50%;
       transform: rotate(-90deg);
     }
 
-    /* ====== Schatten an den 3 Innenkanten (im Boxinneren) ======
-       Wir legen drei Shadow-Bänder auf den Boden:
-       1) links (zur Kugel hin) entlang der ganzen Doppel-Fläche
-       2) oben (Nordkante der oberen Fläche)
-       3) unten (Südkante der unteren Fläche)
-       Diese Werte sind bewusst ähnlich "W2W1KIP-Feeling": weich, breit, nicht eckig. */
+    /* Das Bundle bleibt exakt wie gestern (seam-y + scaleY) */
+    .w3w2Bundle{
+      position:absolute;
+      inset:0;
+
+      transform-origin: 50% var(--seam-y);
+      transform: scaleY(0.5);
+    }
+
+    /* ====== Schatten an den 3 Innenkanten (Teil der Gruppe!) ====== */
     .edgeShadow{
       position:absolute;
       pointer-events:none;
+      z-index: 12000;
       filter: blur(0.6px);
       opacity: 0.95;
-      z-index: 12000; /* unter Trennlinie, über Boden */
     }
 
-    /* Linke Innenkante (vertikal) */
+    /* linke Innenkante */
     .shadow-left{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
       width: 18px;
       height: var(--pairHeight);
       transform: translateX(-18px);
-      background: linear-gradient(90deg, rgba(0,0,0,0.32), rgba(0,0,0,0.00));
+      background: linear-gradient(90deg, rgba(0,0,0,0.30), rgba(0,0,0,0.00));
     }
 
-    /* Obere Innenkante (horizontal) */
+    /* obere Innenkante */
     .shadow-top{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
       width: var(--cubeSize);
       height: 16px;
       transform: translateY(-16px);
-      background: linear-gradient(180deg, rgba(0,0,0,0.26), rgba(0,0,0,0.00));
+      background: linear-gradient(180deg, rgba(0,0,0,0.24), rgba(0,0,0,0.00));
     }
 
-    /* Untere Innenkante (horizontal) */
+    /* untere Innenkante */
     .shadow-bottom{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step) + var(--pairHeight));
       width: var(--cubeSize);
       height: 16px;
-      background: linear-gradient(0deg, rgba(0,0,0,0.26), rgba(0,0,0,0.00));
-    }
-
-    /* W3 FINAL (im Code vorhanden, aktuell ausgeblendet) */
-    .w3FinalLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-      opacity: 0;
-      visibility: hidden;
+      background: linear-gradient(0deg, rgba(0,0,0,0.24), rgba(0,0,0,0.00));
     }
 
     .cube,
@@ -344,7 +311,6 @@
       z-index: 6;
     }
 
-    /* ✅ Kontaktkante: Radius dort entfernen (nur innen) */
     .cubeFinal.joinTop{
       border-top-left-radius: 0 !important;
       border-top-right-radius: 0 !important;
@@ -360,13 +326,18 @@
     .pairLayer .cube2{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
     /* W2-Kopie auf Q2 */
-    .w3w2BaseLayer .cubeFinal.w2copy{ left: calc(4 * var(--step)); top:  calc(4 * var(--step)); }
-    /* W3 (gespiegelt) auf Q1 */
-    .w3w2BaseLayer .cubeFinal.w3mirror{ left: calc(4 * var(--step)); top:  calc(1 * var(--step)); }
+    .w3w2BaseLayer .cubeFinal.w2copy,
+    .w3w2KipLayer  .cubeFinal.w2copy{
+      left: calc(4 * var(--step));
+      top:  calc(4 * var(--step));
+    }
 
-    /* ====== Im FLAT/ROT-Paket dieselben Positionen ====== */
-    .w3w2KipFlatRotLayer .cubeFinal.w2copy{ left: calc(4 * var(--step)); top:  calc(4 * var(--step)); }
-    .w3w2KipFlatRotLayer .cubeFinal.w3mirror{ left: calc(4 * var(--step)); top:  calc(1 * var(--step)); }
+    /* W3 (gespiegelt) auf Q1 */
+    .w3w2BaseLayer .cubeFinal.w3mirror,
+    .w3w2KipLayer  .cubeFinal.w3mirror{
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+    }
 
     .slot{
       position:absolute;
@@ -423,22 +394,10 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.25);
     }
 
-    /* Leserichtungen */
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
     .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
-
-    /* ===== Slot-Positionen (W2KIP/W1KIP) ===== */
-    .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
-    .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
-    .slot-4d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 2 * var(--step)); }
-
-    .slot2-2f{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-    .slot2-2g{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-    .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
-    .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
     /* ===== W2-Kopie in Q2 ===== */
     .w2q2-2b{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
@@ -452,8 +411,7 @@
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
-    /* ✅ Trennlinie Q1/Q2 – LOSE Ebene, NICHT im skalierten Bundle
-       Exakt mittig (Mitte des GAPS), ohne Pfusch-Offsets */
+    /* ✅ Trennlinie: jetzt IN der Gruppe (damit "eine Ebene") */
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -461,7 +419,6 @@
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: 2px;
 
-      /* 2px Linie exakt zentrieren */
       transform: translateY(-1px);
 
       background: rgba(234,215,190,0.55);
@@ -472,8 +429,8 @@
       pointer-events:none;
     }
 
-    /* ✅ Zahlen in der FLAT/ROT-Ansicht AUSBLENDEN */
-    .w3w2KipFlatRotLayer .slot .num{
+    /* ✅ Zahlen entfernen (nur für diese Ansicht) */
+    .noNums .slot .num{
       opacity: 0 !important;
       visibility: hidden !important;
     }
@@ -543,52 +500,42 @@
         <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
 
         <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
+
         <div class="slot w3q1-botL read-south" data-w3base="U1"><div class="num"><span></span></div></div>
         <div class="slot w3q1-botR read-south" data-w3base="U2"><div class="num"><span></span></div></div>
         <div class="slot w3q1-midE read-east"  data-w3base="U3"><div class="num"><span></span></div></div>
         <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- =========================
-           ✅ NEUE Ansicht: W3–W2 KIP FLAT + ROT(-90°)
-           - Schatten + Trennlinie + Würfelflächen + Slots = 1 Paket
-           - Zahlen sind ausgeblendet
-           ========================= -->
-      <div class="w3w2KipFlatRotLayer" id="w3w2KipFlatRotLayer" aria-label="W3–W2 KIP FLAT ROT (sichtbar)">
-        <div class="w3w2KipFlatRotPack" id="w3w2KipFlatRotPack">
-          <!-- Schatten an 3 Innenkanten -->
+      <!-- ✅ W3–W2 KIP (sichtbar): jetzt "eine Ebene" als Gruppe + Rotation CCW -->
+      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W3–W2 KIP (sichtbar)">
+        <div class="w3w2KipGroup" id="w3w2KipGroup">
+          <!-- Schatten (Teil der Gruppe!) -->
           <div class="edgeShadow shadow-left" aria-hidden="true"></div>
           <div class="edgeShadow shadow-top" aria-hidden="true"></div>
           <div class="edgeShadow shadow-bottom" aria-hidden="true"></div>
 
-          <!-- Trennlinie ist Teil des Pakets (flat) -->
+          <!-- Trennlinie (Teil der Gruppe!) -->
           <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-          <!-- Würfelteile -->
-          <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2 (flat)"></div>
-          <div class="cubeFinal w3mirror joinBottom" aria-label="W3 auf Q1 (flat)"></div>
+          <!-- Das gestern-perfekte Bundle bleibt unverändert -->
+          <div class="w3w2Bundle" id="w3w2Bundle">
+            <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
+            <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
+            <div class="slot w2q2-2c read-north"><div class="num"><span></span></div></div>
+            <div class="slot w2q2-3d read-east" ><div class="num"><span></span></div></div>
+            <div class="slot w2q2-4d read-east" ><div class="num"><span></span></div></div>
 
-          <!-- Slots (ohne Zahlen sichtbar, Zahlen werden per CSS ausgeblendet) -->
-          <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-2c read-north"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-3d read-east" ><div class="num"><span></span></div></div>
-          <div class="slot w2q2-4d read-east" ><div class="num"><span></span></div></div>
+            <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
 
-          <div class="slot w3q1-botL read-south"><div class="num"><span></span></div></div>
-          <div class="slot w3q1-botR read-south"><div class="num"><span></span></div></div>
-          <div class="slot w3q1-midE read-east" ><div class="num"><span></span></div></div>
-          <div class="slot w3q1-topE read-east" ><div class="num"><span></span></div></div>
+            <div class="slot w3q1-botL read-south"><div class="num"><span></span></div></div>
+            <div class="slot w3q1-botR read-south"><div class="num"><span></span></div></div>
+            <div class="slot w3q1-midE read-east" ><div class="num"><span></span></div></div>
+            <div class="slot w3q1-topE read-east" ><div class="num"><span></span></div></div>
+          </div>
         </div>
       </div>
 
-      <!-- W3 FINAL (im Code vorhanden, aktuell ausgeblendet) -->
-      <div class="w3FinalLayer" id="w3FinalLayer" aria-label="W3 Final (Q2)">
-        <div class="cubeFinal" aria-label="W3 Final Fläche"></div>
-        <div class="slot w3f-5g read-east"  data-w3final="U1"><div class="num"><span></span></div></div>
-        <div class="slot w3f-6g read-east"  data-w3final="U2"><div class="num"><span></span></div></div>
-        <div class="slot w3f-7e read-south" data-w3final="U3"><div class="num"><span></span></div></div>
-        <div class="slot w3f-7f read-south" data-w3final="U4"><div class="num"><span></span></div></div>
-      </div>
     </div>
 
     <div class="controls">
@@ -613,16 +560,6 @@
     const w3BaseSpanEls = new Map(
       Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w3base]"))
         .map(s => [s.dataset.w3base, s.querySelector(".num > span")])
-    );
-
-    // W3–W2 KIP (sichtbar) Slots (hier aktuell nicht sichtbar, aber Daten bleiben)
-    const w2KipQ2SpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2KipLayer .slot[data-w2kip]"))
-        .map(s => [s.dataset.w2kip, s.querySelector(".num > span")])
-    );
-    const w3KipSpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2KipLayer .slot[data-w3kip]"))
-        .map(s => [s.dataset.w3kip, s.querySelector(".num > span")])
     );
 
     function setBoardSquare(){
@@ -687,38 +624,24 @@
       return pool.slice(0, count);
     }
 
-    function syncW2BaseAndKipFromKipSource(){
+    function syncW2BaseFromKipSource(){
       ["S1","S2","S3","S4"].forEach(k => {
         const src = slotSpanEls.get(k);
-
         const dstBase = w2BaseQ2SpanEls.get(k);
-        const dstKip  = w2KipQ2SpanEls.get(k);
-
         if (src && dstBase){
           dstBase.textContent = src.textContent;
           dstBase.classList.toggle("dot", src.classList.contains("dot"));
         }
-        if (src && dstKip){
-          dstKip.textContent = src.textContent;
-          dstKip.classList.toggle("dot", src.classList.contains("dot"));
-        }
       });
     }
 
-    function syncW3BaseAndKipFromStore(store){
+    function syncW3BaseFromStore(store){
       ["U1","U2","U3","U4"].forEach(k => {
         const v = store.get(k);
-
         const dstBase = w3BaseSpanEls.get(k);
-        const dstKip  = w3KipSpanEls.get(k);
-
         if (v && dstBase){
           dstBase.textContent = v.text;
           dstBase.classList.toggle("dot", !!v.dot);
-        }
-        if (v && dstKip){
-          dstKip.textContent = v.text;
-          dstKip.classList.toggle("dot", !!v.dot);
         }
       });
     }
@@ -741,8 +664,8 @@
         w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
       });
 
-      syncW2BaseAndKipFromKipSource();
-      syncW3BaseAndKipFromStore(w3Store);
+      syncW2BaseFromKipSource();
+      syncW3BaseFromStore(w3Store);
     }
 
     btn.addEventListener("click", () => setRandomNumbers());
