@@ -283,9 +283,7 @@
       font-size: clamp(18px, 8vmin, 36px); /* dein Regler */
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
-      /* ✅ WICHTIG:
-         translateX/translateY kommt VOR der Rotation,
-         dadurch "dreht sich der Shift mit" (7 rechts -> bei 180° automatisch links). */
+      /* translate kommt VOR Rotation => Shift dreht mit */
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
 
@@ -297,6 +295,12 @@
 
     /* 10: als Ganzes minimal nach links (Shift dreht mit) */
     .slot .num > span.num10{ --opt-x: -2px; }
+
+    /* ✅ 6 & 9: wegen dickem Punkt als Ganzes minimal nach links */
+    .slot .num > span[data-val="6"],
+    .slot .num > span[data-val="9"]{
+      --opt-x: -2px;
+    }
 
     /* zweistellige Zahlen als Digits: Abstand steuern */
     .slot .num > span .d{
@@ -319,14 +323,12 @@
       content:"";
       position:absolute;
 
-      /* em skaliert automatisch mit der Zahlengröße */
       width: 0.20em;
       height: 0.20em;
 
       border-radius: 50%;
       background: #111;
 
-      /* Position wie bisher, nur minimal „satter“ */
       left: 100%;
       top: 72%;
       transform: translate(18%, -50%);
@@ -468,7 +470,7 @@
 
     const w1Spans = Array.from(document.querySelectorAll("[data-w1] .num > span"));
 
-    // ✅ rendern: 10/11 als zwei Digits (für Kerning)
+    // rendern: 10/11 als zwei Digits (für Kerning)
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
       span.innerHTML = "";
