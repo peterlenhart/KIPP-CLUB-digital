@@ -95,17 +95,13 @@
       --step: calc(var(--cell) + var(--cell-gap));
 
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
-
-      /* ✅ perfekte Mitte */
       --seam-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* W2 Basis links oben */
       --cube-col: 1;
       --cube-row: 1;
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
-      /* Hilfen für Schatten */
       --cubeSize: calc(3 * var(--cell) + 2 * var(--cell-gap));
       --pairHeight: calc(2 * var(--cubeSize) + var(--cell-gap));
 
@@ -153,12 +149,12 @@
       z-index: 2;
       pointer-events: none;
 
+      /* ✅ FIX 1: vertikalen Schattenstreifen entfernen:
+         -> die seitlichen "inset -26px 0 ..." und "inset 26px 0 ..." raus */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
         inset 0 0 0 1px rgba(0,0,0,0.12),
-        inset -26px 0 40px rgba(0,0,0,0.26),
-        inset  26px 0 40px rgba(0,0,0,0.26),
         inset  0 -26px 40px rgba(0,0,0,0.30),
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
@@ -180,9 +176,6 @@
       pointer-events: none;
     }
 
-    /* =========================
-       W2KIP + W1KIP (unsichtbar)
-       ========================= */
     .pairLayer{
       position:absolute;
       inset:0;
@@ -196,9 +189,6 @@
       visibility: hidden;
     }
 
-    /* =========================
-       W3–W2 BASIS (unsichtbar)
-       ========================= */
     .w3w2BaseLayer{
       position:absolute;
       inset:0;
@@ -209,10 +199,6 @@
       visibility: hidden;
     }
 
-    /* =========================
-       ✅ KIP-Layer (sichtbar)
-       - WICHTIG: Schatten darf NICHT auf den Rahmen -> Clip auf Innenboden!
-       ========================= */
     .w3w2KipLayer{
       position:absolute;
       inset:0;
@@ -222,58 +208,51 @@
       opacity: 1;
       visibility: visible;
 
-      /* ✅ Clipping auf Innenboden (nie über Rahmen hinaus!) */
       -webkit-clip-path: inset(var(--step) var(--step) var(--step) var(--step));
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ DIE Gruppe (eine Ebene) – KEINE Rotation hier */
+    /* ✅ FIX 2+3: W3W2-Kippdarstellung um Kugel/Box-Mittelpunkt drehen (90° CCW) */
     .w3w2KipGroup{
       position:absolute;
       inset:0;
-      transform: none;
+
+      transform-origin: var(--axis-x) var(--seam-y);
+      transform: rotate(-90deg);
     }
 
-    /* ✅ Realistischer Bodenschatten (kräftiger, rundum) */
     .w3w2KipGroup::before{
       content:"";
       position:absolute;
 
-      /* Schattenfläche genau dort, wo das Kipp-Gebilde steht */
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
       width: var(--cubeSize);
       height: var(--pairHeight);
 
-      /* Schatten liegt UNTER den Würfelflächen */
       z-index: 0;
       pointer-events:none;
 
-      /* Mehr Tiefe: weich + Richtung (leicht nach Süd/Ost) */
       background:
         radial-gradient(120% 80% at 55% 60%,
           rgba(0,0,0,0.38) 0%,
           rgba(0,0,0,0.24) 32%,
           rgba(0,0,0,0.00) 72%),
-        /* Westkante (fehlte dir) */
         linear-gradient(90deg,
           rgba(0,0,0,0.26) 0%,
           rgba(0,0,0,0.00) 26%),
-        /* Südkante (fehlte dir) */
         linear-gradient(0deg,
           rgba(0,0,0,0.28) 0%,
           rgba(0,0,0,0.00) 34%),
-        /* leichte Ostkante (damit’s rund wirkt) */
         linear-gradient(-90deg,
           rgba(0,0,0,0.18) 0%,
           rgba(0,0,0,0.00) 22%);
 
       filter: blur(10px);
-      transform: translate(8px, 10px); /* etwas nach Süd/Ost */
+      transform: translate(8px, 10px);
       opacity: 0.95;
     }
 
-    /* Das Bundle bleibt exakt wie gestern (seam-y + scaleY) */
     .w3w2Bundle{
       position:absolute;
       inset:0;
@@ -281,7 +260,6 @@
       transform-origin: 50% var(--seam-y);
       transform: scaleY(0.5);
 
-      /* ✅ über dem Schatten */
       z-index: 2;
     }
 
@@ -325,19 +303,15 @@
       border-bottom-right-radius: 0 !important;
     }
 
-    /* W2 Basis (links) */
     .pairLayer .cube{ left: var(--cube-x); top: var(--cube-y); }
-    /* W1 Basis (rechts) */
     .pairLayer .cube2{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* W2-Kopie auf Q2 */
     .w3w2BaseLayer .cubeFinal.w2copy,
     .w3w2KipLayer  .cubeFinal.w2copy{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
     }
 
-    /* W3 (gespiegelt) auf Q1 */
     .w3w2BaseLayer .cubeFinal.w3mirror,
     .w3w2KipLayer  .cubeFinal.w3mirror{
       left: calc(4 * var(--step));
@@ -404,19 +378,16 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ===== W2-Kopie in Q2 ===== */
     .w2q2-2b{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-2c{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-3d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
     .w2q2-4d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
 
-    /* ===== W3 (gespiegelt) in Q1 ===== */
     .w3q1-botL{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
     .w3q1-botR{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
-    /* ✅ Trennlinie: Teil der Gruppe */
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -434,7 +405,6 @@
       pointer-events:none;
     }
 
-    /* ✅ Zahlen entfernen (nur für diese Ansicht) */
     .noNums .slot .num{
       opacity: 0 !important;
       visibility: hidden !important;
@@ -478,7 +448,6 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W2KIP + W1KIP (unsichtbar, gespeichert) -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
         <div class="cube" aria-label="W2 Basis/KIP"></div>
         <div class="cube2" aria-label="W1 Basis/KIP"></div>
@@ -494,7 +463,6 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- W3–W2 BASIS (unsichtbar gespeichert) -->
       <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W3–W2 Basis (unsichtbar)">
         <div class="divider-Q1Q2" aria-hidden="true"></div>
 
@@ -512,13 +480,10 @@
         <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ KIP (sichtbar) -->
       <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W2–W1 KIP (sichtbar)">
         <div class="w3w2KipGroup" id="w3w2KipGroup">
-          <!-- Trennlinie (Teil der Gruppe) -->
           <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-          <!-- Bundle -->
           <div class="w3w2Bundle" id="w3w2Bundle">
             <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
             <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
@@ -548,11 +513,9 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
 
-    // Quelle: Slots in W2KIP/W1KIP (unsichtbar)
     const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // W3–W2 BASIS (unsichtbar) Slots
     const w2BaseQ2SpanEls = new Map(
       Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w2q2]"))
         .map(s => [s.dataset.w2q2, s.querySelector(".num > span")])
