@@ -94,11 +94,9 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
+      /* Box-Mittelpunkt-Achsen */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
-
-      /* ✅ Absolut saubere Mitte zwischen Q1 und Q2:
-         das ist die MITTE des GAPS zwischen Zeile 4 und 5 */
-      --seam-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
+      --axis-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
       /* W2 Basis links oben */
       --cube-col: 1;
@@ -106,6 +104,7 @@
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
+      /* Schatten-Default (wie bei anderen Views) */
       --cast-x: 18px;
       --cast-y: 18px;
 
@@ -188,23 +187,6 @@
       inset:0;
       z-index: 6;
       pointer-events:none;
-
-      transform-origin: var(--axis-x) 50%;
-      transform: scaleX(var(--pair-scale-x, 0.5));
-
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* =========================
-       W3–W2 BASIS (unsichtbar)
-       ========================= */
-    .w3w2BaseLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-
       opacity: 0;
       visibility: hidden;
     }
@@ -217,44 +199,23 @@
       inset:0;
       z-index: 8;
       pointer-events:none;
-
       opacity: 1;
       visibility: visible;
     }
 
-    /* Das "Bildpaket" – innen darf sich nichts relativ bewegen */
-    .w3w2Bundle{
+    /* ✅ Render-Bundle: Alles "geometrische" als 1 Paket */
+    .w3w2Render{
       position:absolute;
       inset:0;
 
-      /* ✅ Skalierachse = exakt MITTE des GAPS (perfekt) */
-      transform-origin: 50% var(--seam-y);
+      /* Skalierachse exakt auf der Q1/Q2 Grenze (Zeile 4/5) */
+      transform-origin: var(--axis-x) calc(4 * var(--step));
       transform: scaleY(0.5);
+
+      /* leichte Gesamtweiche wie "Canvas-Look" */
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,0.20));
     }
 
-    /* W2 FINAL (gespeichert, ausgeblendet) */
-    .w2FinalLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* W3 FINAL (im Code vorhanden, aktuell ausgeblendet) */
-    .w3FinalLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    .cube,
-    .cube2,
     .cubeFinal{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -284,7 +245,7 @@
       z-index: 6;
     }
 
-    /* ✅ Kontaktkante: Radius dort entfernen (nur innen) */
+    /* Kontaktkante: Radius entfernen (nur innen) */
     .cubeFinal.joinTop{
       border-top-left-radius: 0 !important;
       border-top-right-radius: 0 !important;
@@ -294,23 +255,99 @@
       border-bottom-right-radius: 0 !important;
     }
 
-    /* W2 Basis (links) */
-    .pairLayer .cube{ left: var(--cube-x); top: var(--cube-y); }
-    /* W1 Basis (rechts) */
-    .pairLayer .cube2{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
-
-    /* W2-Kopie auf Q2 */
-    .w3w2BaseLayer .cubeFinal.w2copy,
-    .w3w2KipLayer  .cubeFinal.w2copy{
+    /* W2 auf Q2 (unten) */
+    .cubeFinal.w2copy{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
     }
 
-    /* W3 (gespiegelt) auf Q1 */
-    .w3w2BaseLayer .cubeFinal.w3mirror,
-    .w3w2KipLayer  .cubeFinal.w3mirror{
+    /* W3 auf Q1 (oben) */
+    .cubeFinal.w3mirror{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
+    }
+
+    /* =========================
+       ✅ 3 Innenschatten (Boxinneres)
+       - NICHT am Außenrahmen
+       ========================= */
+    .innerEdges{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(6 * var(--cell) + 5 * var(--cell-gap)); /* umfasst W3+W2 Bereich (Q1..Q2) */
+      pointer-events:none;
+      z-index: 12000;
+    }
+
+    /* Schatten 1: entlang der Trennkante (zwischen W3 und W2) – schließt auch optisch "Spalt" */
+    .edge-divider{
+      position:absolute;
+      left: 0;
+      top:  calc(3 * var(--cell) + 2 * var(--cell-gap)); /* Unterkante W3 */
+      width: 100%;
+      height: 10px;
+      transform: translateY(-5px);
+      background: linear-gradient(
+        180deg,
+        rgba(0,0,0,0.38),
+        rgba(0,0,0,0.00)
+      );
+      filter: blur(0.4px);
+      opacity: 0.70;
+    }
+
+    /* Schatten 2: innere Vertikalkante (im Boxinneren) */
+    .edge-inner-vertical{
+      position:absolute;
+      right: 0; /* innen rechts am Paket, NICHT am Außenrahmen der Box */
+      top:  0;
+      width: 12px;
+      height: 100%;
+      transform: translateX(6px);
+      background: linear-gradient(
+        90deg,
+        rgba(0,0,0,0.00),
+        rgba(0,0,0,0.30)
+      );
+      filter: blur(0.6px);
+      opacity: 0.60;
+    }
+
+    /* Schatten 3: innere Horizontalkante (im Boxinneren) */
+    .edge-inner-horizontal{
+      position:absolute;
+      left: 0;
+      top:  0;
+      width: 100%;
+      height: 12px;
+      transform: translateY(-6px);
+      background: linear-gradient(
+        180deg,
+        rgba(0,0,0,0.30),
+        rgba(0,0,0,0.00)
+      );
+      filter: blur(0.6px);
+      opacity: 0.55;
+    }
+
+    /* =========================
+       Trennlinie Q1/Q2 – IM Render-Bundle (Canvas-Paket)
+       ========================= */
+    .divider-Q1Q2{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(4 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: 2px;
+
+      background: rgba(234,215,190,0.55);
+      border-radius: 999px;
+      filter: blur(0.1px);
+
+      z-index: 20000;
+      pointer-events:none;
     }
 
     .slot{
@@ -374,7 +411,7 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ===== Slot-Positionen (W2KIP/W1KIP) ===== */
+    /* ===== Slot-Positionen Quelle (W2/W1 Basis unsichtbar) ===== */
     .slot-2b{ left: calc(var(--cube-x) + 0 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-2c{ left: calc(var(--cube-x) + 1 * var(--step)); top:  calc(var(--cube-y) + 0 * var(--step)); }
     .slot-3d{ left: calc(var(--cube-x) + 2 * var(--step)); top:  calc(var(--cube-y) + 1 * var(--step)); }
@@ -385,37 +422,17 @@
     .slot2-3e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .slot2-4e{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
 
-    /* ===== W2-Kopie in Q2 ===== */
+    /* ===== W2 in Q2 (unten) ===== */
     .w2q2-2b{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-2c{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-3d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
     .w2q2-4d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
 
-    /* ===== W3 (gespiegelt) in Q1 ===== */
+    /* ===== W3 in Q1 (oben, gespiegelt) ===== */
     .w3q1-botL{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
     .w3q1-botR{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-
-    /* ✅ Trennlinie Q1/Q2 – LOSE Ebene, NICHT im skalierten Bundle
-       Exakt mittig (Mitte des GAPS), ohne Pfusch-Offsets */
-    .divider-Q1Q2{
-      position:absolute;
-      left: calc(4 * var(--step));
-      top:  var(--seam-y);
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: 2px;
-
-      /* 2px Linie exakt zentrieren */
-      transform: translateY(-1px);
-
-      background: rgba(234,215,190,0.55);
-      border-radius: 999px;
-      filter: blur(0.1px);
-
-      z-index: 20000;
-      pointer-events:none;
-    }
 
     .controls{
       width: 100%;
@@ -455,11 +472,8 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W2KIP + W1KIP (unsichtbar, gespeichert) -->
-      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
-        <div class="cube" aria-label="W2 Basis/KIP"></div>
-        <div class="cube2" aria-label="W1 Basis/KIP"></div>
-
+      <!-- Quelle: W2/W1 Basis (unsichtbar) -->
+      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Quelle (unsichtbar)">
         <div class="slot slot-2b read-north" data-slot="S1"><div class="num"><span></span></div></div>
         <div class="slot slot-2c read-north" data-slot="S2"><div class="num"><span></span></div></div>
         <div class="slot slot-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
@@ -471,56 +485,33 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- W3–W2 BASIS (unsichtbar gespeichert) -->
-      <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W3–W2 Basis (unsichtbar)">
-        <div class="divider-Q1Q2" aria-hidden="true"></div>
-
-        <!-- W2 unten: oben eckig -->
-        <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
-        <div class="slot w2q2-2b read-north" data-w2q2="S1"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-2c read-north" data-w2q2="S2"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-3d read-east"  data-w2q2="S3"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
-
-        <!-- W3 oben: unten eckig -->
-        <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
-        <div class="slot w3q1-botL read-south" data-w3base="U1"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-botR read-south" data-w3base="U2"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-midE read-east"  data-w3base="U3"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
-      </div>
-
-      <!-- W3–W2 KIP (sichtbar) = fixes Paket + Skalierung -->
+      <!-- W3–W2 KIP (sichtbar) -->
       <div class="w3w2KipLayer" id="w3w2KipLayer" aria-label="W3–W2 KIP (sichtbar)">
-        <!-- ✅ LOSE Trennlinie: NICHT im skalierten Bundle -->
-        <div class="divider-Q1Q2" aria-hidden="true"></div>
+        <!-- ✅ Alles Geometrische als 1 Render-Bundle -->
+        <div class="w3w2Render" id="w3w2Render">
+          <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-        <div class="w3w2Bundle" id="w3w2Bundle">
-          <!-- W2 unten: oben eckig -->
-          <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
-          <div class="slot w2q2-2b read-north" data-w2kip="S1"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-2c read-north" data-w2kip="S2"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-3d read-east"  data-w2kip="S3"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-4d read-east"  data-w2kip="S4"><div class="num"><span></span></div></div>
+          <!-- 3 Innenschatten im Boxinneren -->
+          <div class="innerEdges" aria-hidden="true">
+            <div class="edge-inner-horizontal"></div>
+            <div class="edge-inner-vertical"></div>
+            <div class="edge-divider"></div>
+          </div>
 
           <!-- W3 oben: unten eckig -->
-          <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
+          <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt (Q1)"></div>
           <div class="slot w3q1-botL read-south" data-w3kip="U1"><div class="num"><span></span></div></div>
           <div class="slot w3q1-botR read-south" data-w3kip="U2"><div class="num"><span></span></div></div>
           <div class="slot w3q1-midE read-east"  data-w3kip="U3"><div class="num"><span></span></div></div>
           <div class="slot w3q1-topE read-east"  data-w3kip="U4"><div class="num"><span></span></div></div>
-        </div>
-      </div>
 
-      <!-- W3 FINAL (im Code vorhanden, aktuell ausgeblendet) -->
-      <div class="w3FinalLayer" id="w3FinalLayer" aria-label="W3 Final (Q2)">
-        <div class="cubeFinal" aria-label="W3 Final Fläche"></div>
-        <div class="slot w3f-5g read-east"  data-w3final="U1"><div class="num"><span></span></div></div>
-        <div class="slot w3f-6g read-east"  data-w3final="U2"><div class="num"><span></span></div></div>
-        <div class="slot w3f-7e read-south" data-w3final="U3"><div class="num"><span></span></div></div>
-        <div class="slot w3f-7f read-south" data-w3final="U4"><div class="num"><span></span></div></div>
+          <!-- W2 unten: oben eckig -->
+          <div class="cubeFinal w2copy joinTop" aria-label="W2 (Q2)"></div>
+          <div class="slot w2q2-2b read-north" data-w2kip="S1"><div class="num"><span></span></div></div>
+          <div class="slot w2q2-2c read-north" data-w2kip="S2"><div class="num"><span></span></div></div>
+          <div class="slot w2q2-3d read-east"  data-w2kip="S3"><div class="num"><span></span></div></div>
+          <div class="slot w2q2-4d read-east"  data-w2kip="S4"><div class="num"><span></span></div></div>
+        </div>
       </div>
     </div>
 
@@ -534,27 +525,17 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
 
-    // Quelle: Slots in W2KIP/W1KIP (unsichtbar)
-    const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
-    const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
+    // Quelle: Slots (unsichtbar) für S1..S4 / T1..T4
+    const sourceSlotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
+    const sourceSpan = new Map(sourceSlotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
 
-    // W3–W2 BASIS (unsichtbar) Slots
-    const w2BaseQ2SpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w2q2]"))
-        .map(s => [s.dataset.w2q2, s.querySelector(".num > span")])
-    );
-    const w3BaseSpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w3base]"))
-        .map(s => [s.dataset.w3base, s.querySelector(".num > span")])
-    );
-
-    // W3–W2 KIP (sichtbar) Slots
-    const w2KipQ2SpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2KipLayer .slot[data-w2kip]"))
+    // Ziel: W3–W2 KIP (sichtbar)
+    const w2KipSpan = new Map(
+      Array.from(document.querySelectorAll("[data-w2kip]"))
         .map(s => [s.dataset.w2kip, s.querySelector(".num > span")])
     );
-    const w3KipSpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2KipLayer .slot[data-w3kip]"))
+    const w3KipSpan = new Map(
+      Array.from(document.querySelectorAll("[data-w3kip]"))
         .map(s => [s.dataset.w3kip, s.querySelector(".num > span")])
     );
 
@@ -620,65 +601,53 @@
       return pool.slice(0, count);
     }
 
-    function syncW2BaseAndKipFromKipSource(){
+    function syncW2FromSource(){
       ["S1","S2","S3","S4"].forEach(k => {
-        const src = slotSpanEls.get(k);
-
-        const dstBase = w2BaseQ2SpanEls.get(k);
-        const dstKip  = w2KipQ2SpanEls.get(k);
-
-        if (src && dstBase){
-          dstBase.textContent = src.textContent;
-          dstBase.classList.toggle("dot", src.classList.contains("dot"));
-        }
-        if (src && dstKip){
-          dstKip.textContent = src.textContent;
-          dstKip.classList.toggle("dot", src.classList.contains("dot"));
-        }
+        const src = sourceSpan.get(k);
+        const dst = w2KipSpan.get(k);
+        if(!src || !dst) return;
+        dst.textContent = src.textContent;
+        dst.classList.toggle("dot", src.classList.contains("dot"));
       });
     }
 
-    function syncW3BaseAndKipFromStore(store){
+    function syncW3FromStore(store){
       ["U1","U2","U3","U4"].forEach(k => {
         const v = store.get(k);
-
-        const dstBase = w3BaseSpanEls.get(k);
-        const dstKip  = w3KipSpanEls.get(k);
-
-        if (v && dstBase){
-          dstBase.textContent = v.text;
-          dstBase.classList.toggle("dot", !!v.dot);
-        }
-        if (v && dstKip){
-          dstKip.textContent = v.text;
-          dstKip.classList.toggle("dot", !!v.dot);
-        }
+        const dst = w3KipSpan.get(k);
+        if(!v || !dst) return;
+        dst.textContent = v.text;
+        dst.classList.toggle("dot", !!v.dot);
       });
     }
 
     function setRandomNumbers(){
+      // 12 eindeutige Zahlen: 8 für Quelle (S/T), 4 für W3 (U)
       const nums = getUniqueRandomNumbers(12, 1, 12);
 
+      // Quelle befüllen (S1..S4, T1..T4)
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
       keysST.forEach((k, idx) => {
-        const span = slotSpanEls.get(k);
+        const span = sourceSpan.get(k);
         if(!span) return;
         const n = nums[idx];
         span.textContent = String(n);
         setDot(span, n);
       });
 
+      // W3-Store (U1..U4)
       const w3Store = new Map();
       ["U1","U2","U3","U4"].forEach((k, i) => {
         const n = nums[8 + i];
         w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
       });
 
-      syncW2BaseAndKipFromKipSource();
-      syncW3BaseAndKipFromStore(w3Store);
+      // Ziele aktualisieren
+      syncW2FromSource();
+      syncW3FromStore(w3Store);
     }
 
-    btn.addEventListener("click", () => setRandomNumbers());
+    btn.addEventListener("click", setRandomNumbers);
 
     window.addEventListener("load", () => {
       setBoardSquare();
