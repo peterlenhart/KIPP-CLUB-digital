@@ -283,18 +283,20 @@
       font-size: clamp(18px, 8vmin, 36px); /* dein Regler */
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
-      transform: rotate(var(--num-rot, 0deg));
+      /* ✅ WICHTIG:
+         translateX/translateY kommt VOR der Rotation,
+         dadurch "dreht sich der Shift mit" (7 rechts -> bei 180° automatisch links). */
+      transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
 
       position: relative;
-      left: var(--opt-x, 0px);
-      top:  var(--opt-y, 0px);
     }
 
-    /* 7: optisch ein bisschen nach rechts */
-    .slot .num > span[data-val="7"]{
-      --opt-x: 2px;
-    }
+    /* 7: optisch ein bisschen nach rechts (Shift dreht mit) */
+    .slot .num > span[data-val="7"]{ --opt-x: 2px; }
+
+    /* 10: als Ganzes minimal nach links (Shift dreht mit) */
+    .slot .num > span.num10{ --opt-x: -2px; }
 
     /* zweistellige Zahlen als Digits: Abstand steuern */
     .slot .num > span .d{
@@ -312,17 +314,24 @@
       margin-left: -0.10em;
     }
 
+    /* ✅ DICKER PUNKT für 6/9 (Strichstärke-ähnlich) */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
-      width: clamp(3px, 0.55vmin, 6px);
-      height: clamp(3px, 0.55vmin, 6px);
+
+      /* em skaliert automatisch mit der Zahlengröße */
+      width: 0.20em;
+      height: 0.20em;
+
       border-radius: 50%;
       background: #111;
+
+      /* Position wie bisher, nur minimal „satter“ */
       left: 100%;
       top: 72%;
-      transform: translate(25%, -50%);
-      box-shadow: 0 1px 0 rgba(255,255,255,0.25);
+      transform: translate(18%, -50%);
+
+      box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
@@ -462,8 +471,8 @@
     // ✅ rendern: 10/11 als zwei Digits (für Kerning)
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
-      span.innerHTML = "";               // wichtig: vorherige Digits löschen
-      span.dataset.val = String(n);      // für CSS-Optik (z.B. 7)
+      span.innerHTML = "";
+      span.dataset.val = String(n);
 
       if (n === 10){
         span.classList.add("num10");
