@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KIPP – 8×8 Raster</title>
 
+  <!-- Canvas-Renderer (für "auf eine Ebene reduzieren") -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <style>
     :root{
       --violett: rgb(164, 27, 133);
@@ -40,6 +43,7 @@
 
     html, body { height: 100%; }
 
+    /* Tisch + Vignette oben/unten */
     body{
       margin:0;
       display:flex;
@@ -77,6 +81,7 @@
       align-items:center;
     }
 
+    /* BOX + Rahmen + Schatten außen */
     .board{
       position:relative;
       width: 100%;
@@ -85,31 +90,38 @@
       box-sizing: border-box;
 
       background: #0b0b0b;
-
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
-
       overflow: visible;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
+      /* Boxmittelpunkt-Achsen */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
-      --seam-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
-
-      --cube-col: 1;
-      --cube-row: 1;
-      --cube-x: calc(var(--cube-col) * var(--step));
-      --cube-y: calc(var(--cube-row) * var(--step));
-
-      --cubeSize: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      --pairHeight: calc(2 * var(--cubeSize) + var(--cell-gap));
+      --axis-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
     }
 
+    /* Innenschatten vom Rahmen nach innen (ohne Außenrand zu "verschmieren") */
+    .board::after{
+      content:"";
+      position:absolute;
+      inset: 0;
+      border-radius: var(--board-radius);
+      pointer-events:none;
+      z-index: 3;
+      box-shadow:
+        inset 0 18px 26px rgba(0,0,0,0.40),
+        inset 0 -18px 26px rgba(0,0,0,0.40),
+        inset 18px 0 26px rgba(0,0,0,0.35),
+        inset -18px 0 26px rgba(0,0,0,0.35);
+    }
+
+    /* 8×8 Raster */
     .grid{
       position:absolute;
       inset:0;
@@ -134,6 +146,7 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
+    /* Innenboden (Boxboden) */
     .floor{
       position:absolute;
       left: var(--step);
@@ -149,8 +162,6 @@
       z-index: 2;
       pointer-events: none;
 
-      /* ✅ FIX 1: vertikalen Schattenstreifen entfernen:
-         -> die seitlichen "inset -26px 0 ..." und "inset 26px 0 ..." raus */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -159,6 +170,7 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
+    /* Kugel */
     .ball{
       position:absolute;
       left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
@@ -176,95 +188,61 @@
       pointer-events: none;
     }
 
-    .pairLayer{
-      position:absolute;
-      inset:0;
-      z-index: 6;
-      pointer-events:none;
-
-      transform-origin: var(--axis-x) 50%;
-      transform: scaleX(var(--pair-scale-x, 0.5));
-
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    .w3w2BaseLayer{
+    /* =========================
+       W3Final SOURCE (DOM)
+       -> wird zu Canvas gerendert
+       ========================= */
+    .w3FinalSource{
       position:absolute;
       inset:0;
       z-index: 7;
       pointer-events:none;
-
-      opacity: 0;
-      visibility: hidden;
+      /* wird nach Render unsichtbar gemacht */
     }
 
-    .w3w2KipLayer{
+    /* Canvas "eine Ebene" */
+    .w3FinalCanvas{
+      position:absolute;
+      inset:0;
+      z-index: 7;
+      pointer-events:none;
+      display:block;
+    }
+
+    /* =========================
+       W2W1-KIP (sichtbar, ohne Zahlen)
+       ========================= */
+    .w2w1KipLayer{
       position:absolute;
       inset:0;
       z-index: 8;
       pointer-events:none;
 
-      opacity: 1;
-      visibility: visible;
-
+      /* Clipping auf Innenboden */
       -webkit-clip-path: inset(var(--step) var(--step) var(--step) var(--step));
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ FIX 2+3: W3W2-Kippdarstellung um Kugel/Box-Mittelpunkt drehen (90° CCW) */
-    .w3w2KipGroup{
+    /* Gruppe (Rotation etc. kommt später wieder) */
+    .w2w1KipGroup{
       position:absolute;
       inset:0;
-
-      transform-origin: var(--axis-x) var(--seam-y);
-      transform: rotate(-90deg);
+      transform: none;
     }
 
-    .w3w2KipGroup::before{
-      content:"";
-      position:absolute;
-
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-      width: var(--cubeSize);
-      height: var(--pairHeight);
-
-      z-index: 0;
-      pointer-events:none;
-
-      background:
-        radial-gradient(120% 80% at 55% 60%,
-          rgba(0,0,0,0.38) 0%,
-          rgba(0,0,0,0.24) 32%,
-          rgba(0,0,0,0.00) 72%),
-        linear-gradient(90deg,
-          rgba(0,0,0,0.26) 0%,
-          rgba(0,0,0,0.00) 26%),
-        linear-gradient(0deg,
-          rgba(0,0,0,0.28) 0%,
-          rgba(0,0,0,0.00) 34%),
-        linear-gradient(-90deg,
-          rgba(0,0,0,0.18) 0%,
-          rgba(0,0,0,0.00) 22%);
-
-      filter: blur(10px);
-      transform: translate(8px, 10px);
-      opacity: 0.95;
-    }
-
-    .w3w2Bundle{
+    /* Bundle + Schatten nur vom Objekt (keine Streifen über den Boden) */
+    .w2w1Bundle{
       position:absolute;
       inset:0;
-
-      transform-origin: 50% var(--seam-y);
+      transform-origin: 50% var(--axis-y);
       transform: scaleY(0.5);
-
-      z-index: 2;
+      filter:
+        drop-shadow(-10px 6px 12px rgba(0,0,0,0.22))
+        drop-shadow( 10px 6px 12px rgba(0,0,0,0.18))
+        drop-shadow(  0px 14px 16px rgba(0,0,0,0.28));
     }
 
-    .cube,
-    .cube2,
+    /* Würfelfläche */
     .cubeFinal{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -290,34 +268,22 @@
       box-shadow:
         0 12px 22px rgba(0,0,0,0.28),
         0 0 0 1px rgba(255,255,255,0.10) inset;
-
-      z-index: 6;
     }
 
-    .cubeFinal.joinTop{
+    .joinTop{
       border-top-left-radius: 0 !important;
       border-top-right-radius: 0 !important;
     }
-    .cubeFinal.joinBottom{
+    .joinBottom{
       border-bottom-left-radius: 0 !important;
       border-bottom-right-radius: 0 !important;
     }
 
-    .pairLayer .cube{ left: var(--cube-x); top: var(--cube-y); }
-    .pairLayer .cube2{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+    /* Positionen (wie bisher: Q1/Q2-Block rechts oben) */
+    .w2copy{ left: calc(4 * var(--step)); top:  calc(4 * var(--step)); }
+    .w3mirror{ left: calc(4 * var(--step)); top:  calc(1 * var(--step)); }
 
-    .w3w2BaseLayer .cubeFinal.w2copy,
-    .w3w2KipLayer  .cubeFinal.w2copy{
-      left: calc(4 * var(--step));
-      top:  calc(4 * var(--step));
-    }
-
-    .w3w2BaseLayer .cubeFinal.w3mirror,
-    .w3w2KipLayer  .cubeFinal.w3mirror{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-    }
-
+    /* Blättchen/Slots */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -331,8 +297,6 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 7;
-
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -340,7 +304,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    .slot .num{
+    .num{
       position:absolute;
       inset:0;
       display:flex;
@@ -349,7 +313,7 @@
       user-select:none;
     }
 
-    .slot .num > span{
+    .num > span{
       display:inline-block;
       font-weight: 900;
       color: #111;
@@ -360,7 +324,7 @@
       position: relative;
     }
 
-    .slot .num > span.dot::after{
+    .num > span.dot::after{
       content:"";
       position:absolute;
       width: clamp(3px, 0.55vmin, 6px);
@@ -378,6 +342,7 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
+    /* Slot-Positionen (wie bisher) */
     .w2q2-2b{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-2c{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
     .w2q2-3d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
@@ -388,24 +353,22 @@
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
+    /* Trennlinie */
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
-      top:  var(--seam-y);
+      top:  var(--axis-y);
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: 2px;
-
       transform: translateY(-1px);
-
       background: rgba(234,215,190,0.55);
       border-radius: 999px;
       filter: blur(0.1px);
-
-      z-index: 20000;
       pointer-events:none;
     }
 
-    .noNums .slot .num{
+    /* Ohne Zahlen (für W2W1-KIP Anzeige) */
+    .noNums .num{
       opacity: 0 !important;
       visibility: hidden !important;
     }
@@ -448,51 +411,48 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
-        <div class="cube" aria-label="W2 Basis/KIP"></div>
-        <div class="cube2" aria-label="W1 Basis/KIP"></div>
-
-        <div class="slot slot-2b read-north" data-slot="S1"><div class="num"><span></span></div></div>
-        <div class="slot slot-2c read-north" data-slot="S2"><div class="num"><span></span></div></div>
-        <div class="slot slot-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
-        <div class="slot slot-4d read-east"  data-slot="S4"><div class="num"><span></span></div></div>
-
-        <div class="slot slot2-2f read-north" data-slot="T1"><div class="num"><span></span></div></div>
-        <div class="slot slot2-2g read-north" data-slot="T2"><div class="num"><span></span></div></div>
-        <div class="slot slot2-3e read-west"  data-slot="T3"><div class="num"><span></span></div></div>
-        <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
-      </div>
-
-      <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W3–W2 Basis (unsichtbar)">
+      <!-- =========================
+           W3Final SOURCE (DOM)
+           -> wird zu Canvas "eine Ebene"
+           ========================= -->
+      <div class="w3FinalSource" id="w3FinalSource" aria-label="W3Final Source (DOM)">
         <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-        <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
-        <div class="slot w2q2-2b read-north" data-w2q2="S1"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-2c read-north" data-w2q2="S2"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-3d read-east"  data-w2q2="S3"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
+        <!-- Schattenfläche unten (W3Final) -->
+        <!-- (bleibt bewusst simpel – der Snapshot nimmt alles mit) -->
+        <div class="w2w1Bundle" style="filter: drop-shadow(0px 14px 16px rgba(0,0,0,0.26)); transform: scaleY(0.5);">
+          <div class="cubeFinal w2copy joinTop"></div>
+          <div class="slot w2q2-2b read-north"><div class="num"><span id="S1"></span></div></div>
+          <div class="slot w2q2-2c read-north"><div class="num"><span id="S2"></span></div></div>
+          <div class="slot w2q2-3d read-east" ><div class="num"><span id="S3"></span></div></div>
+          <div class="slot w2q2-4d read-east" ><div class="num"><span id="S4"></span></div></div>
 
-        <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
-        <div class="slot w3q1-botL read-south" data-w3base="U1"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-botR read-south" data-w3base="U2"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-midE read-east"  data-w3base="U3"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
+          <div class="cubeFinal w3mirror joinBottom"></div>
+          <div class="slot w3q1-botL read-south"><div class="num"><span id="U1"></span></div></div>
+          <div class="slot w3q1-botR read-south"><div class="num"><span id="U2"></span></div></div>
+          <div class="slot w3q1-midE read-east" ><div class="num"><span id="U3"></span></div></div>
+          <div class="slot w3q1-topE read-east" ><div class="num"><span id="U4"></span></div></div>
+        </div>
       </div>
 
-      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W2–W1 KIP (sichtbar)">
-        <div class="w3w2KipGroup" id="w3w2KipGroup">
+      <!-- Canvas-Resultat (W3Final als Bild) -->
+      <canvas class="w3FinalCanvas" id="w3FinalCanvas" aria-label="W3Final Canvas"></canvas>
+
+      <!-- =========================
+           W2W1-KIP Anzeige (ohne Zahlen)
+           ========================= -->
+      <div class="w2w1KipLayer noNums" id="w2w1KipLayer" aria-label="W2W1-KIP (ohne Zahlen)">
+        <div class="w2w1KipGroup" id="w2w1KipGroup">
           <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-          <div class="w3w2Bundle" id="w3w2Bundle">
-            <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
+          <div class="w2w1Bundle" id="w2w1Bundle">
+            <div class="cubeFinal w2copy joinTop"></div>
             <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
             <div class="slot w2q2-2c read-north"><div class="num"><span></span></div></div>
             <div class="slot w2q2-3d read-east" ><div class="num"><span></span></div></div>
             <div class="slot w2q2-4d read-east" ><div class="num"><span></span></div></div>
 
-            <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
+            <div class="cubeFinal w3mirror joinBottom"></div>
             <div class="slot w3q1-botL read-south"><div class="num"><span></span></div></div>
             <div class="slot w3q1-botR read-south"><div class="num"><span></span></div></div>
             <div class="slot w3q1-midE read-east" ><div class="num"><span></span></div></div>
@@ -513,17 +473,8 @@
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
 
-    const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
-    const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
-
-    const w2BaseQ2SpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w2q2]"))
-        .map(s => [s.dataset.w2q2, s.querySelector(".num > span")])
-    );
-    const w3BaseSpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w3base]"))
-        .map(s => [s.dataset.w3base, s.querySelector(".num > span")])
-    );
+    const w3FinalSource = document.getElementById("w3FinalSource");
+    const w3FinalCanvas = document.getElementById("w3FinalCanvas");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -562,9 +513,7 @@
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
-          if(colorMap.has(coord)){
-            cell.classList.add(colorMap.get(coord));
-          }
+          if(colorMap.has(coord)) cell.classList.add(colorMap.get(coord));
           grid.appendChild(cell);
         }
       }
@@ -587,64 +536,66 @@
       return pool.slice(0, count);
     }
 
-    function syncW2BaseFromKipSource(){
-      ["S1","S2","S3","S4"].forEach(k => {
-        const src = slotSpanEls.get(k);
-        const dstBase = w2BaseQ2SpanEls.get(k);
-        if (src && dstBase){
-          dstBase.textContent = src.textContent;
-          dstBase.classList.toggle("dot", src.classList.contains("dot"));
-        }
-      });
-    }
-
-    function syncW3BaseFromStore(store){
-      ["U1","U2","U3","U4"].forEach(k => {
-        const v = store.get(k);
-        const dstBase = w3BaseSpanEls.get(k);
-        if (v && dstBase){
-          dstBase.textContent = v.text;
-          dstBase.classList.toggle("dot", !!v.dot);
-        }
-      });
-    }
-
-    function setRandomNumbers(){
-      const nums = getUniqueRandomNumbers(12, 1, 12);
-
-      const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
-      keysST.forEach((k, idx) => {
-        const span = slotSpanEls.get(k);
-        if(!span) return;
+    function setW3FinalNumbers(){
+      const nums = getUniqueRandomNumbers(8, 1, 12);
+      const ids = ["S1","S2","S3","S4","U1","U2","U3","U4"];
+      ids.forEach((id, idx) => {
+        const el = document.getElementById(id);
         const n = nums[idx];
-        span.textContent = String(n);
-        setDot(span, n);
+        el.textContent = String(n);
+        setDot(el, n);
       });
-
-      const w3Store = new Map();
-      ["U1","U2","U3","U4"].forEach((k, i) => {
-        const n = nums[8 + i];
-        w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
-      });
-
-      syncW2BaseFromKipSource();
-      syncW3BaseFromStore(w3Store);
     }
 
-    btn.addEventListener("click", () => setRandomNumbers());
+    async function renderW3FinalToCanvas(){
+      // Canvas auf Board-Größe setzen
+      const rect = boardEl.getBoundingClientRect();
+      const pxW = Math.round(rect.width);
+      const pxH = Math.round(rect.height);
 
-    window.addEventListener("load", () => {
+      w3FinalCanvas.width  = pxW * 2;  // höhere Schärfe
+      w3FinalCanvas.height = pxH * 2;
+      w3FinalCanvas.style.width  = pxW + "px";
+      w3FinalCanvas.style.height = pxH + "px";
+
+      // Snapshot machen
+      const shot = await html2canvas(w3FinalSource, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true
+      });
+
+      // In unser Canvas kopieren
+      const ctx = w3FinalCanvas.getContext("2d");
+      ctx.clearRect(0,0,w3FinalCanvas.width,w3FinalCanvas.height);
+      ctx.drawImage(shot, 0, 0, w3FinalCanvas.width, w3FinalCanvas.height);
+
+      // Source ausblenden (Canvas ist die "eine Ebene")
+      w3FinalSource.style.opacity = "0";
+      w3FinalSource.style.visibility = "hidden";
+    }
+
+    btn.addEventListener("click", async () => {
+      setW3FinalNumbers();
+      await renderW3FinalToCanvas();
+    });
+
+    window.addEventListener("load", async () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      setRandomNumbers();
+
+      setW3FinalNumbers();
+      await renderW3FinalToCanvas();
     });
 
-    window.addEventListener("resize", () => {
+    window.addEventListener("resize", async () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
+      // neu rendern, damit Canvas immer exakt passt
+      await renderW3FinalToCanvas();
     });
   </script>
 </body>
