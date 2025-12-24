@@ -148,7 +148,7 @@
       z-index: 2;
       pointer-events: none;
 
-      /* ✅ FIX: KEIN schwarzer Innenrahmen am Boxboden */
+      /* KEIN schwarzer Innenrahmen am Boxboden */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -269,15 +269,47 @@
       user-select:none;
     }
 
+    /* ==========================
+       TYPO: Optik/Kerning
+       ========================== */
+
     .slot .num > span{
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+
       font-weight: 900;
       color: #111;
-      font-size: clamp(18px, 8vmin, 36px);
+      font-size: clamp(18px, 8vmin, 36px); /* dein Regler */
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+
       transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
+
       position: relative;
+      left: var(--opt-x, 0px);
+      top:  var(--opt-y, 0px);
+    }
+
+    /* 7: optisch ein bisschen nach rechts */
+    .slot .num > span[data-val="7"]{
+      --opt-x: 2px;
+    }
+
+    /* zweistellige Zahlen als Digits: Abstand steuern */
+    .slot .num > span .d{
+      display:inline-block;
+      line-height: 1;
+    }
+
+    /* 11: enger zusammen */
+    .slot .num > span.num11 .d + .d{
+      margin-left: -0.18em;
+    }
+
+    /* 10: weniger eng zusammen */
+    .slot .num > span.num10 .d + .d{
+      margin-left: -0.10em;
     }
 
     .slot .num > span.dot::after{
@@ -341,9 +373,6 @@
         <div class="w1Shadow" aria-hidden="true"></div>
         <div class="w1Cube" aria-label="W1 Würfelfläche"></div>
 
-        <!-- Zahlenfuß zum Farbfeld:
-             3B/4B -> Farbfeld links => read-west
-             2C/2D -> Farbfeld oben  => read-north -->
         <div class="slot w1-4b read-west"  data-w1="A1"><div class="num"><span></span></div></div>
         <div class="slot w1-3b read-west"  data-w1="A2"><div class="num"><span></span></div></div>
         <div class="slot w1-2c read-north" data-w1="A3"><div class="num"><span></span></div></div>
@@ -430,11 +459,31 @@
 
     const w1Spans = Array.from(document.querySelectorAll("[data-w1] .num > span"));
 
+    // ✅ rendern: 10/11 als zwei Digits (für Kerning)
+    function renderNumber(span, n){
+      span.classList.remove("num10","num11");
+      span.innerHTML = "";               // wichtig: vorherige Digits löschen
+      span.dataset.val = String(n);      // für CSS-Optik (z.B. 7)
+
+      if (n === 10){
+        span.classList.add("num10");
+        span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
+        return;
+      }
+      if (n === 11){
+        span.classList.add("num11");
+        span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
+        return;
+      }
+
+      span.textContent = String(n);
+    }
+
     function setRandomNumbers(){
       const nums = getUniqueRandomNumbers(4, 0, 11);
       w1Spans.forEach((sp, i) => {
         const n = nums[i];
-        sp.textContent = String(n);
+        renderNumber(sp, n);
         setDot(sp, n);
       });
     }
