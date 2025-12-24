@@ -94,9 +94,8 @@
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
+      /* Kugelmittelpunkt (identisch zur Floor-Mitte) */
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
-
-      /* ✅ perfekte Mitte */
       --seam-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
       /* W2 Basis links oben */
@@ -105,7 +104,7 @@
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
 
-      /* Hilfen für Schatten */
+      /* Hilfen für Schatten (bleiben, auch wenn KIP-Layer unsichtbar ist) */
       --cubeSize: calc(3 * var(--cell) + 2 * var(--cell-gap));
       --pairHeight: calc(2 * var(--cubeSize) + var(--cell-gap));
 
@@ -193,17 +192,16 @@
       visibility: hidden;
     }
 
-    .w3w2BaseLayer{
-      position:absolute;
-      inset:0;
-      z-index: 7;
-      pointer-events:none;
-
-      opacity: 0;
-      visibility: hidden;
+    /* ✅ W3–W2 KIP-DARSTELLUNG KOMPLETT UNSICHTBAR (inkl. evtl. Schatten) */
+    .w3w2KipLayer{
+      display:none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events:none !important;
     }
 
-    .w3w2KipLayer{
+    /* ✅ W2-FINAL-DARSTELLUNG sichtbar (Zahlen weg) */
+    .w3w2BaseLayer{
       position:absolute;
       inset:0;
       z-index: 8;
@@ -212,30 +210,23 @@
       opacity: 1;
       visibility: visible;
 
+      /* optional clip wie bei KIP, damit nix am Rand rausläuft */
       -webkit-clip-path: inset(var(--step) var(--step) var(--step) var(--step));
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    .w3w2KipGroup{
+    /* W2 Final als Gruppe rotieren (90° gegen den Uhrzeigersinn) um Kugelmittelpunkt */
+    .w2FinalGroup{
       position:absolute;
       inset:0;
-      transform: none;
+      transform-origin: var(--axis-x) var(--seam-y);
+      transform: rotate(-90deg); /* CCW */
     }
 
-    /* ✅ SCHATTEN KOMPLETT WEG (Phantom-Teppich entfernt) */
-    .w3w2KipGroup::before{
-      content:"";
-      display:none;
-    }
-
-    .w3w2Bundle{
-      position:absolute;
-      inset:0;
-
-      transform-origin: 50% var(--seam-y);
-      transform: scaleY(0.5);
-
-      z-index: 2;
+    /* W3-Teil im BaseLayer ausblenden (nur W2 Final zeigen) */
+    .w3w2BaseLayer .cubeFinal.w3mirror,
+    .w3w2BaseLayer .slot[data-w3base]{
+      display:none !important;
     }
 
     .cube,
@@ -281,16 +272,9 @@
     .pairLayer .cube{ left: var(--cube-x); top: var(--cube-y); }
     .pairLayer .cube2{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
-    .w3w2BaseLayer .cubeFinal.w2copy,
-    .w3w2KipLayer  .cubeFinal.w2copy{
+    .w3w2BaseLayer .cubeFinal.w2copy{
       left: calc(4 * var(--step));
       top:  calc(4 * var(--step));
-    }
-
-    .w3w2BaseLayer .cubeFinal.w3mirror,
-    .w3w2KipLayer  .cubeFinal.w3mirror{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
     }
 
     .slot{
@@ -358,11 +342,6 @@
     .w2q2-3d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
     .w2q2-4d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
 
-    .w3q1-botL{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
-    .w3q1-botR{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(1 * var(--step) + 2 * var(--step)); }
-    .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
-    .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
-
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -378,6 +357,12 @@
 
       z-index: 20000;
       pointer-events:none;
+    }
+
+    /* ✅ Zahlen in W2-Final (BaseLayer) unsichtbar */
+    .w3w2BaseLayer .slot .num{
+      opacity: 0 !important;
+      visibility: hidden !important;
     }
 
     .noNums .slot .num{
@@ -438,24 +423,28 @@
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
 
-      <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W3–W2 Basis (unsichtbar)">
-        <div class="divider-Q1Q2" aria-hidden="true"></div>
+      <!-- ✅ BaseLayer jetzt sichtbar: zeigt NUR W2-Final, um 90° CCW um Kugelmittelpunkt gedreht, ohne Zahlen -->
+      <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W2 Final (sichtbar, rotiert, ohne Zahlen)">
+        <div class="w2FinalGroup" id="w2FinalGroup">
+          <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-        <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
-        <div class="slot w2q2-2b read-north" data-w2q2="S1"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-2c read-north" data-w2q2="S2"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-3d read-east"  data-w2q2="S3"><div class="num"><span></span></div></div>
-        <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
+          <div class="cubeFinal w2copy joinTop" aria-label="W2 Final rotiert"></div>
+          <div class="slot w2q2-2b read-north" data-w2q2="S1"><div class="num"><span></span></div></div>
+          <div class="slot w2q2-2c read-north" data-w2q2="S2"><div class="num"><span></span></div></div>
+          <div class="slot w2q2-3d read-east"  data-w2q2="S3"><div class="num"><span></span></div></div>
+          <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
+        </div>
 
-        <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
+        <!-- (W3 Elemente bleiben im DOM für JS-Sync, sind aber per CSS ausgeblendet) -->
+        <div class="cubeFinal w3mirror joinBottom" aria-label="W3 (ausgeblendet)"></div>
         <div class="slot w3q1-botL read-south" data-w3base="U1"><div class="num"><span></span></div></div>
         <div class="slot w3q1-botR read-south" data-w3base="U2"><div class="num"><span></span></div></div>
         <div class="slot w3q1-midE read-east"  data-w3base="U3"><div class="num"><span></span></div></div>
         <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W2–W1 KIP (sichtbar)">
+      <!-- ✅ KIP-Layer bleibt im HTML, ist aber komplett unsichtbar via CSS (display:none) -->
+      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W3-W2 KIP (unsichtbar)">
         <div class="w3w2KipGroup" id="w3w2KipGroup">
           <div class="divider-Q1Q2" aria-hidden="true"></div>
 
