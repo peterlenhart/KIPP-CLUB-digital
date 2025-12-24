@@ -12,19 +12,16 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      /* echtes 8×8 ohne Zwischenräume */
       --cell-gap: 0px;
       --cell-radius: 0px;
 
       --floor: #7a4a34;
 
-      /* Holz */
       --cube-wood-base: #d7c2a4;
       --cube-wood-deep: #c9b08f;
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
-      /* W1 Innenrahmen (Gamma-Rand) */
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -126,7 +123,6 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
-    /* jedes Farbfeld bekommt 2px Innenrahmen (optisch 4px zwischen zwei Farbfeldern) */
     .cell.colorCell{
       box-shadow:
         inset 0 0 0 2px #000,
@@ -148,7 +144,6 @@
       z-index: 2;
       pointer-events: none;
 
-      /* KEIN schwarzer Innenrahmen am Boxboden */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -171,26 +166,22 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 8;
+      z-index: 4;
       pointer-events: none;
     }
 
-    /* ==========================
-       W1 (Q0) – sichtbar (Original)
-       ========================== */
-
+    /* W1 */
     .w1Layer{
       position:absolute;
       inset:0;
-      z-index: 5; /* über Floor, unter Ball */
+      z-index: 5;
       pointer-events:none;
     }
 
-    /* Schattenelement unter W1 – nur nach Osten + Süden */
     .w1Shadow{
       position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       border-radius: 0;
@@ -204,12 +195,12 @@
 
     .w1Cube{
       position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap)); /* bis 4D */
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
-      border-radius: 0; /* scharfkantig */
+      border-radius: 0;
 
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
@@ -224,7 +215,6 @@
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
-      /* Innenrahmen, ohne Vergrößerung */
       box-shadow:
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
@@ -254,7 +244,6 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* Slots W1: 4B, 3B, 2C, 2D */
     .w1-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .w1-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .w1-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
@@ -269,10 +258,6 @@
       user-select:none;
     }
 
-    /* ==========================
-       TYPO: Optik/Kerning
-       ========================== */
-
     .slot .num > span{
       display:inline-flex;
       align-items:center;
@@ -280,59 +265,40 @@
 
       font-weight: 900;
       color: #111;
-      font-size: clamp(18px, 8vmin, 36px); /* dein Regler (SlotNumber=8) */
+      font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
-      /* translate kommt VOR Rotation => Shift dreht mit */
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
-
       position: relative;
     }
 
-    /* 7: optisch ein bisschen nach rechts (Shift dreht mit) */
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
-
-    /* 10: als Ganzes minimal nach links (Shift dreht mit) */
     .slot .num > span.num10{ --opt-x: -2px; }
 
-    /* 6 & 9: wegen dickem Punkt als Ganzes minimal nach links */
     .slot .num > span[data-val="6"],
     .slot .num > span[data-val="9"]{
       --opt-x: -2px;
     }
 
-    /* zweistellige Zahlen als Digits: Abstand steuern */
     .slot .num > span .d{
       display:inline-block;
       line-height: 1;
     }
 
-    /* 11: enger zusammen */
-    .slot .num > span.num11 .d + .d{
-      margin-left: -0.18em;
-    }
+    .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
+    .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
 
-    /* 10: weniger eng zusammen */
-    .slot .num > span.num10 .d + .d{
-      margin-left: -0.10em;
-    }
-
-    /* DICKER PUNKT für 6/9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
-
       width: 0.20em;
       height: 0.20em;
-
       border-radius: 50%;
       background: #111;
-
       left: 100%;
       top: 72%;
       transform: translate(18%, -50%);
-
       box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
@@ -341,58 +307,54 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* ==========================
-       KIPPANSICHT (W2–W1)
-       ========================== */
-
+    /* Kippansicht Layer */
     .kippLayer{
       position:absolute;
       inset:0;
-      z-index: 6;              /* über Floor, unter Ball */
+      z-index: 6;
       pointer-events:none;
-      display:none;            /* per Button sichtbar */
+      display:none;
     }
-    .kippLayer.isOn{ display:block; }
 
-    /* Komplettes Doppelgebilde wird HORIZONTAL 50% gestaucht, um die Boxmitte (D/E) */
     .kippGroup{
       position:absolute;
       inset:0;
+      transform-origin: calc(4 * var(--step)) 50%;
       transform: scaleX(0.5);
+    }
+
+    .kippMidShadow{
+      position:absolute;
+      left: var(--step);
+      top:  calc(4 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: 0px;
+      z-index: 0;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.28),
+        0 6px 10px rgba(0,0,0,0.18);
+    }
+
+    .kippRight{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 2;
+    }
+
+    .kippLeft{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 2;
+      transform: scaleX(-1);
       transform-origin: 50% 50%;
     }
 
-    /* gemeinsamer Schatten: auf Kante zwischen Zeile 4 und 5 => y = 4*step */
-    .kippShadowLine{
-      position:absolute;
-      left: calc(1 * var(--step));    /* Beginn bei B */
-      top:  calc(4 * var(--step));    /* Grenze Zeile 4/5 */
-      width: calc(6 * var(--step));   /* doppelte Würfelbreite: 2×3=6 */
-      height: 0px;
-      z-index: 1;
-      pointer-events:none;
-
-      /* kurzer, naher Schatten (Licht recht mittig über Box) */
-      box-shadow:
-        0 8px 10px rgba(0,0,0,0.26),
-        0 3px 6px rgba(0,0,0,0.22);
-    }
-
-    /* die beiden Flächen (links W2 ohne Zahlen, rechts W1 mit Zahlen) */
-    .kippFace{
-      position:absolute;
-      top:  calc(1 * var(--step)); /* wie W1 Original */
-      width: calc(3 * var(--step));
-      height: calc(3 * var(--step));
-    }
-
-    .kippLeft{  left: calc(1 * var(--step)); } /* Q0 */
-    .kippRight{ left: calc(4 * var(--step)); } /* Q1 */
-
-    /* W1-Kopie in Kippansicht: OHNE eigenen Schatten */
-    .kippFace .w1Shadow{ display:none !important; }
-
-    /* Holzfläche in Kippansicht: gleiches Styling wie w1Cube */
     .kippCube{
       position:absolute;
       inset:0;
@@ -417,30 +379,33 @@
         0 0 0 1px rgba(255,255,255,0.08) inset;
     }
 
-    /* linke Fläche = gespiegelte Würfelfläche */
-    .kippLeft{
-      transform: scaleX(-1);
-      transform-origin: 50% 50%;
+    .kippSlot{
+      position:absolute;
+      width: var(--cell);
+      height: var(--cell);
+      box-sizing: border-box;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
+        var(--slot-fill);
+      border: var(--slot-border-w) solid var(--slot-border);
+      border-radius: var(--cell-radius);
+      box-shadow:
+        1px 1px 0 rgba(255,255,255,0.18) inset,
+        -1px -1px 0 rgba(0,0,0,0.08) inset,
+        0 3px 5px rgba(0,0,0,0.22),
+        2px 2px 3px -1px rgba(0,0,0,0.20);
     }
-    /* Spiegelung betrifft nur die Fläche; Zahlen sind dort sowieso weg.
-       Damit die Slots trotzdem an der richtigen Stelle bleiben: wir spiegeln INHALT und spiegeln Slots wieder zurück */
-    .kippLeft .slot{
-      transform: scaleX(-1);
-      transform-origin: 50% 50%;
-    }
 
-    /* Slots innerhalb der 3×3 Fläche (lokales Koordinatensystem) */
-    .kippFace .s-4b{ left: 0;                 top: calc(2 * var(--step)); }
-    .kippFace .s-3b{ left: 0;                 top: calc(1 * var(--step)); }
-    .kippFace .s-2c{ left: calc(1 * var(--step)); top: 0; }
-    .kippFace .s-2d{ left: calc(2 * var(--step)); top: 0; }
+    .k-4b{ left: 0; top: calc(2 * var(--step)); }
+    .k-3b{ left: 0; top: calc(1 * var(--step)); }
+    .k-2c{ left: calc(1 * var(--step)); top: 0; }
+    .k-2d{ left: calc(2 * var(--step)); top: 0; }
 
-    /* Linke Fläche (W2): Zahlen vollständig weg */
-    .kippLeft .num{ display:none !important; }
+    .kippLeft .num{ display:none; }
 
-    /* ==========================
-       Controls
-       ========================== */
+    /* Kipp aktiv: W1Layer aus, KippLayer an (Kugel bleibt!) */
+    .isKipp .w1Layer{ display:none; }
+    .isKipp .kippLayer{ display:block; }
 
     .controls{
       width: 100%;
@@ -479,51 +444,42 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-
+      <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W1 sichtbar (Q0) -->
       <div class="w1Layer" id="w1Layer" aria-label="W1 (Q0) sichtbar">
         <div class="w1Shadow" aria-hidden="true"></div>
         <div class="w1Cube" aria-label="W1 Würfelfläche"></div>
 
-        <!-- Zahlenfuß zum Farbfeld:
-             3B/4B -> Farbfeld links => read-west
-             2C/2D -> Farbfeld oben  => read-north -->
         <div class="slot w1-4b read-west"  data-w1="A1"><div class="num"><span></span></div></div>
         <div class="slot w1-3b read-west"  data-w1="A2"><div class="num"><span></span></div></div>
         <div class="slot w1-2c read-north" data-w1="A3"><div class="num"><span></span></div></div>
         <div class="slot w1-2d read-north" data-w1="A4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Kippansicht Layer (W2–W1) -->
-      <div class="kippLayer" id="kippLayer" aria-label="Kippansicht (W2–W1)">
-        <div class="kippGroup">
-          <div class="kippShadowLine" aria-hidden="true"></div>
+      <div class="kippLayer" id="kippLayer" aria-label="W2–W1 Kippansicht">
+        <div class="kippGroup" id="kippGroup">
+          <div class="kippMidShadow" aria-hidden="true"></div>
 
-          <!-- Links: W2 (gespiegelt, ohne Zahlen) -->
-          <div class="kippFace kippLeft" id="kippLeft">
+          <div class="kippLeft" aria-label="W2 links">
             <div class="kippCube" aria-hidden="true"></div>
-
-            <div class="slot s-4b read-west"><div class="num"><span></span></div></div>
-            <div class="slot s-3b read-west"><div class="num"><span></span></div></div>
-            <div class="slot s-2c read-north"><div class="num"><span></span></div></div>
-            <div class="slot s-2d read-north"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-4b read-west"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-3b read-west"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-2c read-north"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-2d read-north"><div class="num"><span></span></div></div>
           </div>
 
-          <!-- Rechts: W1 Kopie (mit Zahlen, ohne Schatten) -->
-          <div class="kippFace kippRight" id="kippRight">
+          <div class="kippRight" aria-label="W1 rechts">
             <div class="kippCube" aria-hidden="true"></div>
-
-            <div class="slot s-4b read-west"><div class="num"><span></span></div></div>
-            <div class="slot s-3b read-west"><div class="num"><span></span></div></div>
-            <div class="slot s-2c read-north"><div class="num"><span></span></div></div>
-            <div class="slot s-2d read-north"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-4b read-west"  data-k1="B1"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-3b read-west"  data-k1="B2"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-2c read-north" data-k1="B3"><div class="num"><span></span></div></div>
+            <div class="kippSlot k-2d read-north" data-k1="B4"><div class="num"><span></span></div></div>
           </div>
+
         </div>
       </div>
 
-      <div class="ball" aria-label="Kugel"></div>
     </div>
 
     <div class="controls">
@@ -535,11 +491,8 @@
   <script>
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
-    const btnMix = document.getElementById("btnBestuecken");
+    const btn = document.getElementById("btnBestuecken");
     const btnKipp = document.getElementById("btnKipp");
-
-    const w1Layer = document.getElementById("w1Layer");
-    const kippLayer = document.getElementById("kippLayer");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -554,17 +507,14 @@
       [key(4,"A"), "c-gruen"],
       [key(5,"A"), "c-violett"],
       [key(6,"A"), "c-blau"],
-
       [key(8,"C"), "c-gruen"],
       [key(8,"D"), "c-orange"],
       [key(8,"E"), "c-gruen"],
       [key(8,"F"), "c-orange"],
-
       [key(6,"H"), "c-violett"],
       [key(5,"H"), "c-blau"],
       [key(4,"H"), "c-orange"],
       [key(3,"H"), "c-gruen"],
-
       [key(1,"F"), "c-blau"],
       [key(1,"E"), "c-violett"],
       [key(1,"D"), "c-blau"],
@@ -573,13 +523,11 @@
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
-
       for(let r=1; r<=8; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
-
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
             cell.classList.add("colorCell");
@@ -607,6 +555,7 @@
     }
 
     const w1Spans = Array.from(document.querySelectorAll("[data-w1] .num > span"));
+    const k1Spans = Array.from(document.querySelectorAll("[data-k1] .num > span"));
 
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
@@ -623,7 +572,6 @@
         span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
         return;
       }
-
       span.textContent = String(n);
     }
 
@@ -634,66 +582,34 @@
         renderNumber(sp, n);
         setDot(sp, n);
       });
+      if (boardEl.classList.contains("isKipp")){
+        syncW1toKippRight();
+      }
     }
 
-    // ---------- KIPPANSICHT: Zahlen von W1 nach rechts kopieren, links löschen ----------
-    const kippRightSpans = Array.from(document.querySelectorAll("#kippRight .num > span"));
-    const kippLeftSpans  = Array.from(document.querySelectorAll("#kippLeft  .num > span"));
-
-    function copyW1ToKipp(){
-      // rechts: exakte Kopie der Darstellung (inkl. innerHTML für 10/11, Klassen, dataset, dot)
-      w1Spans.forEach((src, i) => {
-        const dst = kippRightSpans[i];
-        if(!dst) return;
-
-        dst.className = src.className;              // num10/num11/dot
-        dst.dataset.val = src.dataset.val || "";    // für 7/6/9 shifts
-        dst.innerHTML = src.innerHTML;              // 10/11 Digits
-        dst.textContent = "";                       // sicherheitshalber
-
-        // Wenn src keine innerHTML hat (einstellig), ist es textContent -> dann übernehmen
-        if (src.innerHTML.trim() === ""){
-          dst.textContent = src.textContent;
-        }
-      });
-
-      // links (W2): Zahlen weg (nur zur Sicherheit – CSS macht sowieso display:none)
-      kippLeftSpans.forEach((sp) => {
-        sp.className = "";
-        sp.dataset.val = "";
-        sp.innerHTML = "";
-        sp.textContent = "";
+    function readCurrentW1Numbers(){
+      return w1Spans.map(sp => {
+        const t = (sp.textContent || "").trim();
+        const n = Number(t);
+        return Number.isFinite(n) ? n : 0;
       });
     }
 
-    function showKipp(){
-      // W1 Original unsichtbar (mit Schatten)
-      w1Layer.style.display = "none";
-
-      // Kippansicht sichtbar + Zahlen aus aktuellem W1 übernehmen
-      copyW1ToKipp();
-      kippLayer.classList.add("isOn");
+    function syncW1toKippRight(){
+      const nums = readCurrentW1Numbers();
+      k1Spans.forEach((sp, i) => {
+        const n = nums[i] ?? 0;
+        renderNumber(sp, n);
+        setDot(sp, n);
+      });
     }
 
-    function hideKipp(){
-      kippLayer.classList.remove("isOn");
-      w1Layer.style.display = "";
-    }
-
-    let kippOn = false;
+    btn.addEventListener("click", () => setRandomNumbers());
 
     btnKipp.addEventListener("click", () => {
-      kippOn = !kippOn;
-      if(kippOn) showKipp();
-      else hideKipp();
-    });
-
-    // mischen: nur W1 neu bestücken (Kipp bleibt aus, damit klar bleibt, was gerade sichtbar ist)
-    btnMix.addEventListener("click", () => {
-      setRandomNumbers();
-      if(kippOn){
-        // falls du in Kippansicht bist, sofort aktualisieren (damit W1-Kopie exakt stimmt)
-        copyW1ToKipp();
+      const isOn = boardEl.classList.toggle("isKipp");
+      if (isOn){
+        syncW1toKippRight();
       }
     });
 
