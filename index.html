@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – W1/W2/W3 Rotation</title>
+  <title>KIPP – 8×8 Raster</title>
 
   <style>
     :root{
@@ -94,6 +94,11 @@
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
+      --face: calc(3 * var(--cell) + 2 * var(--cell-gap));
+
+      /* Kugel-/Boxmittelpunkt */
+      --cx: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
+      --cy: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
 
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
@@ -150,11 +155,11 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
-    /* Kugel: unter dem Paket-Schatten */
+    /* Kugel */
     .ball{
       position:absolute;
-      left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
-      top:  calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
+      left: var(--cx);
+      top:  var(--cy);
       width: calc(var(--cell) * 0.55);
       height: calc(var(--cell) * 0.55);
       border-radius: 50%;
@@ -168,36 +173,54 @@
       pointer-events: none;
     }
 
-    /* ========= DAS EINE PAKET =========
-       Liegt initial in Q0 (2B..4D) und dreht sich um die Ecke am Kugelmittelpunkt:
-       -> transform-origin: 100% 100% (unten rechts)
-    */
-    .wPack{
-      position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      pointer-events:none;
-      z-index: 5;
-
-      transform-origin: 100% 100%; /* Ecke am Kugelmittelpunkt */
-      transform: rotate(0deg);     /* wird per JS gesetzt */
-    }
-
-    .wShadow{
+    /* ==========================
+       DEIN perfektes W2/W1-Phantom (bleibt als Vorschau)
+       ========================== */
+    .kipGroup{
       position:absolute;
       inset:0;
-      z-index: 1;
+      z-index: 5;
+      pointer-events:none;
+      transform-origin: calc(4 * var(--step)) 50%;
+    }
+    .kipGroup.kip50{ transform: scaleX(0.5); }
+    .kipGroup.hidden{ display:none; }
+
+    .kipShadow{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       background: transparent;
+      z-index: 1;
       box-shadow:
-        0 18px 22px rgba(0,0,0,0.30),
-        0  9px 14px rgba(0,0,0,0.16);
+        0 22px 26px rgba(0,0,0,0.32),
+        0 10px 16px rgba(0,0,0,0.18);
+    }
+
+    .kipEdgeCore{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+      width: 6px;
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      transform: translateX(-50%);
+      background:
+        linear-gradient(90deg,
+          rgba(0,0,0,0.00),
+          rgba(0,0,0,0.28),
+          rgba(0,0,0,0.00)
+        );
+      z-index: 1;
+      filter: blur(0.2px);
+      opacity: 0.95;
     }
 
     .cubeFace{
       position:absolute;
-      inset:0;
+      width: var(--face);
+      height: var(--face);
       box-sizing: border-box;
       border-radius: 0;
       background:
@@ -217,6 +240,9 @@
         0 0 0 1px rgba(255,255,255,0.08) inset;
       z-index: 2;
     }
+
+    .faceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .faceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
     .slot{
       position:absolute;
@@ -246,6 +272,7 @@
       z-index: 4;
     }
 
+    /* Zahl: WICHTIG -> wir kompensieren optional Pack-Rotation */
     .slot .num > span{
       display:inline-flex;
       align-items:center;
@@ -254,7 +281,9 @@
       color: #111;
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
+      transform:
+        rotate(calc(var(--num-rot, 0deg) - var(--packRot, 0deg)))
+        translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
     }
@@ -281,18 +310,71 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
-    /* Zahlenfuß-Ausrichtung (bleibt wie gehabt steuerbar) */
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
     .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* 4 Slotpositionen im 3×3 Paket (lokal) */
-    .l-2b{ left: calc(0 * var(--step)); top: calc(0 * var(--step)); }
-    .l-2c{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); }
-    .l-3d{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
-    .l-4d{ left: calc(2 * var(--step)); top: calc(2 * var(--step)); }
+    /* Phantom Slot-Positionen im Board (wie bei dir) */
+    .s-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
+    .s-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
+    .s-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
 
+    .s-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
+    .s-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    .s-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    .s-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* ==========================
+       NEU: DER eine “ORDNER” (W1 als echtes Paket)
+       - sitzt in Q0 (2B..4D)
+       - Drehpunkt = Ecke am Kugelmittelpunkt (bottom-right)
+       ========================== */
+    #wPack{
+      position:absolute;
+      left: calc(1 * var(--step));  /* Start Q0 = 2B */
+      top:  calc(1 * var(--step));
+      width: var(--face);
+      height: var(--face);
+      z-index: 6;
+      pointer-events:none;
+
+      --packRot: 0deg;
+      transform-origin: 100% 100%; /* Ecke am Kugelmittelpunkt */
+      transform: rotate(var(--packRot));
+    }
+    #wPack.hidden{ display:none; }
+
+    /* Schatten im Pack (dreht mit!) */
+    #wPack .packShadow{
+      position:absolute;
+      inset:0;
+      z-index: 1;
+      box-shadow:
+        0 22px 26px rgba(0,0,0,0.32),
+        0 10px 16px rgba(0,0,0,0.18);
+    }
+    #wPack .packFace{
+      position:absolute;
+      inset:0;
+      z-index: 2;
+    }
+    #wPack .slot{ z-index: 3; }
+
+    /* Lokale Slot-Positionen im 3×3 Pack (genau die L-Form wie Q0 in deinem Phantom) */
+    .p-2b{ left: calc(0 * var(--step)); top: calc(0 * var(--step)); } /* 2B */
+    .p-2c{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); } /* 2C */
+    .p-3d{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); } /* 3D */
+    .p-4d{ left: calc(2 * var(--step)); top: calc(2 * var(--step)); } /* 4D */
+
+    /* KIP50 soll auch fürs echte Pack funktionieren */
+    .board.kip50mode #wPack{
+      transform: rotate(var(--packRot)) scaleX(0.5);
+      transform-origin: calc(3 * var(--step)) 50%; /* senkrechte Mittellinie der Box */
+    }
+
+    /* Controls */
     .controls{
       width: 100%;
       display:flex;
@@ -330,36 +412,63 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
+
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- EIN Paket: dreht sich um die Ecke am Kugelmittelpunkt -->
-      <div id="wPack" class="wPack" aria-label="W-Paket (W1/W2/W3)">
-        <div class="wShadow" aria-hidden="true"></div>
-        <div class="cubeFace" aria-hidden="true"></div>
+      <!-- 1) Perfekte Vorschau: W2/W1 Phantom -->
+      <div id="kipGroup" class="kipGroup" aria-label="W2–W1 KIP Gruppe">
+        <div class="kipShadow" aria-hidden="true"></div>
+        <div class="kipEdgeCore" aria-hidden="true"></div>
 
-        <div class="slot l-2b read-south" data-slot="S1"><div class="num"><span></span></div></div>
-        <div class="slot l-2c read-south" data-slot="S2"><div class="num"><span></span></div></div>
-        <div class="slot l-3d read-east"  data-slot="S3"><div class="num"><span></span></div></div>
-        <div class="slot l-4d read-east"  data-slot="S4"><div class="num"><span></span></div></div>
+        <div class="cubeFace faceQ0" aria-label="Würfelfläche Q0"></div>
+        <div class="cubeFace faceQ1" aria-label="Würfelfläche Q1"></div>
+
+        <!-- W2 links: leer -->
+        <div class="slot s-4d read-south" data-slot="W2_A"><div class="num"><span></span></div></div>
+        <div class="slot s-3d read-south" data-slot="W2_B"><div class="num"><span></span></div></div>
+        <div class="slot s-2b read-south" data-slot="W2_C"><div class="num"><span></span></div></div>
+        <div class="slot s-2c read-south" data-slot="W2_D"><div class="num"><span></span></div></div>
+
+        <!-- W1 rechts: befüllt -->
+        <div class="slot s-3e read-east"  data-slot="W1_1"><div class="num"><span></span></div></div>
+        <div class="slot s-4e read-east"  data-slot="W1_2"><div class="num"><span></span></div></div>
+        <div class="slot s-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+        <div class="slot s-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+      </div>
+
+      <!-- 2) ECHTES W1-Paket (Ordner): wird gedreht -> W2 -->
+      <div id="wPack" class="hidden" aria-label="W1 Paket (dreht um Kugelmittelpunkt)">
+        <div class="packShadow" aria-hidden="true"></div>
+        <div class="cubeFace packFace" aria-hidden="true"></div>
+
+        <!-- Slots im Pack -->
+        <div class="slot p-2b" data-pack="P1"><div class="num"><span></span></div></div>
+        <div class="slot p-2c" data-pack="P2"><div class="num"><span></span></div></div>
+        <div class="slot p-3d" data-pack="P3"><div class="num"><span></span></div></div>
+        <div class="slot p-4d" data-pack="P4"><div class="num"><span></span></div></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
     <div class="controls">
-      <button id="btnMix" class="btn">Würfel mischen (12)</button>
-      <button id="btnCW"  class="btn">KIPP ↻ (CW)</button>
-      <button id="btnCCW" class="btn">KIPP ↺ (CCW)</button>
+      <button id="btnBestuecken" class="btn">Würfel mischen</button>
+      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
+      <button id="btnKippCW" class="btn">KIPP (CW)</button>
+      <button id="btnZurueck" class="btn">Zurück (W2/W1)</button>
     </div>
   </div>
 
   <script>
-    const boardEl = document.getElementById("board");
-    const grid = document.getElementById("grid");
-    const wPack = document.getElementById("wPack");
-    const btnMix = document.getElementById("btnMix");
-    const btnCW  = document.getElementById("btnCW");
-    const btnCCW = document.getElementById("btnCCW");
+    const boardEl   = document.getElementById("board");
+    const grid      = document.getElementById("grid");
+    const btnMix    = document.getElementById("btnBestuecken");
+    const btnKip50  = document.getElementById("btnKip50");
+    const btnKippCW = document.getElementById("btnKippCW");
+    const btnZurueck= document.getElementById("btnZurueck");
+
+    const kipGroup  = document.getElementById("kipGroup");
+    const wPack     = document.getElementById("wPack");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -442,80 +551,133 @@
       span.textContent = String(n);
     }
 
-    // ====== STATE ======
-    // 12 Zahlen -> 3 Flächen (W1,W2,W3) -> je 4 Zahlen
-    let faces = [
-      [0,0,0,0], // W1
-      [0,0,0,0], // W2
-      [0,0,0,0], // W3
-    ];
+    /* ======================================
+       STATE: W1 (4) + W2 (4)
+       ====================================== */
+    let w1Nums = [0,0,0,0];
+    let w2Nums = [0,0,0,0];
 
-    // Welche Fläche ist gerade sichtbar? 0=W1,1=W2,2=W3
-    let faceIndex = 0;
+    function clearLeftSlots(){
+      const leftKeys = ["W2_A","W2_B","W2_C","W2_D"];
+      leftKeys.forEach(k=>{
+        const sp = kipGroup.querySelector(`[data-slot="${k}"] .num > span`);
+        if(!sp) return;
+        sp.classList.remove("dot","num10","num11");
+        sp.innerHTML = "";
+        sp.textContent = "";
+        sp.removeAttribute("data-val");
+      });
+    }
 
-    // Visuelle Rotation des Pakets (Q0/Q1/Q2/Q3)
-    // wir halten das als "quarters" (0..3) und setzen rotate(quarters*90deg)
-    let quarters = 0;
-
-    function applyVisibleFaceNumbers(){
-      const nums = faces[faceIndex];
-      const slots = [
-        wPack.querySelector('[data-slot="S1"] .num > span'),
-        wPack.querySelector('[data-slot="S2"] .num > span'),
-        wPack.querySelector('[data-slot="S3"] .num > span'),
-        wPack.querySelector('[data-slot="S4"] .num > span'),
+    function applyW1ToRightSlots(){
+      const targets = [
+        kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
+        kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
+        kipGroup.querySelector('[data-slot="W1_3"] .num > span'),
+        kipGroup.querySelector('[data-slot="W1_4"] .num > span'),
       ];
+
       for(let i=0;i<4;i++){
-        renderNumber(slots[i], nums[i]);
-        setDot(slots[i], nums[i]);
+        const sp = targets[i];
+        const n  = w1Nums[i];
+        renderNumber(sp, n);
+        setDot(sp, n);
       }
     }
 
-    function applyRotation(){
-      const deg = quarters * 90;
-      wPack.style.transform = `rotate(${deg}deg)`;
+    function applyNumsToPack(arr){
+      const packTargets = [
+        wPack.querySelector('[data-pack="P1"] .num > span'),
+        wPack.querySelector('[data-pack="P2"] .num > span'),
+        wPack.querySelector('[data-pack="P3"] .num > span'),
+        wPack.querySelector('[data-pack="P4"] .num > span'),
+      ];
+
+      for(let i=0;i<4;i++){
+        const sp = packTargets[i];
+        const n  = arr[i];
+        renderNumber(sp, n);
+        setDot(sp, n);
+      }
     }
 
-    function reroll12(){
-      // 0..11 wie bei dir, eindeutig
-      const twelve = getUniqueRandomNumbers(12, 0, 11);
-      faces[0] = twelve.slice(0,4);   // W1
-      faces[1] = twelve.slice(4,8);   // W2
-      faces[2] = twelve.slice(8,12);  // W3
+    function setPackReadForQ1(){
+      // Nach CW-Kipp liegt das Quadrat in Q1.
+      // Fürs Auge: obere Slots -> read-north, rechte Slots -> read-west/east?
+      // Wir setzen hier die gleiche Logik wie dein Phantom rechts:
+      // (weil Pack selber rotiert, kompensieren wir via --packRot)
+      const s1 = wPack.querySelector('[data-pack="P1"]').classList;
+      const s2 = wPack.querySelector('[data-pack="P2"]').classList;
+      const s3 = wPack.querySelector('[data-pack="P3"]').classList;
+      const s4 = wPack.querySelector('[data-pack="P4"]').classList;
 
-      // Startzustand wie du es beschreibst: W1 in Q0
-      faceIndex = 0;
-      quarters = 0;
-      applyRotation();
-      applyVisibleFaceNumbers();
+      // reset
+      [s1,s2,s3,s4].forEach(cl=>{
+        cl.remove("read-north","read-south","read-east","read-west");
+      });
+
+      // In deinem Phantom rechts sind die beiden "oben" read-north, die beiden "rechts" read-east.
+      // Unser Pack hat oben = P1/P2, rechts = P3/P4.
+      s1.add("read-north");
+      s2.add("read-north");
+      s3.add("read-east");
+      s4.add("read-east");
     }
 
-    function kippCW(){
-      // W1->W2->W3->W1...
-      faceIndex = (faceIndex + 1) % 3;
-      quarters = (quarters + 1) % 4; // Q0->Q1->Q2->Q3->Q0...
-      applyRotation();
-      applyVisibleFaceNumbers();
+    function reroll(){
+      const eight = getUniqueRandomNumbers(8, 0, 11);
+      w1Nums = eight.slice(0,4);
+      w2Nums = eight.slice(4,8);
+
+      applyW1ToRightSlots();
+      clearLeftSlots();
+
+      // zurück auf Vorschau-Modus
+      kipGroup.classList.remove("hidden");
+      wPack.classList.add("hidden");
+      wPack.style.setProperty("--packRot", "0deg");
     }
 
-    function kippCCW(){
-      // rückwärts: W1<-W2<-W3<-W1...
-      faceIndex = (faceIndex + 2) % 3;
-      quarters = (quarters + 3) % 4; // -1 mod 4
-      applyRotation();
-      applyVisibleFaceNumbers();
-    }
+    // ========== BUTTONS ==========
+    btnMix.addEventListener("click", reroll);
 
-    btnMix.addEventListener("click", reroll12);
-    btnCW.addEventListener("click", kippCW);
-    btnCCW.addEventListener("click", kippCCW);
+    btnKip50.addEventListener("click", () => {
+      // Phantom + echtes Pack sollen gleich reagieren
+      kipGroup.classList.toggle("kip50");
+      boardEl.classList.toggle("kip50mode");
+    });
+
+    // DAS ist dein Schritt: W1 -> 90° CW um Kugelmittelpunkt, Zahlen -> W2
+    btnKippCW.addEventListener("click", () => {
+      // 1) Phantom aus
+      kipGroup.classList.add("hidden");
+
+      // 2) Pack an
+      wPack.classList.remove("hidden");
+
+      // 3) 90° CW drehen (um die Ecke am Kugelmittelpunkt)
+      wPack.style.setProperty("--packRot", "90deg");
+
+      // 4) Zahlen W2 einsetzen
+      applyNumsToPack(w2Nums);
+
+      // 5) Leseausrichtung passend setzen
+      setPackReadForQ1();
+    });
+
+    btnZurueck.addEventListener("click", () => {
+      // zurück zur perfekten Vorschau
+      wPack.classList.add("hidden");
+      kipGroup.classList.remove("hidden");
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
+
       buildGridOnce();
-      reroll12();
+      reroll();
     });
 
     window.addEventListener("resize", () => {
