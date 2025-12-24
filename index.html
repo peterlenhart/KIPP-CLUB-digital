@@ -344,18 +344,16 @@
     .w1Sprite.hidden{ display:none; }
 
     /* ==========================
-       NEU: VERBUNDENE DOPPEL-WÜRFELFLÄCHE (Q0+Q1)
-       - genau 2B..4G (6×3 Zellen)
-       - EIN zusammenhängendes Bild (kein "irgendwo klein")
-       - wirft Schlagschatten ins Boxinnere (nach Süden)
+       NEU: ZWEI EINZELNE W1-FLÄCHEN (Q0 + Q1) + GEMEINSAMER SCHATTEN
        ========================== */
     .doubleCubeLayer{
       position:absolute;
       inset:0;
-      z-index: 5; /* über Floor, unter Ball (gleich wie W1) */
+      z-index: 5; /* über Floor, unter Ball */
       pointer-events:none;
     }
 
+    /* gemeinsamer Schatten der verlängerten Kante (6×3), nach Süden ins Boxinnere */
     .doubleCubeShadow{
       position:absolute;
       left: calc(1 * var(--step));  /* Start Q0: 2B */
@@ -364,23 +362,20 @@
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       background: transparent;
       border-radius: 0;
-      /* Schlagschatten INS BOXINNERE (nach Süden) */
       box-shadow:
         0 22px 28px rgba(0,0,0,0.34),
         0 12px 18px rgba(0,0,0,0.22);
       z-index: 1;
     }
 
-    .doubleCubeFace{
+    /* W1-Fläche (Optik ident zu .w1Cube) – wiederverwendbar */
+    .wFace{
       position:absolute;
-      left: calc(1 * var(--step));  /* Start Q0: 2B */
-      top:  calc(1 * var(--step));  /* 2B */
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap)); /* 2 Würfelflächen verbunden */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
       border-radius: 0;
 
-      /* gleiche Optik wie W1-Würfelfläche */
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
@@ -394,12 +389,23 @@
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
-      /* Innenrahmen wie W1 */
       box-shadow:
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
 
       z-index: 2;
+    }
+
+    /* Q0: exakt wie W1 (Start 2B) */
+    .wFace.q0{
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+    }
+
+    /* Q1: 3 Schritte nach rechts (Start 2E) */
+    .wFace.q1{
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
     }
 
     .controls{
@@ -462,10 +468,11 @@
         <img id="spriteMaster" class="w1Sprite hidden" alt="W1 Sprite Master Cache" />
       </div>
 
-      <!-- NEU: Verbundene Würfelfläche Q0+Q1 als EIN Bild + Schatten ins Boxinnere -->
-      <div class="doubleCubeLayer" id="doubleCubeLayer" aria-label="Doppel-Würfelfläche Q0+Q1">
+      <!-- NEU: Genau deine Anforderung: 2x W1-Fläche (Q0 + Q1) + gemeinsamer Schatten -->
+      <div class="doubleCubeLayer" id="doubleCubeLayer" aria-label="2×W1-Flächen Q0+Q1">
         <div class="doubleCubeShadow" aria-hidden="true"></div>
-        <div class="doubleCubeFace" aria-label="Doppel-Würfelfläche (verbunden)"></div>
+        <div class="wFace q0" aria-label="W1 Fläche Q0"></div>
+        <div class="wFace q1" aria-label="W1 Fläche Q1"></div>
       </div>
     </div>
 
@@ -485,7 +492,6 @@
     const spriteQ1     = document.getElementById("spriteQ1");
     const spriteMaster = document.getElementById("spriteMaster");
 
-    // NEU: Doppel-Würfelfläche soll sichtbar sein, W1/Sprites nicht
     const doubleCubeLayer = document.getElementById("doubleCubeLayer");
 
     function setBoardSquare(){
@@ -599,16 +605,13 @@
     }
 
     async function elementToPngDataUrl(element){
-      // bounding box
       const r = element.getBoundingClientRect();
       const w = Math.max(1, Math.round(r.width));
       const h = Math.max(1, Math.round(r.height));
 
-      // clone + inline styles
       const clone = element.cloneNode(true);
       inlineComputedStyles(element, clone);
 
-      // foreignObject svg
       const svg =
         `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
           <foreignObject width="100%" height="100%">
@@ -637,15 +640,10 @@
       return canvas.toDataURL("image/png");
     }
 
-    // ---------- Q1 DOM Kopie aufbauen + Zahlen spiegeln ----------
-
     function rebuildQ1DomFromMaster(){
-      // Master klonen
       const clone = w1Master.cloneNode(true);
       clone.removeAttribute("id");
-      // q1Shift steckt bereits am Container w1Q1Dom, daher hier nur Inhalt ersetzen
       w1Q1Dom.innerHTML = "";
-      // wir wollen KEINEN zusätzlichen w1Layer wrapper im wrapper => wir übernehmen nur Kinder
       Array.from(clone.childNodes).forEach(n => w1Q1Dom.appendChild(n));
     }
 
@@ -666,8 +664,6 @@
       }
     }
 
-    // ---------- Zahlen neu setzen (nur Master), dann spiegeln ----------
-
     function setRandomNumbersOnMaster(){
       const spans = Array.from(w1Master.querySelectorAll("[data-w1] .num > span"));
       const nums = getUniqueRandomNumbers(4, 0, 11);
@@ -678,51 +674,34 @@
       });
     }
 
-    // ---------- Sprites bauen + Originale verstecken ----------
-
     async function buildSpritesAndHideDom(){
-      // Sicherstellen, dass Q1 DOM existiert + Zahlen aktuell
       if(!w1Q1Dom.children.length){
         rebuildQ1DomFromMaster();
         copyNumbersMasterToQ1();
       }
 
-      // DOM muss sichtbar sein, damit bounding + computed styles sauber sind
       w1Master.style.display = "";
       w1Q1Dom.style.display  = "";
 
-      // 1) Sprite aus Q1-DOM (ohne Würfel-Schlagschatten, per CSS q1Shift .w1Shadow{display:none})
       const pngQ1 = await elementToPngDataUrl(w1Q1Dom);
       spriteQ1.src = pngQ1;
 
-      // 2) Sprite aus Master (mit Schatten) als Cache (unsichtbar)
       const pngMaster = await elementToPngDataUrl(w1Master);
       spriteMaster.src = pngMaster;
 
-      // 3) DOM unsichtbar schalten -> nur Sprite zeigen
       w1Master.style.display = "none";
       w1Q1Dom.style.display  = "none";
     }
 
     async function reroll(){
-      // Zahlen neu -> Q1 spiegeln -> Sprites neu bauen
       setRandomNumbersOnMaster();
       rebuildQ1DomFromMaster();
       copyNumbersMasterToQ1();
       await buildSpritesAndHideDom();
     }
 
-    // ---------------------------
-    // WICHTIGER FIX für deinen Schritt:
-    // Wir zeigen JETZT NUR die verbundene Doppel-Würfelfläche (Q0+Q1).
-    // Alles andere bleibt im Code, wird aber unsichtbar geschaltet.
-    // Random bleibt drin (du wolltest es nicht verlieren).
-    // ---------------------------
     function showOnlyDoubleCube(){
-      // Doppelwürfel sichtbar
       if(doubleCubeLayer) doubleCubeLayer.style.display = "";
-
-      // W1 & Sprite-Logik ausblenden (damit NICHTS "irgendwo klein" auftaucht)
       if(w1Master) w1Master.style.display = "none";
       if(w1Q1Dom)  w1Q1Dom.style.display  = "none";
       if(spriteQ1) spriteQ1.style.display = "none";
@@ -730,7 +709,6 @@
     }
 
     btn.addEventListener("click", () => {
-      // Random bleibt technisch vorhanden, aber wir zeigen weiter nur den Doppelwürfel
       reroll().catch(console.error).finally(showOnlyDoubleCube);
     });
 
@@ -746,7 +724,6 @@
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-      // Random bleibt, aber Darstellung bleibt Doppelwürfel
       reroll().catch(console.error).finally(showOnlyDoubleCube);
     });
   </script>
