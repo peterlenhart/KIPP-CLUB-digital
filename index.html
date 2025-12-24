@@ -343,6 +343,73 @@
     }
     .w1Sprite.hidden{ display:none; }
 
+    /* =========================================================
+       NEU: DOPPEL-WÜRFELFLÄCHE (Q0 + Q1) ALS EINE EINHEIT
+       - zwei W1-Würfelflächen mit Innenrahmen nebeneinander
+       - verbunden über Wrapper (ein Objekt)
+       - gemeinsamer Schlagschatten ins Boxinnere (nach Süden)
+       ========================================================= */
+
+    .doubleFaceLayer{
+      position:absolute;
+      inset:0;
+      z-index: 5; /* gleich wie W1Layer: über Floor, unter Ball */
+      pointer-events:none;
+    }
+
+    /* gemeinsamer Schatten der doppelten Länge -> ins Boxinnere */
+    .doubleFaceShadow{
+      position:absolute;
+      left: calc(1 * var(--step));  /* Start Q0: 2B */
+      top:  calc(1 * var(--step));  /* Start Q0: 2B */
+      width: calc( (2 * (3 * var(--cell) + 2 * var(--cell-gap))) ); /* doppelte Würfelseitenlänge */
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      background: transparent;
+      border-radius: 0;
+      z-index: 1;
+      /* Schatten NUR nach innen (Süden) */
+      box-shadow:
+        0 22px 26px rgba(0,0,0,0.30),
+        0 12px 18px rgba(0,0,0,0.18);
+    }
+
+    /* Wrapper = „verbunden“ (ein Objekt, ein Ankerpunkt) */
+    .doubleFace{
+      position:absolute;
+      left: calc(1 * var(--step));  /* Start Q0: 2B */
+      top:  calc(1 * var(--step));  /* Start Q0: 2B */
+      width: calc( (2 * (3 * var(--cell) + 2 * var(--cell-gap))) );
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      display:flex;
+      flex-direction: row;
+      gap: 0px;         /* auf Stoß */
+      z-index: 2;
+    }
+
+    /* einzelne Würfelfläche = Optik wie W1Cube (ohne Schlagschatten-Element) */
+    .doubleFace .face{
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      box-sizing: border-box;
+      border-radius: 0;
+      background:
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
+        repeating-linear-gradient(
+          20deg,
+          rgba(0,0,0,0.02) 0px,
+          rgba(0,0,0,0.02) 10px,
+          rgba(255,255,255,0.02) 10px,
+          rgba(255,255,255,0.02) 18px
+        ),
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
+        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
+
+      box-shadow:
+        inset 0 0 0 2px var(--w1-innerframe),
+        0 0 0 1px rgba(255,255,255,0.08) inset;
+    }
+
     .controls{
       width: 100%;
       display:flex;
@@ -402,6 +469,18 @@
         <!-- Unsichtbar: Sprite aus Master (mit Schatten) als Cache -->
         <img id="spriteMaster" class="w1Sprite hidden" alt="W1 Sprite Master Cache" />
       </div>
+
+      <!-- =====================================================
+           NEU: Doppel-Würfelfläche (Q0 + Q1) verbunden + Schatten
+           ===================================================== -->
+      <div class="doubleFaceLayer" aria-label="Doppelwürfelfläche Q0+Q1">
+        <div class="doubleFaceShadow" aria-hidden="true"></div>
+        <div class="doubleFace" aria-label="Verbundenes Doppel-Objekt">
+          <div class="face" aria-label="W1 Würfelfläche Q0"></div>
+          <div class="face" aria-label="W1 Würfelfläche Q1"></div>
+        </div>
+      </div>
+
     </div>
 
     <div class="controls">
