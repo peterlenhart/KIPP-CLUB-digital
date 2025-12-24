@@ -42,7 +42,7 @@
       /* Zahlendrehung (dein Setup) */
       --rotSign: 1;
 
-      /* ROTATION STATE (W1/W2/W3) */
+      /* ROTATION STATE */
       --rot: 0deg;
     }
 
@@ -178,11 +178,7 @@
 
     /* =========================================================
        WFaceGroup = DAS PAKET (Schatten+Würfel+Slots+Zahlen)
-       - liegt in EINEM Container
-       - rotiert um Pivot (Kugelmittelpunkt = 4*step / 4*step)
-       - KEIN Child kann "ausreißen"
        ========================================================= */
-
     .wFaceGroup{
       position:absolute;
       inset:0;
@@ -193,7 +189,6 @@
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
-      /* Rotation um Eck-Pivot via translate-rotate-translate zurück */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
         rotate(var(--rot))
@@ -202,7 +197,6 @@
       will-change: transform;
     }
 
-    /* optional: KIP 50% (skaliert bewusst das gesamte Paket) */
     .wFaceGroup.kip50{
       transform:
         translate(var(--pivot-x), var(--pivot-y))
@@ -211,12 +205,11 @@
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
     }
 
-    /* Schatten (gehört ins Paket!) */
     .cubeShadow{
       position:absolute;
       left: calc(1 * var(--step));  /* 2B */
       top:  calc(1 * var(--step));  /* 2B */
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap)); /* 3x3 Face */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       z-index: 1;
       background: transparent;
@@ -225,7 +218,6 @@
         0 10px 16px rgba(0,0,0,0.18);
     }
 
-    /* Würfelfläche */
     .cubeFace{
       position:absolute;
       left: calc(1 * var(--step));  /* 2B */
@@ -255,7 +247,6 @@
       z-index: 2;
     }
 
-    /* Slots */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -288,19 +279,14 @@
       z-index: 4;
     }
 
-    /* Zahlen: bleiben groß (kein Mini-Text mehr) */
     .slot .num > span{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       font-weight: 900;
       color: #111;
-
-      /* WICHTIG: Größe am Cell gebunden, nicht an vmin */
       font-size: calc(var(--cell) * 0.62);
-
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
@@ -337,18 +323,12 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* Slot-Positionen für EIN Face (W1/W2/W3) in Q0:
-       Face liegt 2B..4D
-       Slots auf Face-Kante wie bei deiner W1-Optik:
-       - links vertikal: 3B / 4B
-       - oben horizontal: 2C / 2D
-    */
-    .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); } /* 3B */
-    .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); } /* 4B */
-    .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); } /* 2C */
-    .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); } /* 2D */
+    /* Slot-Positionen für EIN Face in Q0 */
+    .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
+    .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
+    .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+    .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* Controls */
     .controls{
       width: 100%;
       display:flex;
@@ -387,22 +367,18 @@
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
 
-      <!-- Raster -->
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- DAS ROTIERBARE PAKET -->
-      <div id="wFaceGroup" class="wFaceGroup" aria-label="W1/W2/W3 Paket">
+      <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
         <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace" aria-label="Würfelfläche"></div>
 
-        <!-- 4 Slots -->
         <div class="slot s-3b read-east"  data-slot="S1"><div class="num"><span></span></div></div>
         <div class="slot s-4b read-east"  data-slot="S2"><div class="num"><span></span></div></div>
         <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Kugel -->
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
@@ -509,59 +485,67 @@
       return pool.slice(0, count);
     }
 
-    // ===== W1/W2/W3 State =====
-    // 12 einzigartige Zahlen 0..11 => drei Sets à 4
+    // =========================================================
+    // FIX: echte 4er-Rotation (0/90/180/270) statt 3er (0/90/180)
+    // =========================================================
+
+    // Wir behalten deine 12 einzigartigen Zahlen (W1/W2/W3).
+    // Die 270°-Lage ist eine ROTATION, kein eigenes neues Zahlen-Set.
+    // Deshalb: Set 3 (Index 3) = wie W1 (Index 0).
     let sets = [
       [0,0,0,0], // W1
       [0,0,0,0], // W2
       [0,0,0,0], // W3
+      [0,0,0,0], // Q3 / 270° (spiegelt W1)
     ];
 
-    // aktueller Face-Index: 0=W1,1=W2,2=W3
-    let faceIndex = 0;
+    // Rotations-Index: 0=0°,1=90°,2=180°,3=270°
+    let rotIndex = 0;
 
-    // Rotation (0, 90, 180) für W1/W2/W3
-    const rotDeg = [0, 90, 180];
+    const rotDeg = [0, 90, 180, 270];
 
-    function applyFace(){
+    const slotTargets = [
+      wFace.querySelector('[data-slot="S1"] .num > span'),
+      wFace.querySelector('[data-slot="S2"] .num > span'),
+      wFace.querySelector('[data-slot="S3"] .num > span'),
+      wFace.querySelector('[data-slot="S4"] .num > span'),
+    ];
+
+    function applyRotationAndNumbers(){
       // Rotation
-      const deg = rotDeg[faceIndex];
+      const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
 
-      // Zahlen
-      const nums = sets[faceIndex];
-      const targets = [
-        wFace.querySelector('[data-slot="S1"] .num > span'),
-        wFace.querySelector('[data-slot="S2"] .num > span'),
-        wFace.querySelector('[data-slot="S3"] .num > span'),
-        wFace.querySelector('[data-slot="S4"] .num > span'),
-      ];
+      // Zahlen: je nach rotIndex (0..3)
+      // Index 3 = wie Index 0 (damit 12 einzigartig bleiben)
+      const nums = sets[rotIndex] || sets[0];
+
       for(let i=0;i<4;i++){
-        renderNumber(targets[i], nums[i]);
-        setDot(targets[i], nums[i]);
+        renderNumber(slotTargets[i], nums[i]);
+        setDot(slotTargets[i], nums[i]);
       }
     }
 
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
-      sets[0] = twelve.slice(0,4);
-      sets[1] = twelve.slice(4,8);
-      sets[2] = twelve.slice(8,12);
-      // Start immer auf W1
-      faceIndex = 0;
-      applyFace();
+
+      sets[0] = twelve.slice(0,4);   // W1 / 0°
+      sets[1] = twelve.slice(4,8);   // W2 / 90°
+      sets[2] = twelve.slice(8,12);  // W3 / 180°
+      sets[3] = sets[0].slice();     // 270° = wieder W1
+
+      rotIndex = 0;
+      applyRotationAndNumbers();
     }
 
     function stepCW(){
-      // W1->W2->W3->W1
-      faceIndex = (faceIndex + 1) % 3;
-      applyFace();
+      rotIndex = (rotIndex + 1) % 4;   // 0->1->2->3->0
+      applyRotationAndNumbers();
     }
 
     function stepCCW(){
-      // W1<-W2<-W3<-W1
-      faceIndex = (faceIndex + 2) % 3;
-      applyFace();
+      rotIndex = (rotIndex + 3) % 4;   // 0->3->2->1->0  (sauber!)
+      applyRotationAndNumbers();
     }
 
     // ===== Buttons =====
