@@ -109,6 +109,13 @@
       --cubeSize: calc(3 * var(--cell) + 2 * var(--cell-gap));
       --pairHeight: calc(2 * var(--cubeSize) + var(--cell-gap));
 
+      /* ✅ Innenboden-Maße (für Kugelmittelpunkt als Transform-Origin) */
+      --innerLeft: var(--step);
+      --innerTop:  var(--step);
+      --innerSize: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      --ball-x: calc(var(--innerLeft) + (var(--innerSize) / 2));
+      --ball-y: calc(var(--innerTop)  + (var(--innerSize) / 2));
+
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
@@ -216,13 +223,14 @@
       clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
+    /* ✅ HIER: Rotation um Kugelmittelpunkt (Schatten dreht mit, weil ::before am Group hängt) */
     .w3w2KipGroup{
       position:absolute;
       inset:0;
-      transform: none;
+      transform-origin: var(--ball-x) var(--ball-y);
+      transform: rotate(-90deg);
     }
 
-    /* ✅ FIX: Seitliche (West/Ost) Gradients entfernt -> senkrechter Schatten weg */
     .w3w2KipGroup::before{
       content:"";
       position:absolute;
@@ -240,7 +248,6 @@
           rgba(0,0,0,0.38) 0%,
           rgba(0,0,0,0.24) 32%,
           rgba(0,0,0,0.00) 72%),
-        /* Südkante bleibt */
         linear-gradient(0deg,
           rgba(0,0,0,0.28) 0%,
           rgba(0,0,0,0.00) 34%);
