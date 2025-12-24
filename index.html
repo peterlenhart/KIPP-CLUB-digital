@@ -210,119 +210,70 @@
     }
 
     /* =========================
-       ✅ NEU: Innenboden-Clip (ersetzt clip-path)
-       -> verhindert den „vertikalen Band-Schatten“ durch clip-path+blur auf Mobile
-       ========================= */
-    .innerClip{
-      position:absolute;
-      left: var(--step);
-      top:  var(--step);
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      overflow: hidden;
-      z-index: 8;
-      pointer-events:none;
-    }
-
-    /* =========================
-       ✅ KIP (sichtbar) – liegt im innerClip
+       ✅ KIP-Layer (sichtbar)
+       - WICHTIG: Schatten darf NICHT auf den Rahmen -> Clip auf Innenboden!
        ========================= */
     .w3w2KipLayer{
       position:absolute;
       inset:0;
+      z-index: 8;
       pointer-events:none;
 
       opacity: 1;
       visibility: visible;
+
+      /* ✅ Clipping auf Innenboden (nie über Rahmen hinaus!) */
+      -webkit-clip-path: inset(var(--step) var(--step) var(--step) var(--step));
+      clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ DIE Gruppe (eine Ebene) – 90° CCW um Board-Mitte */
+    /* ✅ DIE Gruppe (eine Ebene) – KEINE Rotation hier */
     .w3w2KipGroup{
       position:absolute;
       inset:0;
-
-      transform-origin: 50% 50%;
-      transform: rotate(-90deg);
+      transform: none;
     }
 
-    /* ✅ Realistischer Bodenschatten (stärker, weich, rund) */
+    /* ✅ Realistischer Bodenschatten (kräftiger, rundum) */
     .w3w2KipGroup::before{
       content:"";
       position:absolute;
 
+      /* Schattenfläche genau dort, wo das Kipp-Gebilde steht */
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
       width: var(--cubeSize);
       height: var(--pairHeight);
 
+      /* Schatten liegt UNTER den Würfelflächen */
       z-index: 0;
       pointer-events:none;
 
+      /* Mehr Tiefe: weich + Richtung (leicht nach Süd/Ost) */
       background:
-        radial-gradient(140% 90% at 55% 62%,
-          rgba(0,0,0,0.44) 0%,
-          rgba(0,0,0,0.28) 30%,
-          rgba(0,0,0,0.00) 74%),
+        radial-gradient(120% 80% at 55% 60%,
+          rgba(0,0,0,0.38) 0%,
+          rgba(0,0,0,0.24) 32%,
+          rgba(0,0,0,0.00) 72%),
+        /* Westkante (fehlte dir) */
         linear-gradient(90deg,
-          rgba(0,0,0,0.30) 0%,
-          rgba(0,0,0,0.00) 28%),
+          rgba(0,0,0,0.26) 0%,
+          rgba(0,0,0,0.00) 26%),
+        /* Südkante (fehlte dir) */
         linear-gradient(0deg,
-          rgba(0,0,0,0.34) 0%,
-          rgba(0,0,0,0.00) 36%),
+          rgba(0,0,0,0.28) 0%,
+          rgba(0,0,0,0.00) 34%),
+        /* leichte Ostkante (damit’s rund wirkt) */
         linear-gradient(-90deg,
-          rgba(0,0,0,0.20) 0%,
+          rgba(0,0,0,0.18) 0%,
           rgba(0,0,0,0.00) 22%);
 
-      filter: blur(11px);
-      transform: translate(9px, 12px);
-      opacity: 0.98;
-    }
-
-    /* ✅ Schatten an den 3 Innenkanten (deutlich stärker) */
-    .edgeShadow{
-      position:absolute;
-      pointer-events:none;
-      z-index: 1;          /* über Bodenschatten, unter Würfeln */
+      filter: blur(10px);
+      transform: translate(8px, 10px); /* etwas nach Süd/Ost */
       opacity: 0.95;
-      filter: blur(1.1px);
     }
 
-    /* linke Innenkante (West) */
-    .shadow-left{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-      width: 26px;
-      height: var(--pairHeight);
-      transform: translateX(-26px);
-      background: linear-gradient(90deg,
-        rgba(0,0,0,0.42),
-        rgba(0,0,0,0.00));
-    }
-
-    /* obere Innenkante (Nord) */
-    .shadow-top{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-      width: var(--cubeSize);
-      height: 22px;
-      transform: translateY(-22px);
-      background: linear-gradient(180deg,
-        rgba(0,0,0,0.30),
-        rgba(0,0,0,0.00));
-    }
-
-    /* untere Innenkante (Süd) */
-    .shadow-bottom{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step) + var(--pairHeight));
-      width: var(--cubeSize);
-      height: 24px;
-      background: linear-gradient(0deg,
-        rgba(0,0,0,0.34),
-        rgba(0,0,0,0.00));
-    }
-
-    /* Das Bundle bleibt wie gehabt (seam-y + scaleY) */
+    /* Das Bundle bleibt exakt wie gestern (seam-y + scaleY) */
     .w3w2Bundle{
       position:absolute;
       inset:0;
@@ -330,7 +281,8 @@
       transform-origin: 50% var(--seam-y);
       transform: scaleY(0.5);
 
-      z-index: 2; /* über Kanten-/Bodenschatten */
+      /* ✅ über dem Schatten */
+      z-index: 2;
     }
 
     .cube,
@@ -560,34 +512,26 @@
         <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ Innenboden-Clip (verhindert Schatten über Rahmen + verhindert Band-Artefakt) -->
-      <div class="innerClip" aria-hidden="true">
-        <!-- ✅ KIP (sichtbar) -->
-        <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W2–W1 KIP (sichtbar)">
-          <div class="w3w2KipGroup" id="w3w2KipGroup">
-            <!-- ✅ stärkere Kanten-Schatten -->
-            <div class="edgeShadow shadow-left" aria-hidden="true"></div>
-            <div class="edgeShadow shadow-top" aria-hidden="true"></div>
-            <div class="edgeShadow shadow-bottom" aria-hidden="true"></div>
+      <!-- ✅ KIP (sichtbar) -->
+      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W2–W1 KIP (sichtbar)">
+        <div class="w3w2KipGroup" id="w3w2KipGroup">
+          <!-- Trennlinie (Teil der Gruppe) -->
+          <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-            <!-- Trennlinie (Teil der Gruppe) -->
-            <div class="divider-Q1Q2" aria-hidden="true"></div>
+          <!-- Bundle -->
+          <div class="w3w2Bundle" id="w3w2Bundle">
+            <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
+            <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
+            <div class="slot w2q2-2c read-north"><div class="num"><span></span></div></div>
+            <div class="slot w2q2-3d read-east" ><div class="num"><span></span></div></div>
+            <div class="slot w2q2-4d read-east" ><div class="num"><span></span></div></div>
 
-            <!-- Bundle -->
-            <div class="w3w2Bundle" id="w3w2Bundle">
-              <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
-              <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
-              <div class="slot w2q2-2c read-north"><div class="num"><span></span></div></div>
-              <div class="slot w2q2-3d read-east" ><div class="num"><span></span></div></div>
-              <div class="slot w2q2-4d read-east" ><div class="num"><span></span></div></div>
+            <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
 
-              <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
-              <div class="slot w3q1-botL read-south"><div class="num"><span></span></div></div>
-              <div class="slot w3q1-botR read-south"><div class="num"><span></span></div></div>
-              <div class="slot w3q1-midE read-east" ><div class="num"><span></span></div></div>
-              <div class="slot w3q1-topE read-east" ><div class="num"><span></span></div></div>
-            </div>
+            <div class="slot w3q1-botL read-south"><div class="num"><span></span></div></div>
+            <div class="slot w3q1-botR read-south"><div class="num"><span></span></div></div>
+            <div class="slot w3q1-midE read-east" ><div class="num"><span></span></div></div>
+            <div class="slot w3q1-topE read-east" ><div class="num"><span></span></div></div>
           </div>
         </div>
       </div>
