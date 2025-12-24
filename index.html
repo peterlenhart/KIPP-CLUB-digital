@@ -98,15 +98,11 @@
       --axis-x: calc(4 * var(--step) - (var(--cell-gap) / 2));
       --seam-y: calc(4 * var(--step) - (var(--cell-gap) / 2));
 
-      /* W2 Basis links oben */
+      /* W2 Basis links oben (bleibt als Basis drin) */
       --cube-col: 1;
       --cube-row: 1;
       --cube-x: calc(var(--cube-col) * var(--step));
       --cube-y: calc(var(--cube-row) * var(--step));
-
-      /* Hilfen für Schatten (bleiben, auch wenn KIP-Layer unsichtbar ist) */
-      --cubeSize: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      --pairHeight: calc(2 * var(--cubeSize) + var(--cell-gap));
 
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
@@ -179,6 +175,7 @@
       pointer-events: none;
     }
 
+    /* Basis-Layer (W2+W1 gespeichert) bleibt im Code, aber ist weiterhin unsichtbar */
     .pairLayer{
       position:absolute;
       inset:0;
@@ -192,46 +189,8 @@
       visibility: hidden;
     }
 
-    /* ✅ W3–W2 KIP-DARSTELLUNG KOMPLETT UNSICHTBAR (inkl. evtl. Schatten) */
-    .w3w2KipLayer{
-      display:none !important;
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events:none !important;
-    }
-
-    /* ✅ W2-FINAL-DARSTELLUNG sichtbar (Zahlen weg) */
-    .w3w2BaseLayer{
-      position:absolute;
-      inset:0;
-      z-index: 8;
-      pointer-events:none;
-
-      opacity: 1;
-      visibility: visible;
-
-      /* optional clip wie bei KIP, damit nix am Rand rausläuft */
-      -webkit-clip-path: inset(var(--step) var(--step) var(--step) var(--step));
-      clip-path: inset(var(--step) var(--step) var(--step) var(--step));
-    }
-
-    /* W2 Final als Gruppe rotieren (90° gegen den Uhrzeigersinn) um Kugelmittelpunkt */
-    .w2FinalGroup{
-      position:absolute;
-      inset:0;
-      transform-origin: var(--axis-x) var(--seam-y);
-      transform: rotate(-90deg); /* CCW */
-    }
-
-    /* W3-Teil im BaseLayer ausblenden (nur W2 Final zeigen) */
-    .w3w2BaseLayer .cubeFinal.w3mirror,
-    .w3w2BaseLayer .slot[data-w3base]{
-      display:none !important;
-    }
-
     .cube,
-    .cube2,
-    .cubeFinal{
+    .cube2{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -260,22 +219,8 @@
       z-index: 6;
     }
 
-    .cubeFinal.joinTop{
-      border-top-left-radius: 0 !important;
-      border-top-right-radius: 0 !important;
-    }
-    .cubeFinal.joinBottom{
-      border-bottom-left-radius: 0 !important;
-      border-bottom-right-radius: 0 !important;
-    }
-
-    .pairLayer .cube{ left: var(--cube-x); top: var(--cube-y); }
+    .pairLayer .cube { left: var(--cube-x); top: var(--cube-y); }
     .pairLayer .cube2{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
-
-    .w3w2BaseLayer .cubeFinal.w2copy{
-      left: calc(4 * var(--step));
-      top:  calc(4 * var(--step));
-    }
 
     .slot{
       position:absolute;
@@ -337,39 +282,6 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    .w2q2-2b{ left: calc(4 * var(--step) + 0 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
-    .w2q2-2c{ left: calc(4 * var(--step) + 1 * var(--step)); top: calc(4 * var(--step) + 0 * var(--step)); }
-    .w2q2-3d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 1 * var(--step)); }
-    .w2q2-4d{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(4 * var(--step) + 2 * var(--step)); }
-
-    .divider-Q1Q2{
-      position:absolute;
-      left: calc(4 * var(--step));
-      top:  var(--seam-y);
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: 2px;
-
-      transform: translateY(-1px);
-
-      background: rgba(234,215,190,0.55);
-      border-radius: 999px;
-      filter: blur(0.1px);
-
-      z-index: 20000;
-      pointer-events:none;
-    }
-
-    /* ✅ Zahlen in W2-Final (BaseLayer) unsichtbar */
-    .w3w2BaseLayer .slot .num{
-      opacity: 0 !important;
-      visibility: hidden !important;
-    }
-
-    .noNums .slot .num{
-      opacity: 0 !important;
-      visibility: hidden !important;
-    }
-
     .controls{
       width: 100%;
       display:flex;
@@ -408,6 +320,10 @@
       <div class="ball" aria-label="Kugel"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
+      <!-- ✅ W2-FINAL + W3-FINAL (BaseLayer) komplett GELÖSCHT -->
+      <!-- ✅ W3–W2 KIP-Layer komplett GELÖSCHT -->
+
+      <!-- (bleibt als spätere Basis im Code) -->
       <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (KIP, gespeichert)">
         <div class="cube" aria-label="W2 Basis/KIP"></div>
         <div class="cube2" aria-label="W1 Basis/KIP"></div>
@@ -422,49 +338,6 @@
         <div class="slot slot2-3e read-west"  data-slot="T3"><div class="num"><span></span></div></div>
         <div class="slot slot2-4e read-west"  data-slot="T4"><div class="num"><span></span></div></div>
       </div>
-
-      <!-- ✅ BaseLayer jetzt sichtbar: zeigt NUR W2-Final, um 90° CCW um Kugelmittelpunkt gedreht, ohne Zahlen -->
-      <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W2 Final (sichtbar, rotiert, ohne Zahlen)">
-        <div class="w2FinalGroup" id="w2FinalGroup">
-          <div class="divider-Q1Q2" aria-hidden="true"></div>
-
-          <div class="cubeFinal w2copy joinTop" aria-label="W2 Final rotiert"></div>
-          <div class="slot w2q2-2b read-north" data-w2q2="S1"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-2c read-north" data-w2q2="S2"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-3d read-east"  data-w2q2="S3"><div class="num"><span></span></div></div>
-          <div class="slot w2q2-4d read-east"  data-w2q2="S4"><div class="num"><span></span></div></div>
-        </div>
-
-        <!-- (W3 Elemente bleiben im DOM für JS-Sync, sind aber per CSS ausgeblendet) -->
-        <div class="cubeFinal w3mirror joinBottom" aria-label="W3 (ausgeblendet)"></div>
-        <div class="slot w3q1-botL read-south" data-w3base="U1"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-botR read-south" data-w3base="U2"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-midE read-east"  data-w3base="U3"><div class="num"><span></span></div></div>
-        <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
-      </div>
-
-      <!-- ✅ KIP-Layer bleibt im HTML, ist aber komplett unsichtbar via CSS (display:none) -->
-      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W3-W2 KIP (unsichtbar)">
-        <div class="w3w2KipGroup" id="w3w2KipGroup">
-          <div class="divider-Q1Q2" aria-hidden="true"></div>
-
-          <div class="w3w2Bundle" id="w3w2Bundle">
-            <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
-            <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
-            <div class="slot w2q2-2c read-north"><div class="num"><span></span></div></div>
-            <div class="slot w2q2-3d read-east" ><div class="num"><span></span></div></div>
-            <div class="slot w2q2-4d read-east" ><div class="num"><span></span></div></div>
-
-            <div class="cubeFinal w3mirror joinBottom" aria-label="W3 gespiegelt auf Q1"></div>
-
-            <div class="slot w3q1-botL read-south"><div class="num"><span></span></div></div>
-            <div class="slot w3q1-botR read-south"><div class="num"><span></span></div></div>
-            <div class="slot w3q1-midE read-east" ><div class="num"><span></span></div></div>
-            <div class="slot w3q1-topE read-east" ><div class="num"><span></span></div></div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <div class="controls">
@@ -479,15 +352,6 @@
 
     const slotEls = Array.from(document.querySelectorAll(".pairLayer .slot"));
     const slotSpanEls = new Map(slotEls.map(s => [s.dataset.slot, s.querySelector(".num > span")]));
-
-    const w2BaseQ2SpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w2q2]"))
-        .map(s => [s.dataset.w2q2, s.querySelector(".num > span")])
-    );
-    const w3BaseSpanEls = new Map(
-      Array.from(document.querySelectorAll("#w3w2BaseLayer .slot[data-w3base]"))
-        .map(s => [s.dataset.w3base, s.querySelector(".num > span")])
-    );
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -551,31 +415,8 @@
       return pool.slice(0, count);
     }
 
-    function syncW2BaseFromKipSource(){
-      ["S1","S2","S3","S4"].forEach(k => {
-        const src = slotSpanEls.get(k);
-        const dstBase = w2BaseQ2SpanEls.get(k);
-        if (src && dstBase){
-          dstBase.textContent = src.textContent;
-          dstBase.classList.toggle("dot", src.classList.contains("dot"));
-        }
-      });
-    }
-
-    function syncW3BaseFromStore(store){
-      ["U1","U2","U3","U4"].forEach(k => {
-        const v = store.get(k);
-        const dstBase = w3BaseSpanEls.get(k);
-        if (v && dstBase){
-          dstBase.textContent = v.text;
-          dstBase.classList.toggle("dot", !!v.dot);
-        }
-      });
-    }
-
     function setRandomNumbers(){
       const nums = getUniqueRandomNumbers(12, 1, 12);
-
       const keysST = ["S1","S2","S3","S4","T1","T2","T3","T4"];
       keysST.forEach((k, idx) => {
         const span = slotSpanEls.get(k);
@@ -584,15 +425,6 @@
         span.textContent = String(n);
         setDot(span, n);
       });
-
-      const w3Store = new Map();
-      ["U1","U2","U3","U4"].forEach((k, i) => {
-        const n = nums[8 + i];
-        w3Store.set(k, { text: String(n), dot: (n === 6 || n === 9) });
-      });
-
-      syncW2BaseFromKipSource();
-      syncW3BaseFromStore(w3Store);
     }
 
     btn.addEventListener("click", () => setRandomNumbers());
