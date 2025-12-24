@@ -344,7 +344,7 @@
     .w1Sprite.hidden{ display:none; }
 
     /* ==========================
-       NEU: ZWEI EINZELNE W1-FLÄCHEN (Q0 + Q1) + GEMEINSAMER SCHATTEN
+       ZWEI EINZELNE W1-FLÄCHEN (Q0 + Q1) + GEMEINSAMER SCHATTEN
        ========================== */
     .doubleCubeLayer{
       position:absolute;
@@ -396,17 +396,30 @@
       z-index: 2;
     }
 
-    /* Q0: exakt wie W1 (Start 2B) */
     .wFace.q0{
       left: calc(1 * var(--step));
       top:  calc(1 * var(--step));
     }
 
-    /* Q1: 3 Schritte nach rechts (Start 2E) */
     .wFace.q1{
       left: calc(4 * var(--step));
       top:  calc(1 * var(--step));
     }
+
+    /* ==========================
+       NEU: W2-SLOTS (8 Stück) – Positionen nach Raster-Koordinaten
+       ========================== */
+    .w2-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); } /* 4D */
+    .w2-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); } /* 3D */
+
+    .w2-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); } /* 2B */
+    .w2-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); } /* 2C */
+
+    .w2-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); } /* 3E */
+    .w2-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); } /* 4E */
+
+    .w2-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); } /* 2F */
+    .w2-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); } /* 2G */
 
     .controls{
       width: 100%;
@@ -462,17 +475,28 @@
 
       <!-- Sprite Layer -->
       <div class="spriteLayer" aria-label="Sprites">
-        <!-- Sichtbar: Sprite aus Q1-DOM -->
         <img id="spriteQ1" class="w1Sprite" alt="W1 Sprite Q1" />
-        <!-- Unsichtbar: Sprite aus Master (mit Schatten) als Cache -->
         <img id="spriteMaster" class="w1Sprite hidden" alt="W1 Sprite Master Cache" />
       </div>
 
-      <!-- NEU: Genau deine Anforderung: 2x W1-Fläche (Q0 + Q1) + gemeinsamer Schatten -->
-      <div class="doubleCubeLayer" id="doubleCubeLayer" aria-label="2×W1-Flächen Q0+Q1">
+      <!-- Doppel-Fläche + Schatten + W2 Slots -->
+      <div class="doubleCubeLayer" id="doubleCubeLayer" aria-label="W2 Fläche (Q0+Q1) mit Slots">
         <div class="doubleCubeShadow" aria-hidden="true"></div>
         <div class="wFace q0" aria-label="W1 Fläche Q0"></div>
         <div class="wFace q1" aria-label="W1 Fläche Q1"></div>
+
+        <!-- W2 Slots (8 Stück) -->
+        <div class="slot w2-4d" aria-label="Slot 4D"></div>
+        <div class="slot w2-3d" aria-label="Slot 3D"></div>
+
+        <div class="slot w2-2b" aria-label="Slot 2B"></div>
+        <div class="slot w2-2c" aria-label="Slot 2C"></div>
+
+        <div class="slot w2-3e" aria-label="Slot 3E"></div>
+        <div class="slot w2-4e" aria-label="Slot 4E"></div>
+
+        <div class="slot w2-2g" aria-label="Slot 2G"></div>
+        <div class="slot w2-2f" aria-label="Slot 2F"></div>
       </div>
     </div>
 
@@ -559,7 +583,6 @@
       return pool.slice(0, count);
     }
 
-    // rendern: 10/11 als zwei Digits (für Kerning)
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
       span.innerHTML = "";
@@ -577,8 +600,6 @@
       }
       span.textContent = String(n);
     }
-
-    // ---------- DOM -> PNG (mit inline computed styles) ----------
 
     function walkPairs(a, b, fn){
       fn(a, b);
