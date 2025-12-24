@@ -122,15 +122,20 @@
       background:#0b0b0b;
       border-radius: var(--cell-radius);
       box-sizing: border-box;
-      /* neutraler Look */
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.02) inset;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
     }
 
     .c-orange{ background: var(--orange); }
     .c-gruen { background: var(--gruen);  }
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
+
+    /* ✅ NEU: jedes Farbfeld bekommt 2px Innenrahmen (ergibt optisch 4px zwischen zwei Farbfeldern) */
+    .cell.colorCell{
+      box-shadow:
+        inset 0 0 0 2px #000,
+        0 0 0 1px rgba(0,0,0,0.25);
+    }
 
     .floor{
       position:absolute;
@@ -176,27 +181,9 @@
       pointer-events: none;
     }
 
-    /* ==========================
-       W2/W3 Final & andere Layer
-       ========================== */
-
-    .pairLayer{
-      position:absolute;
-      inset:0;
-      z-index: 6;
-      pointer-events:none;
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    /* ✅ W2/W3 Final vorerst unsichtbar lassen */
-    .w3w2BaseLayer{
-      display:none !important;
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events:none !important;
-    }
-
+    /* Alt-Layer bleiben drin, aber unsichtbar (zum späteren Wiederverwenden) */
+    .pairLayer,
+    .w3w2BaseLayer,
     .w3w2KipLayer{
       display:none !important;
       opacity: 0 !important;
@@ -220,17 +207,13 @@
     /* Schattenelement unter W1 – nur nach Osten + Süden */
     .w1Shadow{
       position:absolute;
-      left: calc(1 * var(--step));  /* 2B -> Spalte B */
-      top:  calc(1 * var(--step));  /* Reihe 2 */
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       border-radius: 0;
       z-index: 1;
-
-      /* „Pseudo-Quadrat“ transparent, nur Schatten */
       background: transparent;
-
-      /* Schatten nach Osten und Süden (ins Boxinnere) */
       box-shadow:
         18px 0 22px rgba(0,0,0,0.28),
         0 18px 22px rgba(0,0,0,0.30),
@@ -289,14 +272,7 @@
         2px 2px 3px -1px rgba(0,0,0,0.20);
     }
 
-    /* Slots für W1 (Q0):
-       4B, 3B, 2C, 2D
-       => (Row,Col):
-       4B: row4 colB => top 3*step, left 1*step
-       3B: row3 colB => top 2*step, left 1*step
-       2C: row2 colC => top 1*step, left 2*step
-       2D: row2 colD => top 1*step, left 3*step
-    */
+    /* Slots W1: 4B, 3B, 2C, 2D */
     .w1-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .w1-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .w1-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
@@ -383,16 +359,19 @@
         <div class="w1Shadow" aria-hidden="true"></div>
         <div class="w1Cube" aria-label="W1 Würfelfläche"></div>
 
-        <div class="slot w1-4b read-north" data-w1="A1"><div class="num"><span></span></div></div>
-        <div class="slot w1-3b read-north" data-w1="A2"><div class="num"><span></span></div></div>
+        <!-- ✅ Zahlenfuß zum Farbfeld:
+             3B/4B -> Farbfeld links => read-west
+             2C/2D -> Farbfeld oben  => read-north -->
+        <div class="slot w1-4b read-west"  data-w1="A1"><div class="num"><span></span></div></div>
+        <div class="slot w1-3b read-west"  data-w1="A2"><div class="num"><span></span></div></div>
         <div class="slot w1-2c read-north" data-w1="A3"><div class="num"><span></span></div></div>
         <div class="slot w1-2d read-north" data-w1="A4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Alt-Layer bleiben drin, aber unsichtbar (zum späteren Wiederverwenden) -->
-      <div class="pairLayer" id="pairLayer" aria-label="W2+W1 als Gruppe (unsichtbar)"></div>
-      <div class="w3w2BaseLayer" id="w3w2BaseLayer" aria-label="W2/W3 Final (unsichtbar)"></div>
-      <div class="w3w2KipLayer" id="w3w2KipLayer" aria-label="W3-W2 KIP (unsichtbar)"></div>
+      <!-- bleiben drin, aber unsichtbar -->
+      <div class="pairLayer" id="pairLayer"></div>
+      <div class="w3w2BaseLayer" id="w3w2BaseLayer"></div>
+      <div class="w3w2KipLayer" id="w3w2KipLayer"></div>
     </div>
 
     <div class="controls">
@@ -435,33 +414,6 @@
       [key(1,"C"), "c-violett"],
     ]);
 
-    function isColored(r, cIdx){
-      const coord = key(r, cols[cIdx]);
-      return colorMap.has(coord);
-    }
-
-    function applySmartBorders(cell, r, cIdx){
-      // 1px schwarz nur dort, wo:
-      // - colored an colored grenzt: genau 1 Linie (wir zeichnen sie nur "oben" und "links")
-      // - colored an black grenzt: Linie am Außenrand sichtbar
-      // Regel:
-      //   TOP: wenn (oben black) ODER (oben colored? -> ja, aber wir wollen nur 1 Linie => wir zeichnen TOP immer)
-      //   LEFT: analog => wir zeichnen LEFT immer
-      //   RIGHT/BOTTOM: nur wenn Nachbar black (sonst würde doppelt)
-      const topNeighborColored = (r > 1) ? isColored(r - 1, cIdx) : false;
-      const leftNeighborColored = (cIdx > 0) ? isColored(r, cIdx - 1) : false;
-      const rightNeighborColored = (cIdx < 7) ? isColored(r, cIdx + 1) : false;
-      const bottomNeighborColored = (r < 8) ? isColored(r + 1, cIdx) : false;
-
-      // TOP + LEFT immer (liefert genau 1 Linie zwischen zwei Farbquadraten)
-      cell.style.borderTop = "1px solid #000";
-      cell.style.borderLeft = "1px solid #000";
-
-      // RIGHT/BOTTOM nur wenn Nachbar NICHT farbig (also black)
-      if (!rightNeighborColored) cell.style.borderRight = "1px solid #000";
-      if (!bottomNeighborColored) cell.style.borderBottom = "1px solid #000";
-    }
-
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
 
@@ -469,11 +421,11 @@
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
-
           const coord = key(r, cols[c]);
+
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
-            applySmartBorders(cell, r, c);
+            cell.classList.add("colorCell"); // ✅ 2px Innenrahmen rundum
           }
 
           grid.appendChild(cell);
@@ -499,7 +451,6 @@
       return pool.slice(0, count);
     }
 
-    // W1 Slots (sichtbar) befüllen – nur für Optik, Zahlen sind aktuell egal
     const w1Spans = Array.from(document.querySelectorAll("[data-w1] .num > span"));
 
     function setRandomNumbers(){
