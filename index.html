@@ -171,7 +171,7 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 4;
+      z-index: 8;
       pointer-events: none;
     }
 
@@ -224,6 +224,7 @@
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
+      /* Innenrahmen, ohne Vergrößerung */
       box-shadow:
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
@@ -279,43 +280,59 @@
 
       font-weight: 900;
       color: #111;
-      font-size: clamp(18px, 8vmin, 36px);
+      font-size: clamp(18px, 8vmin, 36px); /* dein Regler (SlotNumber=8) */
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
-      /* Shift dreht mit */
+      /* translate kommt VOR Rotation => Shift dreht mit */
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
+
       position: relative;
     }
 
+    /* 7: optisch ein bisschen nach rechts (Shift dreht mit) */
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
+
+    /* 10: als Ganzes minimal nach links (Shift dreht mit) */
     .slot .num > span.num10{ --opt-x: -2px; }
 
-    /* 6 & 9: wegen Punkt als Ganzes minimal nach links */
+    /* 6 & 9: wegen dickem Punkt als Ganzes minimal nach links */
     .slot .num > span[data-val="6"],
     .slot .num > span[data-val="9"]{
       --opt-x: -2px;
     }
 
+    /* zweistellige Zahlen als Digits: Abstand steuern */
     .slot .num > span .d{
       display:inline-block;
       line-height: 1;
     }
 
-    .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
-    .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
+    /* 11: enger zusammen */
+    .slot .num > span.num11 .d + .d{
+      margin-left: -0.18em;
+    }
 
-    /* dicker Punkt für 6/9 */
+    /* 10: weniger eng zusammen */
+    .slot .num > span.num10 .d + .d{
+      margin-left: -0.10em;
+    }
+
+    /* DICKER PUNKT für 6/9 */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
+
       width: 0.20em;
       height: 0.20em;
+
       border-radius: 50%;
       background: #111;
+
       left: 100%;
       top: 72%;
       transform: translate(18%, -50%);
+
       box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
@@ -325,60 +342,58 @@
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
     /* ==========================
-       Kippdarstellung (W2–W1)
+       KIPPANSICHT (W2–W1)
        ========================== */
 
     .kippLayer{
       position:absolute;
       inset:0;
-      z-index: 6;           /* über W1Layer */
+      z-index: 6;              /* über Floor, unter Ball */
       pointer-events:none;
-      display:none;         /* wird per JS ein/ausgeschaltet */
+      display:none;            /* per Button sichtbar */
+    }
+    .kippLayer.isOn{ display:block; }
 
-      /* 50% horizontale Stauchung um die vertikale Achse D|E */
-      transform-origin: calc(4 * var(--step)) 50%;
+    /* Komplettes Doppelgebilde wird HORIZONTAL 50% gestaucht, um die Boxmitte (D/E) */
+    .kippGroup{
+      position:absolute;
+      inset:0;
       transform: scaleX(0.5);
-    }
-
-    /* durchgehender Schatten auf Boxboden: Zeilengrenze 4/5 */
-    .kippFloorShadow{
-      position:absolute;
-      left: var(--step);
-      top:  calc(4 * var(--step)); /* Grenze Zeile 4/5 */
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: 0;
-      z-index: 0;
-      pointer-events:none;
-
-      /* eher nah, weil Lichtquelle mittig oben */
-      box-shadow:
-        0 10px 14px rgba(0,0,0,0.22),
-        0 6px 10px rgba(0,0,0,0.18);
-    }
-
-    /* Face-Container (Q0 / Q1), identische Geometrie wie W1 */
-    .face{
-      position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      top:  calc(1 * var(--step));  /* Reihe 2 */
-      pointer-events:none;
-    }
-
-    /* Q1 (rechts): Start bei E2 => left = 4*step */
-    .face.q1{ left: calc(4 * var(--step)); }
-
-    /* Q0 (links): Start bei B2 => left = 1*step */
-    .face.q0{ left: calc(1 * var(--step)); }
-
-    /* Spiegelung: q0 ist die gespiegelte Kopie */
-    .face.mirrored{
-      transform: scaleX(-1);
       transform-origin: 50% 50%;
     }
 
-    /* Damit beim Spiegeln die Slots korrekt „mitgehen“ (sie werden als Gruppe gespiegelt) */
-    .face .cube{
+    /* gemeinsamer Schatten: auf Kante zwischen Zeile 4 und 5 => y = 4*step */
+    .kippShadowLine{
+      position:absolute;
+      left: calc(1 * var(--step));    /* Beginn bei B */
+      top:  calc(4 * var(--step));    /* Grenze Zeile 4/5 */
+      width: calc(6 * var(--step));   /* doppelte Würfelbreite: 2×3=6 */
+      height: 0px;
+      z-index: 1;
+      pointer-events:none;
+
+      /* kurzer, naher Schatten (Licht recht mittig über Box) */
+      box-shadow:
+        0 8px 10px rgba(0,0,0,0.26),
+        0 3px 6px rgba(0,0,0,0.22);
+    }
+
+    /* die beiden Flächen (links W2 ohne Zahlen, rechts W1 mit Zahlen) */
+    .kippFace{
+      position:absolute;
+      top:  calc(1 * var(--step)); /* wie W1 Original */
+      width: calc(3 * var(--step));
+      height: calc(3 * var(--step));
+    }
+
+    .kippLeft{  left: calc(1 * var(--step)); } /* Q0 */
+    .kippRight{ left: calc(4 * var(--step)); } /* Q1 */
+
+    /* W1-Kopie in Kippansicht: OHNE eigenen Schatten */
+    .kippFace .w1Shadow{ display:none !important; }
+
+    /* Holzfläche in Kippansicht: gleiches Styling wie w1Cube */
+    .kippCube{
       position:absolute;
       inset:0;
       box-sizing:border-box;
@@ -402,20 +417,26 @@
         0 0 0 1px rgba(255,255,255,0.08) inset;
     }
 
-    /* Slots im Face (relativ) */
-    .face .slot{
-      position:absolute;
-      width: var(--cell);
-      height: var(--cell);
-      z-index: 2;
+    /* linke Fläche = gespiegelte Würfelfläche */
+    .kippLeft{
+      transform: scaleX(-1);
+      transform-origin: 50% 50%;
     }
-    .face .s-4b{ left: 0;            top: calc(2 * var(--step)); } /* wie w1-4b relativ */
-    .face .s-3b{ left: 0;            top: calc(1 * var(--step)); }
-    .face .s-2c{ left: calc(1 * var(--step)); top: 0; }
-    .face .s-2d{ left: calc(2 * var(--step)); top: 0; }
+    /* Spiegelung betrifft nur die Fläche; Zahlen sind dort sowieso weg.
+       Damit die Slots trotzdem an der richtigen Stelle bleiben: wir spiegeln INHALT und spiegeln Slots wieder zurück */
+    .kippLeft .slot{
+      transform: scaleX(-1);
+      transform-origin: 50% 50%;
+    }
 
-    /* W2 (linke Fläche): Zahlen weg */
-    .face.noNumbers .num{ opacity: 0; }
+    /* Slots innerhalb der 3×3 Fläche (lokales Koordinatensystem) */
+    .kippFace .s-4b{ left: 0;                 top: calc(2 * var(--step)); }
+    .kippFace .s-3b{ left: 0;                 top: calc(1 * var(--step)); }
+    .kippFace .s-2c{ left: calc(1 * var(--step)); top: 0; }
+    .kippFace .s-2d{ left: calc(2 * var(--step)); top: 0; }
+
+    /* Linke Fläche (W2): Zahlen vollständig weg */
+    .kippLeft .num{ display:none !important; }
 
     /* ==========================
        Controls
@@ -425,7 +446,7 @@
       width: 100%;
       display:flex;
       justify-content:center;
-      gap: 12px;
+      gap: 10px;
       padding: 0 6px;
       margin-top: 18px;
       flex-wrap: wrap;
@@ -458,52 +479,67 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-      <div class="ball" aria-label="Kugel"></div>
+
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W1 Original (Q0) -->
+      <!-- W1 sichtbar (Q0) -->
       <div class="w1Layer" id="w1Layer" aria-label="W1 (Q0) sichtbar">
         <div class="w1Shadow" aria-hidden="true"></div>
         <div class="w1Cube" aria-label="W1 Würfelfläche"></div>
 
+        <!-- Zahlenfuß zum Farbfeld:
+             3B/4B -> Farbfeld links => read-west
+             2C/2D -> Farbfeld oben  => read-north -->
         <div class="slot w1-4b read-west"  data-w1="A1"><div class="num"><span></span></div></div>
         <div class="slot w1-3b read-west"  data-w1="A2"><div class="num"><span></span></div></div>
         <div class="slot w1-2c read-north" data-w1="A3"><div class="num"><span></span></div></div>
         <div class="slot w1-2d read-north" data-w1="A4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- Kippdarstellung W2–W1 (wird per JS gebaut) -->
-      <div class="kippLayer" id="kippLayer" aria-label="W2–W1 Kippdarstellung">
-        <div class="kippFloorShadow" aria-hidden="true"></div>
+      <!-- Kippansicht Layer (W2–W1) -->
+      <div class="kippLayer" id="kippLayer" aria-label="Kippansicht (W2–W1)">
+        <div class="kippGroup">
+          <div class="kippShadowLine" aria-hidden="true"></div>
 
-        <!-- Q0: gespiegelte Kopie (W2) => ohne Zahlen -->
-        <div class="face q0 mirrored noNumbers" id="faceW2"></div>
+          <!-- Links: W2 (gespiegelt, ohne Zahlen) -->
+          <div class="kippFace kippLeft" id="kippLeft">
+            <div class="kippCube" aria-hidden="true"></div>
 
-        <!-- Q1: Kopie ohne Schatten (W1 Kopie) => mit Zahlen -->
-        <div class="face q1" id="faceW1Copy"></div>
+            <div class="slot s-4b read-west"><div class="num"><span></span></div></div>
+            <div class="slot s-3b read-west"><div class="num"><span></span></div></div>
+            <div class="slot s-2c read-north"><div class="num"><span></span></div></div>
+            <div class="slot s-2d read-north"><div class="num"><span></span></div></div>
+          </div>
+
+          <!-- Rechts: W1 Kopie (mit Zahlen, ohne Schatten) -->
+          <div class="kippFace kippRight" id="kippRight">
+            <div class="kippCube" aria-hidden="true"></div>
+
+            <div class="slot s-4b read-west"><div class="num"><span></span></div></div>
+            <div class="slot s-3b read-west"><div class="num"><span></span></div></div>
+            <div class="slot s-2c read-north"><div class="num"><span></span></div></div>
+            <div class="slot s-2d read-north"><div class="num"><span></span></div></div>
+          </div>
+        </div>
       </div>
+
+      <div class="ball" aria-label="Kugel"></div>
     </div>
 
     <div class="controls">
       <button id="btnBestuecken" class="btn">Würfel mischen</button>
       <button id="btnKipp" class="btn">Kippansicht</button>
-      <button id="btnW1" class="btn">W1 Ansicht</button>
     </div>
   </div>
 
   <script>
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
-
-    const btnMix  = document.getElementById("btnBestuecken");
+    const btnMix = document.getElementById("btnBestuecken");
     const btnKipp = document.getElementById("btnKipp");
-    const btnW1   = document.getElementById("btnW1");
 
     const w1Layer = document.getElementById("w1Layer");
     const kippLayer = document.getElementById("kippLayer");
-
-    const faceW2 = document.getElementById("faceW2");
-    const faceW1Copy = document.getElementById("faceW1Copy");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -587,99 +623,8 @@
         span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
         return;
       }
+
       span.textContent = String(n);
-    }
-
-    function readW1Numbers(){
-      // Zahlenstand aus W1-Original auslesen (inkl. Digits/Classes)
-      return w1Spans.map(sp => ({
-        html: sp.innerHTML,
-        text: sp.textContent,
-        cls: Array.from(sp.classList),
-        val: sp.dataset.val || "",
-      }));
-    }
-
-    function buildFace(container){
-      // Cube
-      const cube = document.createElement("div");
-      cube.className = "cube";
-      container.appendChild(cube);
-
-      // 4 Slots (relativ)
-      const slots = [
-        { cls:"s-4b read-west",  key:"A1" },
-        { cls:"s-3b read-west",  key:"A2" },
-        { cls:"s-2c read-north", key:"A3" },
-        { cls:"s-2d read-north", key:"A4" },
-      ];
-
-      slots.forEach(s => {
-        const slot = document.createElement("div");
-        slot.className = `slot ${s.cls}`;
-        slot.dataset.face = s.key;
-
-        const num = document.createElement("div");
-        num.className = "num";
-        const span = document.createElement("span");
-        num.appendChild(span);
-        slot.appendChild(num);
-
-        container.appendChild(slot);
-      });
-    }
-
-    function applyNumbersToFace(container, numbers){
-      const spans = Array.from(container.querySelectorAll(".num > span"));
-      spans.forEach((sp, i) => {
-        const nfo = numbers[i];
-        sp.className = ""; // reset
-        nfo.cls.forEach(c => sp.classList.add(c));
-        sp.dataset.val = nfo.val || "";
-        sp.innerHTML = nfo.html || "";
-        // Dot-Logik sicherheitshalber aus val ableiten
-        const n = Number(sp.dataset.val);
-        setDot(sp, n);
-      });
-    }
-
-    function ensureKippBuilt(){
-      if (kippLayer.dataset.built === "1") return;
-
-      // Face-Strukturen bauen
-      buildFace(faceW1Copy);
-      buildFace(faceW2);
-
-      kippLayer.dataset.built = "1";
-    }
-
-    function showW1(){
-      kippLayer.style.display = "none";
-      w1Layer.style.display = "";
-    }
-
-    function showKipp(){
-      ensureKippBuilt();
-
-      // 1) W1 bleibt als „Original“ erhalten -> wird nur unsichtbar
-      w1Layer.style.display = "none";
-
-      // 2) W1 kopieren ohne Schatten -> nach Q1 (faceW1Copy)
-      const numbers = readW1Numbers();
-      applyNumbersToFace(faceW1Copy, numbers);
-
-      // 3) Q1 kopieren und horizontal spiegeln -> landet logisch auf Q0 (faceW2)
-      //    (Wir spiegeln die ganze Face-Gruppe via CSS .mirrored)
-      applyNumbersToFace(faceW2, numbers);
-
-      // 4) Auf W2 (links) Zahlen entfernen
-      //    (per CSS .noNumbers opacity 0)
-
-      // 5) Waagerechter Schatten durch die Boxmitte ist im kippLayer bereits vorhanden
-
-      // 6) Gesamtes Gebilde 50% horizontal stauchen -> per .kippLayer scaleX(0.5)
-
-      kippLayer.style.display = "";
     }
 
     function setRandomNumbers(){
@@ -689,18 +634,68 @@
         renderNumber(sp, n);
         setDot(sp, n);
       });
-
-      // Wenn Kippansicht aktiv: rechte Seite sofort aktualisieren
-      if (kippLayer.style.display !== "none" && kippLayer.dataset.built === "1"){
-        const numbers = readW1Numbers();
-        applyNumbersToFace(faceW1Copy, numbers);
-        applyNumbersToFace(faceW2, numbers);
-      }
     }
 
-    btnMix.addEventListener("click", () => setRandomNumbers());
-    btnKipp.addEventListener("click", () => showKipp());
-    btnW1.addEventListener("click", () => showW1());
+    // ---------- KIPPANSICHT: Zahlen von W1 nach rechts kopieren, links löschen ----------
+    const kippRightSpans = Array.from(document.querySelectorAll("#kippRight .num > span"));
+    const kippLeftSpans  = Array.from(document.querySelectorAll("#kippLeft  .num > span"));
+
+    function copyW1ToKipp(){
+      // rechts: exakte Kopie der Darstellung (inkl. innerHTML für 10/11, Klassen, dataset, dot)
+      w1Spans.forEach((src, i) => {
+        const dst = kippRightSpans[i];
+        if(!dst) return;
+
+        dst.className = src.className;              // num10/num11/dot
+        dst.dataset.val = src.dataset.val || "";    // für 7/6/9 shifts
+        dst.innerHTML = src.innerHTML;              // 10/11 Digits
+        dst.textContent = "";                       // sicherheitshalber
+
+        // Wenn src keine innerHTML hat (einstellig), ist es textContent -> dann übernehmen
+        if (src.innerHTML.trim() === ""){
+          dst.textContent = src.textContent;
+        }
+      });
+
+      // links (W2): Zahlen weg (nur zur Sicherheit – CSS macht sowieso display:none)
+      kippLeftSpans.forEach((sp) => {
+        sp.className = "";
+        sp.dataset.val = "";
+        sp.innerHTML = "";
+        sp.textContent = "";
+      });
+    }
+
+    function showKipp(){
+      // W1 Original unsichtbar (mit Schatten)
+      w1Layer.style.display = "none";
+
+      // Kippansicht sichtbar + Zahlen aus aktuellem W1 übernehmen
+      copyW1ToKipp();
+      kippLayer.classList.add("isOn");
+    }
+
+    function hideKipp(){
+      kippLayer.classList.remove("isOn");
+      w1Layer.style.display = "";
+    }
+
+    let kippOn = false;
+
+    btnKipp.addEventListener("click", () => {
+      kippOn = !kippOn;
+      if(kippOn) showKipp();
+      else hideKipp();
+    });
+
+    // mischen: nur W1 neu bestücken (Kipp bleibt aus, damit klar bleibt, was gerade sichtbar ist)
+    btnMix.addEventListener("click", () => {
+      setRandomNumbers();
+      if(kippOn){
+        // falls du in Kippansicht bist, sofort aktualisieren (damit W1-Kopie exakt stimmt)
+        copyW1ToKipp();
+      }
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -709,7 +704,6 @@
 
       buildGridOnce();
       setRandomNumbers();
-      showW1();
     });
 
     window.addEventListener("resize", () => {
