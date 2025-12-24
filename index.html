@@ -273,7 +273,7 @@
       display:inline-block;
       font-weight: 900;
       color: #111;
-      font-size: clamp(18px, 6.2vmin, 36px);
+      font-size: clamp(18px, 7vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
@@ -431,7 +431,7 @@
     const w1Spans = Array.from(document.querySelectorAll("[data-w1] .num > span"));
 
     function setRandomNumbers(){
-      const nums = getUniqueRandomNumbers(4, 1, 12);
+      const nums = getUniqueRandomNumbers(4, 0, 11);
       w1Spans.forEach((sp, i) => {
         const n = nums[i];
         sp.textContent = String(n);
