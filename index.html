@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – W1/W2/W3 Rotation</title>
+  <title>KIPP – W1/W2/W3 Rotation (Pivot-Ecke)</title>
 
   <style>
     :root{
@@ -24,7 +24,7 @@
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
-      /* Innenrahmen (Gamma-Rand) */
+      /* Innenrahmen */
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -39,7 +39,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
+      /* Zahlendrehung (dein Setup) */
       --rotSign: 1;
+
+      /* ROTATION STATE (W1/W2/W3) */
+      --rot: 0deg;
     }
 
     html, body { height: 100%; }
@@ -66,6 +70,7 @@
           rgba(255,255,255,0.03) 16px
         ),
         linear-gradient(180deg, #e0b47c, #c89259);
+
       background-attachment: fixed;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
@@ -86,20 +91,16 @@
       height: 0;
       aspect-ratio: 1 / 1;
       box-sizing: border-box;
+
       background: #0b0b0b;
+
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
+
       overflow: visible;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
-
-      /* 3×3 Face-Größe */
-      --face: calc(3 * var(--cell) + 2 * var(--cell-gap));
-
-      /* Kugelzentrum (gleich wie Ball) */
-      --cx: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
-      --cy: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
 
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
@@ -129,6 +130,7 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
+    /* jedes Farbfeld bekommt 2px Innenrahmen (optisch 4px zwischen zwei Farbfeldern) */
     .cell.colorCell{
       box-shadow:
         inset 0 0 0 2px #000,
@@ -156,10 +158,11 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
+    /* Kugel */
     .ball{
       position:absolute;
-      left: var(--cx);
-      top:  var(--cy);
+      left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
+      top:  calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
       width: calc(var(--cell) * 0.55);
       height: calc(var(--cell) * 0.55);
       border-radius: 50%;
@@ -169,50 +172,69 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 4;
+      z-index: 3;
       pointer-events: none;
     }
 
     /* =========================================================
-       DAS EINE PAKET: Schatten + Fläche + Slots + Zahlen
-       Ecke unten-rechts sitzt FIX am Kugelmittelpunkt
-       Rotation um genau diese Ecke
+       WFaceGroup = DAS PAKET (Schatten+Würfel+Slots+Zahlen)
+       - liegt in EINEM Container
+       - rotiert um Pivot (Kugelmittelpunkt = 4*step / 4*step)
+       - KEIN Child kann "ausreißen"
        ========================================================= */
-    #wPack{
-      position:absolute;
 
-      /* ECKE (100%/100%) GENAU am Kugelmittelpunkt */
-      left: calc(var(--cx) - var(--face));
-      top:  calc(var(--cy) - var(--face));
-
-      width: var(--face);
-      height: var(--face);
-
-      z-index: 6;
-      pointer-events:none;
-
-      --packRot: 0deg;
-      transform-origin: 100% 100%;  /* Ecke = Drehpunkt */
-      transform: rotate(var(--packRot));
-    }
-
-    /* Schatten im Paket (rotiert automatisch mit) */
-    .wShadow{
+    .wFaceGroup{
       position:absolute;
       inset:0;
-      z-index: 1;
+      z-index: 4;
       pointer-events:none;
+
+      /* Pivot im Board: Mitte = 4*step (bei 8x8) */
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+
+      /* Rotation um Eck-Pivot via translate-rotate-translate zurück */
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        rotate(var(--rot))
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* optional: KIP 50% (skaliert bewusst das gesamte Paket) */
+    .wFaceGroup.kip50{
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        rotate(var(--rot))
+        scaleX(0.5)
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+    }
+
+    /* Schatten (gehört ins Paket!) */
+    .cubeShadow{
+      position:absolute;
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap)); /* 3x3 Face */
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 1;
+      background: transparent;
       box-shadow:
         0 22px 26px rgba(0,0,0,0.32),
         0 10px 16px rgba(0,0,0,0.18);
     }
 
-    /* Würfelfläche im Paket */
+    /* Würfelfläche */
     .cubeFace{
       position:absolute;
-      inset:0;
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
       border-radius: 0;
+
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
@@ -225,9 +247,11 @@
         ),
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
+
       box-shadow:
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
+
       z-index: 2;
     }
 
@@ -237,12 +261,16 @@
       width: var(--cell);
       height: var(--cell);
       box-sizing: border-box;
+
       background:
         linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
         var(--slot-fill);
+
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
+
       z-index: 3;
+
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -260,24 +288,32 @@
       z-index: 4;
     }
 
-    /* Zahlenoptik */
+    /* Zahlen: bleiben groß (kein Mini-Text mehr) */
     .slot .num > span{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       font-weight: 900;
       color: #111;
-      font-size: clamp(18px, 8vmin, 36px);
+
+      /* WICHTIG: Größe am Cell gebunden, nicht an vmin */
+      font-size: calc(var(--cell) * 0.62);
+
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
+      line-height: 1;
     }
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
+
     .slot .num > span[data-val="6"],
-    .slot .num > span[data-val="9"]{ --opt-x: -2px; }
+    .slot .num > span[data-val="9"]{
+      --opt-x: -2px;
+    }
 
     .slot .num > span .d{ display:inline-block; line-height: 1; }
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
@@ -296,21 +332,23 @@
       box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
-    /* Dein Ausrichtungsprinzip (Fuß an Farbquadrat) – in Paket-Koordinaten fix */
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
     .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* Slot-Positionen INNERHALB der 3×3 Fläche (lokal!)
-       Mapping aus deinem Q0:
-       2B=(0,0) 2C=(1,0) 3D=(2,1) 4D=(2,2)
+    /* Slot-Positionen für EIN Face (W1/W2/W3) in Q0:
+       Face liegt 2B..4D
+       Slots auf Face-Kante wie bei deiner W1-Optik:
+       - links vertikal: 3B / 4B
+       - oben horizontal: 2C / 2D
     */
-    .p-2b{ left: calc(0 * var(--step)); top: calc(0 * var(--step)); }
-    .p-2c{ left: calc(1 * var(--step)); top: calc(0 * var(--step)); }
-    .p-3d{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
-    .p-4d{ left: calc(2 * var(--step)); top: calc(2 * var(--step)); }
+    .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); } /* 3B */
+    .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); } /* 4B */
+    .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); } /* 2C */
+    .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); } /* 2D */
 
+    /* Controls */
     .controls{
       width: 100%;
       display:flex;
@@ -352,16 +390,16 @@
       <!-- Raster -->
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- DAS EINE PAKET (W1/W2/W3 zyklisch): rotiert um Kugelmittelpunkt-Ecke -->
-      <div id="wPack" aria-label="W-Paket (Schatten+Fläche+Slots+Zahlen)">
-        <div class="wShadow" aria-hidden="true"></div>
+      <!-- DAS ROTIERBARE PAKET -->
+      <div id="wFaceGroup" class="wFaceGroup" aria-label="W1/W2/W3 Paket">
+        <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace" aria-label="Würfelfläche"></div>
 
-        <!-- 4 Slots (W-Set) -->
-        <div class="slot p-4d read-south" data-slot="W_A"><div class="num"><span></span></div></div>
-        <div class="slot p-3d read-south" data-slot="W_B"><div class="num"><span></span></div></div>
-        <div class="slot p-2b read-south" data-slot="W_C"><div class="num"><span></span></div></div>
-        <div class="slot p-2c read-south" data-slot="W_D"><div class="num"><span></span></div></div>
+        <!-- 4 Slots -->
+        <div class="slot s-3b read-east"  data-slot="S1"><div class="num"><span></span></div></div>
+        <div class="slot s-4b read-east"  data-slot="S2"><div class="num"><span></span></div></div>
+        <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
+        <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
       <!-- Kugel -->
@@ -370,25 +408,28 @@
 
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
-      <button id="btnCW"  class="btn">KIPP ↻ (CW)</button>
-      <button id="btnCCW" class="btn">KIPP ↺ (CCW)</button>
+      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
+      <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
+      <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
     </div>
   </div>
 
   <script>
-    const boardEl = document.getElementById("board");
-    const grid = document.getElementById("grid");
-    const wPack = document.getElementById("wPack");
+    const boardEl  = document.getElementById("board");
+    const grid     = document.getElementById("grid");
+    const wFace    = document.getElementById("wFaceGroup");
 
-    const btnMix = document.getElementById("btnMix");
-    const btnCW  = document.getElementById("btnCW");
-    const btnCCW = document.getElementById("btnCCW");
+    const btnMix   = document.getElementById("btnMix");
+    const btnKip50 = document.getElementById("btnKip50");
+    const btnCW    = document.getElementById("btnCW");
+    const btnCCW   = document.getElementById("btnCCW");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
     }
 
+    // ===== Raster farbig wie bisher =====
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -416,11 +457,13 @@
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
+
       for(let r=1; r<=8; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
+
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
             cell.classList.add("colorCell");
@@ -431,20 +474,11 @@
       grid.dataset.built = "1";
     }
 
+    // ===== Zahlenrendering (10/11 Kerning + 6/9 Punkt) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
       if (number === 6 || number === 9) span.classList.add("dot");
-    }
-
-    function getUniqueRandomNumbers(count, min, max){
-      const pool = [];
-      for(let i=min; i<=max; i++) pool.push(i);
-      for(let i=pool.length-1; i>0; i--){
-        const j = Math.floor(Math.random() * (i+1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      return pool.slice(0, count);
     }
 
     function renderNumber(span, n){
@@ -465,71 +499,89 @@
       span.textContent = String(n);
     }
 
-    // ============================================
-    // W1/W2/W3 Zahlen: 12 Unique -> 3 Gruppen à 4
-    // ============================================
+    function getUniqueRandomNumbers(count, min, max){
+      const pool = [];
+      for(let i=min; i<=max; i++) pool.push(i);
+      for(let i=pool.length-1; i>0; i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, count);
+    }
+
+    // ===== W1/W2/W3 State =====
+    // 12 einzigartige Zahlen 0..11 => drei Sets à 4
     let sets = [
       [0,0,0,0], // W1
       [0,0,0,0], // W2
-      [0,0,0,0]  // W3
+      [0,0,0,0], // W3
     ];
 
-    // aktueller Sichtzustand: 0=W1, 1=W2, 2=W3
-    let cur = 0;
+    // aktueller Face-Index: 0=W1,1=W2,2=W3
+    let faceIndex = 0;
 
-    function applyCurrentSet(){
-      const nums = sets[cur];
+    // Rotation (0, 90, 180) für W1/W2/W3
+    const rotDeg = [0, 90, 180];
+
+    function applyFace(){
+      // Rotation
+      const deg = rotDeg[faceIndex];
+      wFace.style.setProperty("--rot", deg + "deg");
+
+      // Zahlen
+      const nums = sets[faceIndex];
       const targets = [
-        wPack.querySelector('[data-slot="W_A"] .num > span'),
-        wPack.querySelector('[data-slot="W_B"] .num > span'),
-        wPack.querySelector('[data-slot="W_C"] .num > span'),
-        wPack.querySelector('[data-slot="W_D"] .num > span'),
+        wFace.querySelector('[data-slot="S1"] .num > span'),
+        wFace.querySelector('[data-slot="S2"] .num > span'),
+        wFace.querySelector('[data-slot="S3"] .num > span'),
+        wFace.querySelector('[data-slot="S4"] .num > span'),
       ];
       for(let i=0;i<4;i++){
-        const sp = targets[i];
-        const n = nums[i];
-        renderNumber(sp, n);
-        setDot(sp, n);
+        renderNumber(targets[i], nums[i]);
+        setDot(targets[i], nums[i]);
       }
     }
 
-    function setRotationFromCur(){
-      const deg = (cur * 90); // 0, 90, 180, 270
-      wPack.style.setProperty("--packRot", `${deg}deg`);
-    }
-
-    function mix12(){
+    function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
       sets[0] = twelve.slice(0,4);
       sets[1] = twelve.slice(4,8);
       sets[2] = twelve.slice(8,12);
-      cur = 0;
-      setRotationFromCur();
-      applyCurrentSet();
+      // Start immer auf W1
+      faceIndex = 0;
+      applyFace();
     }
 
-    function kipCW(){
-      cur = (cur + 1) % 3;
-      setRotationFromCur();
-      applyCurrentSet();
+    function stepCW(){
+      // W1->W2->W3->W1
+      faceIndex = (faceIndex + 1) % 3;
+      applyFace();
     }
 
-    function kipCCW(){
-      cur = (cur + 2) % 3; // -1 mod 3
-      setRotationFromCur();
-      applyCurrentSet();
+    function stepCCW(){
+      // W1<-W2<-W3<-W1
+      faceIndex = (faceIndex + 2) % 3;
+      applyFace();
     }
 
-    btnMix.addEventListener("click", mix12);
-    btnCW.addEventListener("click", kipCW);
-    btnCCW.addEventListener("click", kipCCW);
+    // ===== Buttons =====
+    btnMix.addEventListener("click", reroll12);
 
+    btnKip50.addEventListener("click", () => {
+      wFace.classList.toggle("kip50");
+    });
+
+    btnCW.addEventListener("click", stepCW);
+    btnCCW.addEventListener("click", stepCCW);
+
+    // ===== Init =====
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
+
       buildGridOnce();
-      mix12();
+      reroll12();
     });
 
     window.addEventListener("resize", () => {
