@@ -286,7 +286,6 @@
       /* translate kommt VOR Rotation => Shift dreht mit */
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
-
       position: relative;
     }
 
@@ -296,43 +295,30 @@
     /* 10: als Ganzes minimal nach links (Shift dreht mit) */
     .slot .num > span.num10{ --opt-x: -2px; }
 
-    /* ✅ 6 & 9: wegen dickem Punkt als Ganzes minimal nach links */
+    /* 6 & 9: wegen dickem Punkt als Ganzes minimal nach links */
     .slot .num > span[data-val="6"],
     .slot .num > span[data-val="9"]{
       --opt-x: -2px;
     }
 
-    /* zweistellige Zahlen als Digits: Abstand steuern */
     .slot .num > span .d{
       display:inline-block;
       line-height: 1;
     }
 
-    /* 11: enger zusammen */
-    .slot .num > span.num11 .d + .d{
-      margin-left: -0.18em;
-    }
+    .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
+    .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
 
-    /* 10: weniger eng zusammen */
-    .slot .num > span.num10 .d + .d{
-      margin-left: -0.10em;
-    }
-
-    /* ✅ DICKER PUNKT für 6/9 (Strichstärke-ähnlich) */
     .slot .num > span.dot::after{
       content:"";
       position:absolute;
-
       width: 0.20em;
       height: 0.20em;
-
       border-radius: 50%;
       background: #111;
-
       left: 100%;
       top: 72%;
       transform: translate(18%, -50%);
-
       box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
@@ -341,10 +327,94 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
+    /* ==========================
+       KIP (W2–W1) Ansicht
+       ========================== */
+
+    .kipLayer{
+      position:absolute;
+      inset:0;
+      z-index: 6; /* über W1, unter Ball */
+      pointer-events:none;
+
+      /* wichtigste Transformation: horizontal 50% stauchen */
+      transform: scaleX(0.5);
+      transform-origin: 50% 50%;
+    }
+
+    /* durchgehender Schatten auf Boxboden – an Zeilengrenze 4/5 */
+    .kipFloorShadow{
+      position:absolute;
+      left: var(--step); /* Floor links */
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap)); /* Floor Breite */
+
+      /* ✅ Rastergrenze zwischen Row 4 und 5 (global im 8×8) */
+      top: calc(4 * var(--step));
+
+      height: calc(1 * var(--cell)); /* Schattenband (weich) */
+      transform: translateY(-0.20 * var(--cell));
+      background: linear-gradient(
+        180deg,
+        rgba(0,0,0,0.00),
+        rgba(0,0,0,0.32) 40%,
+        rgba(0,0,0,0.00)
+      );
+      filter: blur(0.6px);
+      opacity: 0.85;
+    }
+
+    /* KIP Cube Faces (Positionen Q0 / Q1) */
+    .kipCubeFace{
+      position:absolute;
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      box-sizing: border-box;
+      border-radius: 0;
+
+      background:
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
+        repeating-linear-gradient(
+          20deg,
+          rgba(0,0,0,0.02) 0px,
+          rgba(0,0,0,0.02) 10px,
+          rgba(255,255,255,0.02) 10px,
+          rgba(255,255,255,0.02) 18px
+        ),
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
+        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
+
+      box-shadow:
+        inset 0 0 0 2px var(--w1-innerframe),
+        0 0 0 1px rgba(255,255,255,0.08) inset;
+    }
+
+    /* links: Q0 wie W1-Position (B..D) */
+    .kipLeftCube{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    /* rechts: Q1 gespiegelt rüber (E..G) => +3 steps */
+    .kipRightCube{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* linke Cube-Optik gespiegelt (vertikale Spiegelachse) */
+    .kipMirror{
+      transform: scaleX(-1);
+      transform-origin: 50% 50%;
+    }
+
+    /* Slots für KIP rechts (Q1) */
+    .q1-4b{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    .q1-3b{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
+    .q1-2c{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    .q1-2d{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* ==========================
+       UI
+       ========================== */
+
     .controls{
       width: 100%;
       display:flex;
       justify-content:center;
+      gap: 10px;
       padding: 0 6px;
       margin-top: 18px;
     }
@@ -381,7 +451,7 @@
 
       <!-- W1 sichtbar (Q0) -->
       <div class="w1Layer" id="w1Layer" aria-label="W1 (Q0) sichtbar">
-        <div class="w1Shadow" aria-hidden="true"></div>
+        <div class="w1Shadow" id="w1Shadow" aria-hidden="true"></div>
         <div class="w1Cube" aria-label="W1 Würfelfläche"></div>
 
         <div class="slot w1-4b read-west"  data-w1="A1"><div class="num"><span></span></div></div>
@@ -389,10 +459,31 @@
         <div class="slot w1-2c read-north" data-w1="A3"><div class="num"><span></span></div></div>
         <div class="slot w1-2d read-north" data-w1="A4"><div class="num"><span></span></div></div>
       </div>
+
+      <!-- KIP Ansicht (W2–W1), initial unsichtbar -->
+      <div class="kipLayer" id="kipLayer" aria-label="W2–W1 Kippdarstellung" style="display:none;">
+        <!-- durchgehender Boden-Schatten -->
+        <div class="kipFloorShadow" aria-hidden="true"></div>
+
+        <!-- W2 links: gespiegelt, ohne Zahlen -->
+        <div class="kipCubeFace kipLeftCube kipMirror" aria-hidden="true"></div>
+        <div class="slot w1-4b read-west"  data-w2="B1"><div class="num"><span></span></div></div>
+        <div class="slot w1-3b read-west"  data-w2="B2"><div class="num"><span></span></div></div>
+        <div class="slot w1-2c read-north" data-w2="B3"><div class="num"><span></span></div></div>
+        <div class="slot w1-2d read-north" data-w2="B4"><div class="num"><span></span></div></div>
+
+        <!-- W1 rechts: ohne eigenen Schatten, mit Zahlen -->
+        <div class="kipCubeFace kipRightCube" aria-hidden="true"></div>
+        <div class="slot q1-4b read-west"  data-kipw1="C1"><div class="num"><span></span></div></div>
+        <div class="slot q1-3b read-west"  data-kipw1="C2"><div class="num"><span></span></div></div>
+        <div class="slot q1-2c read-north" data-kipw1="C3"><div class="num"><span></span></div></div>
+        <div class="slot q1-2d read-north" data-kipw1="C4"><div class="num"><span></span></div></div>
+      </div>
     </div>
 
     <div class="controls">
       <button id="btnBestuecken" class="btn">Würfel mischen</button>
+      <button id="btnToggleKip" class="btn">Kippansicht</button>
     </div>
   </div>
 
@@ -400,6 +491,13 @@
     const boardEl = document.getElementById("board");
     const grid = document.getElementById("grid");
     const btn = document.getElementById("btnBestuecken");
+    const btnToggleKip = document.getElementById("btnToggleKip");
+
+    const w1Layer = document.getElementById("w1Layer");
+    const w1Shadow = document.getElementById("w1Shadow");
+    const kipLayer = document.getElementById("kipLayer");
+
+    let showKip = false;
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -442,7 +540,7 @@
 
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
-            cell.classList.add("colorCell"); // 2px Innenrahmen rundum
+            cell.classList.add("colorCell");
           }
 
           grid.appendChild(cell);
@@ -469,8 +567,9 @@
     }
 
     const w1Spans = Array.from(document.querySelectorAll("[data-w1] .num > span"));
+    const kipW1Spans = Array.from(document.querySelectorAll("[data-kipw1] .num > span"));
+    const w2Spans = Array.from(document.querySelectorAll("[data-w2] .num > span"));
 
-    // rendern: 10/11 als zwei Digits (für Kerning)
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
       span.innerHTML = "";
@@ -490,16 +589,66 @@
       span.textContent = String(n);
     }
 
+    function clearSpan(span){
+      span.classList.remove("num10","num11","dot");
+      span.innerHTML = "";
+      span.textContent = "";
+      span.dataset.val = "";
+    }
+
+    function syncKipFromW1(values){
+      // rechte KIP-W1 bekommt exakt die gleichen Zahlen wie W1
+      kipW1Spans.forEach((sp, i) => {
+        const n = values[i];
+        renderNumber(sp, n);
+        setDot(sp, n);
+      });
+
+      // linke W2 verliert Zahlen
+      w2Spans.forEach(sp => clearSpan(sp));
+    }
+
     function setRandomNumbers(){
       const nums = getUniqueRandomNumbers(4, 0, 11);
+
+      // W1 setzen
       w1Spans.forEach((sp, i) => {
         const n = nums[i];
         renderNumber(sp, n);
         setDot(sp, n);
       });
+
+      // KIP synchron halten (auch wenn gerade nicht sichtbar)
+      syncKipFromW1(nums);
     }
 
-    btn.addEventListener("click", () => setRandomNumbers());
+    function setView(isKip){
+      showKip = isKip;
+
+      if (showKip){
+        // Original W1 (mit Schatten) ausblenden, aber behalten
+        w1Layer.style.visibility = "hidden";
+        // KIP einblenden
+        kipLayer.style.display = "block";
+        // Schatten von W1 darf in KIP nicht vorkommen -> ist sowieso nur im Original-Layer
+        // Buttontext
+        btnToggleKip.textContent = "W1 Ansicht";
+      } else {
+        w1Layer.style.visibility = "visible";
+        kipLayer.style.display = "none";
+        btnToggleKip.textContent = "Kippansicht";
+      }
+    }
+
+    btn.addEventListener("click", () => {
+      setRandomNumbers();
+      // Optional: nach "mischen" im W1 bleiben (so wie du es beschrieben hast)
+      setView(false);
+    });
+
+    btnToggleKip.addEventListener("click", () => {
+      setView(!showKip);
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -508,6 +657,7 @@
 
       buildGridOnce();
       setRandomNumbers();
+      setView(false);
     });
 
     window.addEventListener("resize", () => {
