@@ -210,8 +210,8 @@
     }
 
     /* =========================
-       ✅ W3–W2 KIP (sichtbar) – jetzt als "eine Ebene"
-       - wir rotieren die GRUPPE, nicht Einzelteile
+       ✅ KIP-Layer (sichtbar)
+       - WICHTIG: Schatten darf NICHT auf den Rahmen -> Clip auf Innenboden!
        ========================= */
     .w3w2KipLayer{
       position:absolute;
@@ -221,16 +221,56 @@
 
       opacity: 1;
       visibility: visible;
+
+      /* ✅ Clipping auf Innenboden (nie über Rahmen hinaus!) */
+      -webkit-clip-path: inset(var(--step) var(--step) var(--step) var(--step));
+      clip-path: inset(var(--step) var(--step) var(--step) var(--step));
     }
 
-    /* ✅ DIE "Flatten"-Gruppe: Schatten + Linie + Bundle */
+    /* ✅ DIE Gruppe (eine Ebene) – KEINE Rotation hier */
     .w3w2KipGroup{
       position:absolute;
       inset:0;
+      transform: none;
+    }
 
-      /* 90° gegen Uhrzeigersinn um Board-Mittelpunkt */
-      transform-origin: 50% 50%;
-      transform: rotate(-90deg);
+    /* ✅ Realistischer Bodenschatten (kräftiger, rundum) */
+    .w3w2KipGroup::before{
+      content:"";
+      position:absolute;
+
+      /* Schattenfläche genau dort, wo das Kipp-Gebilde steht */
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+      width: var(--cubeSize);
+      height: var(--pairHeight);
+
+      /* Schatten liegt UNTER den Würfelflächen */
+      z-index: 0;
+      pointer-events:none;
+
+      /* Mehr Tiefe: weich + Richtung (leicht nach Süd/Ost) */
+      background:
+        radial-gradient(120% 80% at 55% 60%,
+          rgba(0,0,0,0.38) 0%,
+          rgba(0,0,0,0.24) 32%,
+          rgba(0,0,0,0.00) 72%),
+        /* Westkante (fehlte dir) */
+        linear-gradient(90deg,
+          rgba(0,0,0,0.26) 0%,
+          rgba(0,0,0,0.00) 26%),
+        /* Südkante (fehlte dir) */
+        linear-gradient(0deg,
+          rgba(0,0,0,0.28) 0%,
+          rgba(0,0,0,0.00) 34%),
+        /* leichte Ostkante (damit’s rund wirkt) */
+        linear-gradient(-90deg,
+          rgba(0,0,0,0.18) 0%,
+          rgba(0,0,0,0.00) 22%);
+
+      filter: blur(10px);
+      transform: translate(8px, 10px); /* etwas nach Süd/Ost */
+      opacity: 0.95;
     }
 
     /* Das Bundle bleibt exakt wie gestern (seam-y + scaleY) */
@@ -240,44 +280,9 @@
 
       transform-origin: 50% var(--seam-y);
       transform: scaleY(0.5);
-    }
 
-    /* ====== Schatten an den 3 Innenkanten (Teil der Gruppe!) ====== */
-    .edgeShadow{
-      position:absolute;
-      pointer-events:none;
-      z-index: 12000;
-      filter: blur(0.6px);
-      opacity: 0.95;
-    }
-
-    /* linke Innenkante */
-    .shadow-left{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-      width: 18px;
-      height: var(--pairHeight);
-      transform: translateX(-18px);
-      background: linear-gradient(90deg, rgba(0,0,0,0.30), rgba(0,0,0,0.00));
-    }
-
-    /* obere Innenkante */
-    .shadow-top{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-      width: var(--cubeSize);
-      height: 16px;
-      transform: translateY(-16px);
-      background: linear-gradient(180deg, rgba(0,0,0,0.24), rgba(0,0,0,0.00));
-    }
-
-    /* untere Innenkante */
-    .shadow-bottom{
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step) + var(--pairHeight));
-      width: var(--cubeSize);
-      height: 16px;
-      background: linear-gradient(0deg, rgba(0,0,0,0.24), rgba(0,0,0,0.00));
+      /* ✅ über dem Schatten */
+      z-index: 2;
     }
 
     .cube,
@@ -411,7 +416,7 @@
     .w3q1-midE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 1 * var(--step)); }
     .w3q1-topE{ left: calc(4 * var(--step) + 2 * var(--step)); top: calc(1 * var(--step) + 0 * var(--step)); }
 
-    /* ✅ Trennlinie: jetzt IN der Gruppe (damit "eine Ebene") */
+    /* ✅ Trennlinie: Teil der Gruppe */
     .divider-Q1Q2{
       position:absolute;
       left: calc(4 * var(--step));
@@ -507,18 +512,13 @@
         <div class="slot w3q1-topE read-east"  data-w3base="U4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- ✅ W3–W2 KIP (sichtbar): jetzt "eine Ebene" als Gruppe + Rotation CCW -->
-      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W3–W2 KIP (sichtbar)">
+      <!-- ✅ KIP (sichtbar) -->
+      <div class="w3w2KipLayer noNums" id="w3w2KipLayer" aria-label="W2–W1 KIP (sichtbar)">
         <div class="w3w2KipGroup" id="w3w2KipGroup">
-          <!-- Schatten (Teil der Gruppe!) -->
-          <div class="edgeShadow shadow-left" aria-hidden="true"></div>
-          <div class="edgeShadow shadow-top" aria-hidden="true"></div>
-          <div class="edgeShadow shadow-bottom" aria-hidden="true"></div>
-
-          <!-- Trennlinie (Teil der Gruppe!) -->
+          <!-- Trennlinie (Teil der Gruppe) -->
           <div class="divider-Q1Q2" aria-hidden="true"></div>
 
-          <!-- Das gestern-perfekte Bundle bleibt unverändert -->
+          <!-- Bundle -->
           <div class="w3w2Bundle" id="w3w2Bundle">
             <div class="cubeFinal w2copy joinTop" aria-label="W2 auf Q2"></div>
             <div class="slot w2q2-2b read-north"><div class="num"><span></span></div></div>
