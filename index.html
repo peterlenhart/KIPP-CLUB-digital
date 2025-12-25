@@ -322,9 +322,13 @@
 
     /* =========================================================
        KIP-GRUPPE (aus deinem "guten KIP-Code" übernommen)
-       - NICHT rotieren, NICHT anfassen
+       - NICHT rotieren, NICHT anfassen   <-- (bis auf genau die Rotationsfunktion)
        - Button zeigt diese Gruppe und skaliert sie 50% an Achse D/E
        ========================================================= */
+
+    /* >>> FIX: KIP-GRUPPE rotiert jetzt ebenfalls um Kugelmittelpunkt,
+              50%-Skalierung bleibt erhalten (scaleX 0.5).
+              Sonst unverändert. */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -332,11 +336,18 @@
       pointer-events:none;
       display:none;
 
-      /* Skalierachse = senkrechte Mittellinie der Box (Grenze D/E) */
-      transform-origin: calc(4 * var(--step)) 50%;
-    }
-    .kipGroup.kip50{
-      transform: scaleX(0.5);
+      /* Pivot im Board: Mitte = 4*step (bei 8x8) */
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+
+      /* Rotation + 50%-ScaleX um denselben Pivot */
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        rotate(var(--rot))
+        scaleX(0.5)
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+      will-change: transform;
     }
 
     .kipShadow{
@@ -608,6 +619,9 @@
     function applyRotationAndNumbers(){
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
+
+      /* >>> FIX: KIP-Gruppe bekommt denselben Rotationswinkel (nur Rotation, sonst nichts) */
+      kipGroup.style.setProperty("--rot", deg + "deg");
 
       const nums = sets[rotIndex] || sets[0];
 
