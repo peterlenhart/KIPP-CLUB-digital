@@ -239,8 +239,8 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 20; /* <<< wichtig: Slots ÜBER cubeFace */
-      overflow: visible; /* Safety */
+      z-index: 20; /* über cubeFace */
+      overflow: visible;
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -255,8 +255,8 @@
       align-items:center;
       justify-content:center;
       user-select:none;
-      z-index: 999; /* <<< Zahlen-Container ganz oben */
       pointer-events:none;
+      z-index: 9999; /* ganz oben */
     }
 
     .slot .num > span{
@@ -264,20 +264,20 @@
       align-items:center;
       justify-content:center;
       font-weight: 900;
-      color: #111;
-      font-size: calc(var(--cell) * 0.62); /* <<< eindeutig */
-      line-height: 1;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
-      /* Safety: wirklich sichtbar */
+      /* HARD-FIX: wirklich sichtbar erzwingen */
+      color: #111 !important;
       opacity: 1 !important;
       visibility: visible !important;
 
-      /* Rotationsoptik bleibt, aber Animation NICHT über transform */
+      font-size: calc(var(--cell) * 0.62);
+      line-height: 1;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
-      z-index: 9999;
+      z-index: 99999;
     }
 
     /* 10/11 Kerning + 6/9 Punkt */
@@ -322,8 +322,6 @@
       inset:0;
       z-index: 7;
       pointer-events:none;
-
-      /* Skalierachse: Grenze D/E */
       transform-origin: calc(4 * var(--step)) 50%;
     }
     .kipGroup.kip50{ transform: scaleX(0.5); }
@@ -359,31 +357,25 @@
       opacity: 0.95;
     }
 
-    .kipGroup .cubeFace{
-      z-index: 3; /* unter Slots */
-    }
+    .kipGroup .cubeFace{ z-index: 3; }
 
     .faceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
     .faceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* Slot-Positionen KIP (rechte Seite nutzt W1 Slots aus deinem Fix-Code) */
+    /* Slot-Positionen KIP (rechte Seite) */
     .s-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
     .s-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
     .s-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .s-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ==========================
-       Animation: NUR opacity (KEIN transform!)
-       ========================== */
+    /* Animation: NUR opacity */
     @keyframes flyInOpacity{
       from { opacity: 0; }
       to   { opacity: 1; }
     }
     .fly{ animation: flyInOpacity 260ms ease-out; }
 
-    /* ==========================
-       Debug Panel
-       ========================== */
+    /* Debug Panel */
     .debug{
       position:absolute;
       left: calc(0.6 * var(--step));
@@ -521,7 +513,7 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering =====
+    // ===== Zahlenrendering (robust) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -529,7 +521,9 @@
     }
 
     function renderNumber(span, n){
-      span.classList.remove("num10","num11","fly");
+      if(!span) return;
+
+      span.classList.remove("num10","num11","fly","dot");
       span.innerHTML = "";
       span.dataset.val = String(n);
 
@@ -542,6 +536,8 @@
       } else {
         span.textContent = String(n);
       }
+
+      setDot(span, n);
 
       // "fliegen" – nur opacity
       span.classList.add("fly");
@@ -558,22 +554,28 @@
       return pool.slice(0, count);
     }
 
-    // ===== Targets =====
-    const fullTargets = [
-      wFace.querySelector('[data-slot="S1"] .num > span'),
-      wFace.querySelector('[data-slot="S2"] .num > span'),
-      wFace.querySelector('[data-slot="S3"] .num > span'),
-      wFace.querySelector('[data-slot="S4"] .num > span'),
+    // ===== Targets (WICHTIG: Slots statt Spans) =====
+    const fullSlots = [
+      wFace.querySelector('[data-slot="S1"]'),
+      wFace.querySelector('[data-slot="S2"]'),
+      wFace.querySelector('[data-slot="S3"]'),
+      wFace.querySelector('[data-slot="S4"]'),
     ];
 
-    const kipRightTargets = [
-      kipGroup.querySelector('[data-slot="K1"] .num > span'),
-      kipGroup.querySelector('[data-slot="K2"] .num > span'),
-      kipGroup.querySelector('[data-slot="K3"] .num > span'),
-      kipGroup.querySelector('[data-slot="K4"] .num > span'),
+    const kipRightSlots = [
+      kipGroup.querySelector('[data-slot="K1"]'),
+      kipGroup.querySelector('[data-slot="K2"]'),
+      kipGroup.querySelector('[data-slot="K3"]'),
+      kipGroup.querySelector('[data-slot="K4"]'),
     ];
 
-    function targetsOk(arr){ return arr.filter(Boolean).length; }
+    function getNumSpan(slotEl){
+      return slotEl ? slotEl.querySelector(".num > span") : null;
+    }
+
+    function targetsOkSlots(arr){
+      return arr.filter(el => !!getNumSpan(el)).length;
+    }
 
     // ===== States =====
     let twelve = [];
@@ -586,18 +588,18 @@
       w2 = twelve.slice(4,8);
     }
 
-    function applyNums(targets, nums){
+    function applyNumsToSlots(slotEls, nums){
       for(let i=0;i<4;i++){
-        const sp = targets[i];
-        const n = nums[i];
+        const slot = slotEls[i];
+        const sp = getNumSpan(slot);
         if(!sp) continue;
-        renderNumber(sp, n);
-        setDot(sp, n);
+        renderNumber(sp, nums[i]);
       }
     }
 
-    function clearNums(targets){
-      for(const sp of targets){
+    function clearNumsInSlots(slotEls){
+      for(const slot of slotEls){
+        const sp = getNumSpan(slot);
         if(!sp) continue;
         sp.classList.remove("dot","num10","num11","fly");
         sp.innerHTML = "";
@@ -643,13 +645,13 @@
       // STEP 1: FULL Q0 (0°), W1 Zahlen rein
       showFull();
       setRot(0);
-      clearNums(fullTargets);
-      applyNums(fullTargets, w1);
+      clearNumsInSlots(fullSlots);
+      applyNumsToSlots(fullSlots, w1);
 
       showDebug(
 `STEP 1
-FULL targets: ${targetsOk(fullTargets)}/4
-KIP-right targets: ${targetsOk(kipRightTargets)}/4
+FULL targets: ${targetsOkSlots(fullSlots)}/4
+KIP-right targets: ${targetsOkSlots(kipRightSlots)}/4
 12: ${JSON.stringify(twelve)}
 W1(4): ${JSON.stringify(w1)}
 W2(4): ${JSON.stringify(w2)}
@@ -658,10 +660,10 @@ Applied FULL (W1): 4/4`
 
       await wait(5000);
 
-      // STEP 2: KIP 50% (rechts W1), gleiche Ausrichtung (keine Verdrehung)
+      // STEP 2: KIP 50% (rechts W1)
       showKip();
-      clearNums(kipRightTargets);
-      applyNums(kipRightTargets, w1);
+      clearNumsInSlots(kipRightSlots);
+      applyNumsToSlots(kipRightSlots, w1);
 
       showDebug(
 `STEP 2
@@ -673,11 +675,11 @@ Applied KIP-right (W1): 4/4`
       // STEP 3: FULL rotiert 90° CW, dann W2 Zahlen rein
       showFull();
       setRot(90);
-      clearNums(fullTargets);
-      applyNums(fullTargets, w2);
+      clearNumsInSlots(fullSlots);
+      applyNumsToSlots(fullSlots, w2);
 
-      // zusätzlich: Debug zeigt Style vom ersten Span
-      const sp0 = fullTargets[0];
+      // zusätzlicher Style-Check am ersten Zielspan
+      const sp0 = getNumSpan(fullSlots[0]);
       const cs = sp0 ? getComputedStyle(sp0) : null;
 
       showDebug(
@@ -698,9 +700,7 @@ col=${cs?cs.color:"?"}, z=${cs?cs.zIndex:"?"}`
 
     function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-    // Button: Start -> Ablauf; danach: Würfel mischen -> erneut Ablauf
     btnMain.addEventListener("click", () => {
-      // beim erneuten Klick (Würfel mischen) gleiche Sequenz wiederholen
       runStartSequence();
     });
 
@@ -715,8 +715,8 @@ col=${cs?cs.color:"?"}, z=${cs?cs.zIndex:"?"}`
       // Anfangszustand: FULL sichtbar, aber noch leer
       showFull();
       setRot(0);
-      clearNums(fullTargets);
-      clearNums(kipRightTargets);
+      clearNumsInSlots(fullSlots);
+      clearNumsInSlots(kipRightSlots);
       kipGroup.classList.remove("kip50");
       kipGroup.style.display = "none";
     });
