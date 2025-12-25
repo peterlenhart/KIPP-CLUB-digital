@@ -12,16 +12,19 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
+      /* echtes 8×8 ohne Zwischenräume */
       --cell-gap: 0px;
       --cell-radius: 0px;
 
       --floor: #7a4a34;
 
+      /* Holz */
       --cube-wood-base: #d7c2a4;
       --cube-wood-deep: #c9b08f;
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
+      /* Innenrahmen */
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -36,15 +39,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
+      /* Zahlendrehung (dein Setup) */
       --rotSign: 1;
-      --rot: 0deg;
 
-      /* ======================================================
-         KIP50: NUR POSITIONIERUNG (keine Skalierung, kein Spiegeln)
-         Werte in "Raster-Spalten (step)".
-         ====================================================== */
-      --kipA-nudge-steps: -1.5; /* Hälfte A: nach Westen */
-      --kipB-nudge-steps: -4.5; /* Hälfte B: weiter nach Westen */
+      /* ROTATION STATE */
+      --rot: 0deg;
     }
 
     html, body { height: 100%; }
@@ -131,6 +130,7 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
+    /* jedes Farbfeld bekommt 2px Innenrahmen (optisch 4px zwischen zwei Farbfeldern) */
     .cell.colorCell{
       box-shadow:
         inset 0 0 0 2px #000,
@@ -158,6 +158,7 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
+    /* Kugel */
     .ball{
       position:absolute;
       left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
@@ -175,15 +176,16 @@
       pointer-events: none;
     }
 
-    /* =======================
-       ROTIERBARES PAKET
-       ======================= */
+    /* =========================================================
+       WFaceGroup = DAS PAKET (Rotation bleibt exakt wie bei dir)
+       ========================================================= */
     .wFaceGroup{
       position:absolute;
       inset:0;
       z-index: 4;
       pointer-events:none;
 
+      /* Pivot im Board: Mitte = 4*step (bei 8x8) */
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
@@ -195,33 +197,67 @@
       will-change: transform;
     }
 
-    .wFaceGroup .half{
+    /* ======= WICHTIG: KIP50 wird NICHT mehr am wFaceGroup skaliert! ======= */
+    /* (der alte scaleX(0.5) am Container war genau das, was alles "verzogen" hat) */
+
+    /* ---------- Normalansicht (W1 mit Schlagschatten) ---------- */
+    .normalFace{ position:absolute; inset:0; }
+
+    /* ---------- KIP50-Ansicht (neu nach deinen 7 Punkten) ---------- */
+    .kip50Layer{ position:absolute; inset:0; display:none; }
+
+    /* Wenn kip50 aktiv: normal aus, kipLayer ein */
+    .wFaceGroup.kip50 .normalFace{ display:none; }
+    .wFaceGroup.kip50 .kip50Layer{ display:block; }
+
+    /* Punkt 7:
+       Beide (W1ohne@Q1 und W1ohne-gespiegelt@Q0) werden 50% skaliert
+       um die Achse zwischen Spalte D/E = x = pivot-x.
+       => Nur X-Skalierung, um pivot-x "geankert".
+    */
+    .wFaceGroup.kip50 .kip50Layer{
+      transform:
+        translateX(var(--pivot-x))
+        scaleX(0.5)
+        translateX(calc(-1 * var(--pivot-x)));
+      transform-origin: 0 0;
+    }
+
+    /* Punkt 3:
+       W1ohne auf Q1 platzieren (Q0->Q1 = +3*step nach Osten)
+       => Wir definieren eine "Basis" in Q1
+    */
+    .kipA, .kipB{
       position:absolute;
       inset:0;
+      transform: translateX(calc(3 * var(--step)));
+      transform-origin: 0 0;
       pointer-events:none;
-      transform: none; /* wichtig: baseline sauber */
     }
 
-    .wFaceGroup .halfB{ display:none; }
-
-    /* ======================================================
-       KIP50: NUR VERSCHIEBEN (keine Skalierung, kein Spiegeln)
-       ====================================================== */
-    .wFaceGroup.kip50 .halfB{ display:block; }
-
-    .wFaceGroup.kip50 .halfA{
-      transform: translateX(calc(var(--kipA-nudge-steps) * var(--step)));
+    /* Punkt 5 + 6:
+       Kopie von W1ohne (die in Q1 liegt) um die vertikale Mittelachse (D/E) spiegeln.
+       Dadurch landet sie automatisch in Q0 (links), ohne dass wir extra "nach links" rechnen müssen.
+       Spiegelachse = x = pivot-x.
+    */
+    .kipB{
+      transform:
+        translateX(calc(3 * var(--step)))
+        translateX(var(--pivot-x))
+        scaleX(-1)
+        translateX(calc(-1 * var(--pivot-x)));
+      transform-origin: 0 0;
     }
 
-    .wFaceGroup.kip50 .halfB{
-      transform: translateX(calc(var(--kipB-nudge-steps) * var(--step)));
-    }
+    /* =========================================================
+       Bauteile (Face / Shadow / Slots / Numbers)
+       ========================================================= */
 
-    /* Schatten */
+    /* Schlagschatten (nur in NORMAL!) */
     .cubeShadow{
       position:absolute;
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       z-index: 1;
@@ -233,8 +269,8 @@
 
     .cubeFace{
       position:absolute;
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
@@ -265,12 +301,16 @@
       width: var(--cell);
       height: var(--cell);
       box-sizing: border-box;
+
       background:
         linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
         var(--slot-fill);
+
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
+
       z-index: 3;
+
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -304,7 +344,6 @@
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
-
     .slot .num > span[data-val="6"],
     .slot .num > span[data-val="9"]{ --opt-x: -2px; }
 
@@ -330,6 +369,7 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
+    /* Slot-Positionen für EIN Face in Q0 */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
@@ -374,8 +414,13 @@
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
+      <!-- ROTIERBARES PAKET -->
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
-        <div class="half halfA">
+
+        <!-- =======================
+             NORMAL: W1 (mit Schlagschatten)
+             ======================= -->
+        <div class="normalFace" aria-hidden="false">
           <div class="cubeShadow" aria-hidden="true"></div>
           <div class="cubeFace" aria-label="Würfelfläche"></div>
 
@@ -385,14 +430,35 @@
           <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
         </div>
 
-        <div class="half halfB">
-          <div class="cubeShadow" aria-hidden="true"></div>
-          <div class="cubeFace" aria-label="Würfelfläche"></div>
+        <!-- =======================
+             KIP50: neu nach 7 Punkten
+             - KEIN cubeShadow (Schlagschatten weg)
+             - W1ohne @ Q1
+             - Kopie gespiegelt um D/E => landet @ Q0
+             - beide gemeinsam scaleX(0.5) um D/E
+             ======================= -->
+        <div class="kip50Layer" aria-hidden="true">
 
-          <div class="slot s-3b read-east"  data-slot="S1B"><div class="num"><span></span></div></div>
-          <div class="slot s-4b read-east"  data-slot="S2B"><div class="num"><span></span></div></div>
-          <div class="slot s-2c read-north" data-slot="S3B"><div class="num"><span></span></div></div>
-          <div class="slot s-2d read-north" data-slot="S4B"><div class="num"><span></span></div></div>
+          <!-- A = W1ohne auf Q1 -->
+          <div class="kipA" aria-hidden="true">
+            <div class="cubeFace" aria-label="Würfelfläche (ohne Schlagschatten)"></div>
+
+            <div class="slot s-3b read-east"  data-slot="K1A"><div class="num"><span></span></div></div>
+            <div class="slot s-4b read-east"  data-slot="K2A"><div class="num"><span></span></div></div>
+            <div class="slot s-2c read-north" data-slot="K3A"><div class="num"><span></span></div></div>
+            <div class="slot s-2d read-north" data-slot="K4A"><div class="num"><span></span></div></div>
+          </div>
+
+          <!-- B = Kopie von A, gespiegelt um D/E => Q0 -->
+          <div class="kipB" aria-hidden="true">
+            <div class="cubeFace" aria-label="Würfelfläche gespiegelt (ohne Schlagschatten)"></div>
+
+            <div class="slot s-3b read-east"  data-slot="K1B"><div class="num"><span></span></div></div>
+            <div class="slot s-4b read-east"  data-slot="K2B"><div class="num"><span></span></div></div>
+            <div class="slot s-2c read-north" data-slot="K3B"><div class="num"><span></span></div></div>
+            <div class="slot s-2d read-north" data-slot="K4B"><div class="num"><span></span></div></div>
+          </div>
+
         </div>
       </div>
 
@@ -422,6 +488,7 @@
       boardEl.style.height = w + "px";
     }
 
+    // ===== Raster farbig wie bisher =====
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -466,6 +533,7 @@
       grid.dataset.built = "1";
     }
 
+    // ===== Zahlenrendering (10/11 Kerning + 6/9 Punkt) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -500,53 +568,75 @@
       return pool.slice(0, count);
     }
 
+    // =========================================================
+    // 4er-Rotation (0/90/180/270)
+    // =========================================================
     let sets = [
-      [0,0,0,0],
-      [0,0,0,0],
-      [0,0,0,0],
-      [0,0,0,0],
+      [0,0,0,0], // W1
+      [0,0,0,0], // W2
+      [0,0,0,0], // W3
+      [0,0,0,0], // 270° = wieder W1
     ];
 
     let rotIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
-    const slotTargetsA = [
+    // Targets normal
+    const slotTargets = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
       wFace.querySelector('[data-slot="S3"] .num > span'),
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    const slotTargetsB = [
-      wFace.querySelector('[data-slot="S1B"] .num > span'),
-      wFace.querySelector('[data-slot="S2B"] .num > span'),
-      wFace.querySelector('[data-slot="S3B"] .num > span'),
-      wFace.querySelector('[data-slot="S4B"] .num > span'),
+    // Targets KIP50 A
+    const kipTargetsA = [
+      wFace.querySelector('[data-slot="K1A"] .num > span'),
+      wFace.querySelector('[data-slot="K2A"] .num > span'),
+      wFace.querySelector('[data-slot="K3A"] .num > span'),
+      wFace.querySelector('[data-slot="K4A"] .num > span'),
+    ];
+
+    // Targets KIP50 B
+    const kipTargetsB = [
+      wFace.querySelector('[data-slot="K1B"] .num > span'),
+      wFace.querySelector('[data-slot="K2B"] .num > span'),
+      wFace.querySelector('[data-slot="K3B"] .num > span'),
+      wFace.querySelector('[data-slot="K4B"] .num > span'),
     ];
 
     function applyRotationAndNumbers(){
+      // Rotation bleibt wie gehabt
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
 
+      // Zahlen
       const nums = sets[rotIndex] || sets[0];
 
+      // Normal
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsA[i], nums[i]);
-        setDot(slotTargetsA[i], nums[i]);
+        renderNumber(slotTargets[i], nums[i]);
+        setDot(slotTargets[i], nums[i]);
       }
+      // KIP50 A
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsB[i], nums[i]);
-        setDot(slotTargetsB[i], nums[i]);
+        renderNumber(kipTargetsA[i], nums[i]);
+        setDot(kipTargetsA[i], nums[i]);
+      }
+      // KIP50 B
+      for(let i=0;i<4;i++){
+        renderNumber(kipTargetsB[i], nums[i]);
+        setDot(kipTargetsB[i], nums[i]);
       }
     }
 
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
 
-      sets[0] = twelve.slice(0,4);
-      sets[1] = twelve.slice(4,8);
-      sets[2] = twelve.slice(8,12);
-      sets[3] = sets[0].slice();
+      sets[0] = twelve.slice(0,4);   // W1 / 0°
+      sets[1] = twelve.slice(4,8);   // W2 / 90°
+      sets[2] = twelve.slice(8,12);  // W3 / 180°
+      sets[3] = sets[0].slice();     // 270° = wieder W1
 
       rotIndex = 0;
       applyRotationAndNumbers();
@@ -562,11 +652,17 @@
       applyRotationAndNumbers();
     }
 
+    // ===== Buttons =====
     btnMix.addEventListener("click", reroll12);
-    btnKip50.addEventListener("click", () => wFace.classList.toggle("kip50"));
+
+    btnKip50.addEventListener("click", () => {
+      wFace.classList.toggle("kip50");
+    });
+
     btnCW.addEventListener("click", stepCW);
     btnCCW.addEventListener("click", stepCCW);
 
+    // ===== Init =====
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
