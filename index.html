@@ -239,7 +239,7 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 20; /* über cubeFace */
+      z-index: 20;
       overflow: visible;
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
@@ -256,17 +256,19 @@
       justify-content:center;
       user-select:none;
       pointer-events:none;
-      z-index: 9999; /* ganz oben */
+      z-index: 9999;
     }
 
+    /* >>> ANDROID FAIL-SAFE: auch Text-FILL erzwingen */
     .slot .num > span{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       font-weight: 900;
 
-      /* HARD-FIX: wirklich sichtbar erzwingen */
       color: #111 !important;
+      -webkit-text-fill-color: #111 !important;
+
       opacity: 1 !important;
       visibility: visible !important;
 
@@ -280,7 +282,6 @@
       z-index: 99999;
     }
 
-    /* 10/11 Kerning + 6/9 Punkt */
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
     .slot .num > span[data-val="6"],
@@ -315,7 +316,7 @@
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
     /* ==========================
-       KIP-Gruppe (50%) – bewährte Darstellung
+       KIP-Gruppe (50%)
        ========================== */
     .kipGroup{
       position:absolute;
@@ -330,7 +331,7 @@
       position:absolute;
       left: calc(1 * var(--step));
       top:  calc(1 * var(--step));
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap)); /* Q0+Q1 */
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       background: transparent;
       z-index: 1;
@@ -362,7 +363,7 @@
     .faceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
     .faceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* Slot-Positionen KIP (rechte Seite) */
+    /* Slot-Positionen KIP */
     .s-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
     .s-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
     .s-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
@@ -455,7 +456,6 @@
         <div class="cubeFace faceQ0" aria-label="Würfelfläche Q0"></div>
         <div class="cubeFace faceQ1" aria-label="Würfelfläche Q1"></div>
 
-        <!-- rechte Seite: W1-Zahlen -->
         <div class="slot s-3e read-east"  data-slot="K1"><div class="num"><span></span></div></div>
         <div class="slot s-4e read-east"  data-slot="K2"><div class="num"><span></span></div></div>
         <div class="slot s-2f read-north" data-slot="K3"><div class="num"><span></span></div></div>
@@ -513,11 +513,28 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering (robust) =====
+    // ===== Zahlenrendering (ANDROID FAIL-SAFE) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
       if (number === 6 || number === 9) span.classList.add("dot");
+    }
+
+    function enforceSpanVisible(span){
+      // Inline-Failsafe (Android/Chrome): setzt "Text fill" und Sichtbarkeit hart.
+      span.style.display = "inline-flex";
+      span.style.alignItems = "center";
+      span.style.justifyContent = "center";
+      span.style.fontWeight = "900";
+      span.style.color = "#111";
+      span.style.webkitTextFillColor = "#111";
+      span.style.opacity = "1";
+      span.style.visibility = "visible";
+      span.style.position = "relative";
+      span.style.zIndex = "999999";
+
+      // Falls jemand irgendwo Text stroke/fill manipuliert:
+      span.style.webkitTextStroke = "0px transparent";
     }
 
     function renderNumber(span, n){
@@ -537,9 +554,17 @@
         span.textContent = String(n);
       }
 
+      // Inline-Failsafe direkt nach dem Setzen
+      enforceSpanVisible(span);
+
+      // auch die inneren Digits absichern (10/11)
+      span.querySelectorAll(".d").forEach(d=>{
+        d.style.color = "#111";
+        d.style.webkitTextFillColor = "#111";
+      });
+
       setDot(span, n);
 
-      // "fliegen" – nur opacity
       span.classList.add("fly");
       setTimeout(()=> span.classList.remove("fly"), 300);
     }
@@ -554,7 +579,7 @@
       return pool.slice(0, count);
     }
 
-    // ===== Targets (WICHTIG: Slots statt Spans) =====
+    // ===== Targets (Slots statt Spans) =====
     const fullSlots = [
       wFace.querySelector('[data-slot="S1"]'),
       wFace.querySelector('[data-slot="S2"]'),
@@ -572,7 +597,6 @@
     function getNumSpan(slotEl){
       return slotEl ? slotEl.querySelector(".num > span") : null;
     }
-
     function targetsOkSlots(arr){
       return arr.filter(el => !!getNumSpan(el)).length;
     }
@@ -605,6 +629,7 @@
         sp.innerHTML = "";
         sp.textContent = "";
         sp.removeAttribute("data-val");
+        sp.removeAttribute("style"); // wichtig: inline styles beim Leeren entfernen
       }
     }
 
@@ -665,10 +690,7 @@ Applied FULL (W1): 4/4`
       clearNumsInSlots(kipRightSlots);
       applyNumsToSlots(kipRightSlots, w1);
 
-      showDebug(
-`STEP 2
-Applied KIP-right (W1): 4/4`
-      );
+      showDebug(`STEP 2\nApplied KIP-right (W1): 4/4`);
 
       await wait(5000);
 
@@ -678,7 +700,6 @@ Applied KIP-right (W1): 4/4`
       clearNumsInSlots(fullSlots);
       applyNumsToSlots(fullSlots, w2);
 
-      // zusätzlicher Style-Check am ersten Zielspan
       const sp0 = getNumSpan(fullSlots[0]);
       const cs = sp0 ? getComputedStyle(sp0) : null;
 
@@ -691,7 +712,6 @@ col=${cs?cs.color:"?"}, z=${cs?cs.zIndex:"?"}`
 
       await wait(5000);
 
-      // Ende: Button wird „Würfel mischen“
       hideDebug();
       btnMain.textContent = "WÜRFEL MISCHEN";
       btnMain.disabled = false;
@@ -700,9 +720,7 @@ col=${cs?cs.color:"?"}, z=${cs?cs.zIndex:"?"}`
 
     function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-    btnMain.addEventListener("click", () => {
-      runStartSequence();
-    });
+    btnMain.addEventListener("click", () => runStartSequence());
 
     // ===== Init =====
     window.addEventListener("load", () => {
@@ -712,7 +730,6 @@ col=${cs?cs.color:"?"}, z=${cs?cs.zIndex:"?"}`
 
       buildGridOnce();
 
-      // Anfangszustand: FULL sichtbar, aber noch leer
       showFull();
       setRot(0);
       clearNumsInSlots(fullSlots);
