@@ -321,9 +321,7 @@
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
-      /* FIX:
-         In 50% muss erst rotiert werden und dann in Screen-X skaliert.
-         Dafür rotate() und scaleX() tauschen. */
+      /* ✅ FIX: scaleX VOR rotate -> keine Verzerrung bei 90° */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
         scaleX(0.5)
@@ -533,7 +531,6 @@
     }
 
     function renderNumber(span, n){
-      // n === null => leer lassen
       if(n === null || n === undefined){
         clearSpan(span);
         return;
@@ -566,30 +563,30 @@
       return pool.slice(0, count);
     }
 
-    // vorbereitete Gruppen (werden in sets geschrieben, sobald "bestückt")
+    // =========================================================
+    // LOGIK
+    // =========================================================
+
     let planned = [
       [null,null,null,null], // W1 geplant
       [null,null,null,null], // W2 geplant
       [null,null,null,null], // W3 geplant
     ];
 
-    // wirklich bestückte Flächen (null = leer)
     let sets = [
       [null,null,null,null], // W1
       [null,null,null,null], // W2
       [null,null,null,null], // W3
     ];
 
-    let assigned = [false, false, false]; // W1/W2/W3 schon bestückt?
+    let assigned = [false, false, false];
 
     let rotIndex  = 0; // 0..3
-    let faceIndex = 0; // 0..2 (welche Fläche liegt in 100% "oben")
+    let faceIndex = 0; // 0..2
     const rotDeg = [0, 90, 180, 270];
 
-    // geplante Richtung für Kipp-Preview (nur Anzeige)
     let plannedDir = +1; // +1 CW, -1 CCW
 
-    // Targets 100%
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
@@ -597,7 +594,6 @@
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    // Targets 50% rechts = aktuelle Fläche, links = nächste Fläche (Preview)
     const slotTargetsKipRight = [
       kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
@@ -614,10 +610,16 @@
 
     function ensureAssigned(idx){
       if(assigned[idx]) return;
-
-      // Bestückung: 1:1 die geplante 4er-Gruppe übernehmen
       sets[idx] = planned[idx].slice();
       assigned[idx] = true;
+    }
+
+    // ✅ FIX: Für die "neu auftauchende" Fläche (Preview) Paare tauschen:
+    // [0,1,2,3] -> [2,3,0,1]
+    // (Paare bleiben intakt: 61 bleibt 61, 113 bleibt 113)
+    function swappedPairs(arr){
+      if(!arr) return [null,null,null,null];
+      return [arr[2], arr[3], arr[0], arr[1]];
     }
 
     function applyRotationAndNumbers(){
@@ -625,33 +627,33 @@
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
 
-      // 100%: zeigt aktuelle Fläche. Wenn (theoretisch) noch leer -> leer.
       const curr = sets[faceIndex];
 
+      // 100%: aktuelle Fläche
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
         else slotTargetsW[i].classList.remove("dot");
       }
 
-      // 50%: rechts = aktuelle Fläche (nur wenn bestückt), links = nächste (nur wenn bestückt)
       const nextFaceIndex = (plannedDir === +1)
         ? (faceIndex + 1) % 3
         : (faceIndex + 2) % 3;
 
-      const next = sets[nextFaceIndex];
+      const nextRaw = sets[nextFaceIndex];
+      const nextPreview = swappedPairs(nextRaw); // ✅ FIX nur fürs Preview
 
-      // rechts (aktuell)
+      // 50% rechts = aktuell (unverändert)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links (nächste)
+      // 50% links = nächste/neu auftauchende Fläche (Paare vertauscht)
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], next[i]);
-        if(next[i] !== null && next[i] !== undefined) setDot(slotTargetsKipLeft[i], next[i]);
+        renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+        if(nextPreview[i] !== null && nextPreview[i] !== undefined) setDot(slotTargetsKipLeft[i], nextPreview[i]);
         else slotTargetsKipLeft[i].classList.remove("dot");
       }
     }
@@ -659,11 +661,10 @@
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
 
-      planned[0] = twelve.slice(0,4);    // W1 geplant
-      planned[1] = twelve.slice(4,8);    // W2 geplant
-      planned[2] = twelve.slice(8,12);   // W3 geplant
+      planned[0] = twelve.slice(0,4);
+      planned[1] = twelve.slice(4,8);
+      planned[2] = twelve.slice(8,12);
 
-      // alles leer setzen
       sets = [
         [null,null,null,null],
         [null,null,null,null],
@@ -671,12 +672,11 @@
       ];
       assigned = [false,false,false];
 
-      // Startzustand: W1 liegt auf und wird bestückt
       rotIndex  = 0;
       faceIndex = 0;
       plannedDir = +1;
 
-      ensureAssigned(0); // W1 bestücken
+      ensureAssigned(0);
       applyRotationAndNumbers();
     }
 
@@ -689,9 +689,8 @@
       faceIndex = (faceIndex + 1) % 3;
 
       if(!kipOn){
-        ensureAssigned(faceIndex); // erst beim Aufliegen in 100%
+        ensureAssigned(faceIndex);
       }
-
       applyRotationAndNumbers();
     }
 
@@ -704,7 +703,6 @@
       if(!kipOn){
         ensureAssigned(faceIndex);
       }
-
       applyRotationAndNumbers();
     }
 
@@ -718,17 +716,14 @@
         kipGroup.style.display = "none";
         wFace.style.display = "block";
       }
-
       applyRotationAndNumbers();
     }
 
-    // ===== Buttons =====
     btnMix.addEventListener("click", reroll12);
     btnKip50.addEventListener("click", () => setKipMode(!kipOn));
     btnCW.addEventListener("click", stepCW);
     btnCCW.addEventListener("click", stepCCW);
 
-    // ===== Init =====
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
