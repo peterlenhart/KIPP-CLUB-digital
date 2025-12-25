@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – Rotation perfekt + KIP-Gruppe korrekt</title>
+  <title>KIPP – Start Sequenz (W1 → KIP50 → 90° CW)</title>
 
   <style>
     :root{
@@ -39,10 +39,10 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Zahlendrehung (dein Setup) */
+      /* Zahlendrehung */
       --rotSign: 1;
 
-      /* ROTATION STATE (bleibt unverändert) */
+      /* ROTATION STATE */
       --rot: 0deg;
     }
 
@@ -175,8 +175,10 @@
       pointer-events: none;
     }
 
+    .hidden{ display:none !important; }
+
     /* =========================================================
-       ROTATIONS-GRUPPE (dein aktueller Code: bleibt)
+       WFaceGroup = 100% Darstellung (Q0)
        ========================================================= */
     .wFaceGroup{
       position:absolute;
@@ -184,7 +186,7 @@
       z-index: 4;
       pointer-events:none;
 
-      /* Pivot im Board: Mitte = 4*step (bei 8x8) */
+      /* Pivot (Kugelmittelpunkt) = Boardmitte */
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
@@ -196,6 +198,7 @@
       will-change: transform;
     }
 
+    /* Schlagschatten der Würfelfläche (bei 100% erlaubt) */
     .cubeShadow{
       position:absolute;
       left: calc(1 * var(--step));  /* 2B */
@@ -211,6 +214,8 @@
 
     .cubeFace{
       position:absolute;
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
@@ -234,8 +239,6 @@
         0 0 0 1px rgba(255,255,255,0.08) inset;
 
       z-index: 2;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
     }
 
     .slot{
@@ -284,6 +287,16 @@
       line-height: 1;
     }
 
+    /* “Zahlen fliegen” */
+    @keyframes flyIn{
+      0%   { opacity: 0; transform: translateY(-42px) scale(0.70); }
+      70%  { opacity: 1; transform: translateY(6px)  scale(1.04); }
+      100% { opacity: 1; transform: translateY(0px)  scale(1.00); }
+    }
+    .fly{
+      animation: flyIn 420ms ease-out both;
+    }
+
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
 
@@ -314,25 +327,23 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* Slot-Positionen für EIN Face in Q0 (dein Rotationscode) */
+    /* Slot-Positionen für EIN Face in Q0 (W1) */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
     /* =========================================================
-       KIP-GRUPPE (aus deinem "guten KIP-Code" übernommen)
-       - NICHT rotieren, NICHT anfassen
-       - Button zeigt diese Gruppe und skaliert sie 50% an Achse D/E
+       KIP-Gruppe (korrekte Zwischenkippdarstellung)
+       - wird NICHT rotiert (nur angezeigt)
+       - scaleX(0.5) um Achse zwischen D und E (= 4*step)
        ========================================================= */
     .kipGroup{
       position:absolute;
       inset:0;
-      z-index: 4;
+      z-index: 5;
       pointer-events:none;
-      display:none;
 
-      /* Skalierachse = senkrechte Mittellinie der Box (Grenze D/E) */
       transform-origin: calc(4 * var(--step)) 50%;
     }
     .kipGroup.kip50{
@@ -341,8 +352,8 @@
 
     .kipShadow{
       position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
+      left: calc(1 * var(--step));  /* beginnt bei 2B */
+      top:  calc(1 * var(--step));  /* beginnt bei 2B */
       width: calc(6 * var(--cell) + 5 * var(--cell-gap)); /* über Q0+Q1 */
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       background: transparent;
@@ -354,7 +365,7 @@
 
     .kipEdgeCore{
       position:absolute;
-      left: calc(4 * var(--step));  /* Mittellinie D/E */
+      left: calc(4 * var(--step));  /* Mittellinie zwischen Q0 und Q1 */
       top:  calc(1 * var(--step));
       width: 6px;
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -370,21 +381,47 @@
       opacity: 0.95;
     }
 
-    .kipFaceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); } /* 2B */
-    .kipFaceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); } /* 2E */
+    .cubeFaceKip{
+      position:absolute;
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      box-sizing: border-box;
+      border-radius: 0;
 
-    /* KIP-Slotpositionen (eindeutig, damit nichts kollidiert) */
-    .k-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
-    .k-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
-    .k-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
-    .k-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+      background:
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
+        repeating-linear-gradient(
+          20deg,
+          rgba(0,0,0,0.02) 0px,
+          rgba(0,0,0,0.02) 10px,
+          rgba(255,255,255,0.02) 10px,
+          rgba(255,255,255,0.02) 18px
+        ),
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
+        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
 
-    .k-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
-    .k-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
-    .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
-    .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+      box-shadow:
+        inset 0 0 0 2px var(--w1-innerframe),
+        0 0 0 1px rgba(255,255,255,0.08) inset;
 
-    /* Controls */
+      z-index: 2;
+    }
+
+    .faceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); } /* 2B */
+    .faceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); } /* 2E */
+
+    /* Slot-Positionen (KIP) */
+    .s-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
+    .s-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
+    .s-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .s-2cK{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+
+    .s-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
+    .s-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    .s-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    .s-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+
     .controls{
       width: 100%;
       display:flex;
@@ -415,6 +452,10 @@
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
+    .btn[disabled]{
+      opacity: 0.55;
+      cursor: default;
+    }
   </style>
 </head>
 
@@ -422,11 +463,10 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ROTATION: W1 Paket -->
-      <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
+      <!-- 100% Darstellung -->
+      <div id="wFaceGroup" class="wFaceGroup" aria-label="W1 100%">
         <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace" aria-label="Würfelfläche"></div>
 
@@ -436,50 +476,51 @@
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- KIP: korrekte KIP-Gruppe (aus deinem funktionierenden KIP-Code) -->
-      <div id="kipGroup" class="kipGroup kip50" aria-label="KIP Gruppe">
+      <!-- KIP Zwischenstand (korrekt) -->
+      <div id="kipGroup" class="kipGroup hidden" aria-label="KIP Gruppe">
         <div class="kipShadow" aria-hidden="true"></div>
         <div class="kipEdgeCore" aria-hidden="true"></div>
 
-        <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
-        <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
+        <div class="cubeFaceKip faceQ0" aria-label="Würfelfläche Q0"></div>
+        <div class="cubeFaceKip faceQ1" aria-label="Würfelfläche Q1"></div>
 
-        <!-- linke Slots (leer) -->
-        <div class="slot k-4d read-south" data-slot="W2_A"><div class="num"><span></span></div></div>
-        <div class="slot k-3d read-south" data-slot="W2_B"><div class="num"><span></span></div></div>
-        <div class="slot k-2b read-south" data-slot="W2_C"><div class="num"><span></span></div></div>
-        <div class="slot k-2c read-south" data-slot="W2_D"><div class="num"><span></span></div></div>
+        <!-- links (W2) vorerst leer -->
+        <div class="slot s-4d read-south" data-slot="W2_A"><div class="num"><span></span></div></div>
+        <div class="slot s-3d read-south" data-slot="W2_B"><div class="num"><span></span></div></div>
+        <div class="slot s-2b read-south" data-slot="W2_C"><div class="num"><span></span></div></div>
+        <div class="slot s-2cK read-south" data-slot="W2_D"><div class="num"><span></span></div></div>
 
-        <!-- rechte Seite: bekommt die aktuellen W1-Zahlen -->
-        <div class="slot k-3e read-east"  data-slot="W1_1"><div class="num"><span></span></div></div>
-        <div class="slot k-4e read-east"  data-slot="W1_2"><div class="num"><span></span></div></div>
-        <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
-        <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+        <!-- rechts (W1) bekommt die bereits vergebenen 4 Zahlen -->
+        <div class="slot s-3e read-east"  data-slot="W1_1"><div class="num"><span></span></div></div>
+        <div class="slot s-4e read-east"  data-slot="W1_2"><div class="num"><span></span></div></div>
+        <div class="slot s-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+        <div class="slot s-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
     <div class="controls">
-      <button id="btnMix" class="btn">Würfel mischen (12)</button>
-      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
-      <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
-      <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
+      <button id="btnMain" class="btn">Start</button>
+      <button id="btnKip50" class="btn" disabled>KIP 50% AN/AUS</button>
+      <button id="btnCW" class="btn" disabled>KIPP ⟳ (CW)</button>
+      <button id="btnCCW" class="btn" disabled>KIPP ⟲ (CCW)</button>
     </div>
   </div>
 
   <script>
-    const boardEl   = document.getElementById("board");
-    const grid      = document.getElementById("grid");
+    const boardEl  = document.getElementById("board");
+    const grid     = document.getElementById("grid");
 
-    const wFace     = document.getElementById("wFaceGroup");
-    const kipGroup  = document.getElementById("kipGroup");
+    const wFace    = document.getElementById("wFaceGroup");
+    const kipGroup = document.getElementById("kipGroup");
 
-    const btnMix    = document.getElementById("btnMix");
-    const btnKip50  = document.getElementById("btnKip50");
-    const btnCW     = document.getElementById("btnCW");
-    const btnCCW    = document.getElementById("btnCCW");
+    const btnMain  = document.getElementById("btnMain");
+    const btnKip50 = document.getElementById("btnKip50");
+    const btnCW    = document.getElementById("btnCW");
+    const btnCCW   = document.getElementById("btnCCW");
 
+    // ===== Board square =====
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
@@ -530,7 +571,7 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering (10/11 Kerning + 6/9 Punkt) =====
+    // ===== Numbers rendering (10/11 Kerning + 6/9 Punkt) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -538,7 +579,7 @@
     }
 
     function renderNumber(span, n){
-      span.classList.remove("num10","num11");
+      span.classList.remove("num10","num11","fly");
       span.innerHTML = "";
       span.dataset.val = String(n);
 
@@ -555,6 +596,22 @@
       span.textContent = String(n);
     }
 
+    function clearSpan(span){
+      if(!span) return;
+      span.classList.remove("dot","num10","num11","fly");
+      span.innerHTML = "";
+      span.textContent = "";
+      span.removeAttribute("data-val");
+    }
+
+    function flyIn(span){
+      if(!span) return;
+      // re-trigger animation
+      span.classList.remove("fly");
+      void span.offsetWidth;
+      span.classList.add("fly");
+    }
+
     function getUniqueRandomNumbers(count, min, max){
       const pool = [];
       for(let i=min; i<=max; i++) pool.push(i);
@@ -565,115 +622,173 @@
       return pool.slice(0, count);
     }
 
-    // =========================================================
-    // ROTATION (dein aktueller Code, unverändert)
-    // =========================================================
-    let sets = [
-      [0,0,0,0], // W1
-      [0,0,0,0], // W2
-      [0,0,0,0], // W3
-      [0,0,0,0], // 270° = wieder W1
-    ];
-
-    let rotIndex = 0;
-    const rotDeg = [0, 90, 180, 270];
-
-    const slotTargetsW = [
+    // ===== Slot targets =====
+    const wSlots = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
       wFace.querySelector('[data-slot="S3"] .num > span'),
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    // KIP-Rechts-Slots (bekommen W1/W2/W3 je nach Rotation-State – nur Zahlen, keine Bewegung)
-    const slotTargetsKipRight = [
+    const kipRightSlots = [
       kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_3"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_4"] .num > span'),
     ];
 
-    function clearKipLeftSlots(){
-      const leftKeys = ["W2_A","W2_B","W2_C","W2_D"];
-      leftKeys.forEach(k=>{
-        const sp = kipGroup.querySelector(`[data-slot="${k}"] .num > span`);
-        if(!sp) return;
-        sp.classList.remove("dot","num10","num11");
-        sp.innerHTML = "";
-        sp.textContent = "";
-        sp.removeAttribute("data-val");
-      });
+    const kipLeftSlots = ["W2_A","W2_B","W2_C","W2_D"].map(k =>
+      kipGroup.querySelector(`[data-slot="${k}"] .num > span`)
+    );
+
+    // ===== Rotation state (nur 100% Darstellung) =====
+    const rotDeg = [0, 90, 180, 270];
+    let rotIndex = 0;
+
+    function setRotation(idx){
+      rotIndex = idx % 4;
+      wFace.style.setProperty("--rot", rotDeg[rotIndex] + "deg");
     }
 
-    function applyRotationAndNumbers(){
-      const deg = rotDeg[rotIndex];
-      wFace.style.setProperty("--rot", deg + "deg");
+    // ===== Game state =====
+    let twelve = [];
+    let first4 = [0,0,0,0];
+    let second4 = [0,0,0,0];
+    let last4 = [0,0,0,0];
 
-      const nums = sets[rotIndex] || sets[0];
+    let mode = "start"; // "start" | "mix"
+    let running = false;
 
-      // WFace Zahlen
+    function reroll12_keepLogic(){
+      // WICHTIG: 12 einzigartige Zahlen 0..11 (nicht ändern)
+      twelve = getUniqueRandomNumbers(12, 0, 11);
+      first4  = twelve.slice(0,4);   // Start (0°)
+      second4 = twelve.slice(4,8);   // nach 90° CW
+      last4   = twelve.slice(8,12);  // später
+    }
+
+    function showFull(){
+      kipGroup.classList.add("hidden");
+      wFace.classList.remove("hidden");
+    }
+
+    function showKip(){
+      wFace.classList.add("hidden");
+      kipGroup.classList.remove("hidden");
+    }
+
+    function applyNumbersToFull(nums, doFly){
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], nums[i]);
-        setDot(slotTargetsW[i], nums[i]);
+        renderNumber(wSlots[i], nums[i]);
+        setDot(wSlots[i], nums[i]);
+        if(doFly) flyIn(wSlots[i]);
       }
+    }
 
-      // KIP: rechte Seite bekommt die gleichen 4 Werte (nur Anzeige)
+    function clearNumbersFull(){
+      wSlots.forEach(clearSpan);
+    }
+
+    function applyNumbersToKipRight(nums, doFly){
+      // links leer halten
+      kipLeftSlots.forEach(clearSpan);
+
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], nums[i]);
-        setDot(slotTargetsKipRight[i], nums[i]);
+        renderNumber(kipRightSlots[i], nums[i]);
+        setDot(kipRightSlots[i], nums[i]);
+        if(doFly) flyIn(kipRightSlots[i]);
       }
-      clearKipLeftSlots();
     }
 
-    function reroll12(){
-      const twelve = getUniqueRandomNumbers(12, 0, 11);
-
-      sets[0] = twelve.slice(0,4);   // W1 / 0°
-      sets[1] = twelve.slice(4,8);   // W2 / 90°
-      sets[2] = twelve.slice(8,12);  // W3 / 180°
-      sets[3] = sets[0].slice();     // 270° = wieder W1
-
-      rotIndex = 0;
-      applyRotationAndNumbers();
+    function sleep(ms){
+      return new Promise(res => setTimeout(res, ms));
     }
 
-    function stepCW(){
-      rotIndex = (rotIndex + 1) % 4;
-      applyRotationAndNumbers();
-    }
+    // ===== SEQUENZ bis zu deinem Stopp-Punkt =====
+    async function runStartSequence(){
+      if(running) return;
+      running = true;
+      btnMain.disabled = true;
 
-    function stepCCW(){
-      rotIndex = (rotIndex + 3) % 4;
-      applyRotationAndNumbers();
-    }
+      // 1) Start zeigt 100% auf Q0 (0°) + erste 4 Zahlen fliegen rein
+      showFull();
+      setRotation(0);
+      clearNumbersFull();
+      applyNumbersToFull(first4, true);
 
-    // =========================================================
-    // KIP-TOGGLE: zeigt KIP-Gruppe korrekt, ohne Rotation-Experimente
-    // =========================================================
-    let kipOn = false;
+      await sleep(5000);
 
-    function setKipMode(on){
-      kipOn = !!on;
+      // 2) 50% Zwischenkipp: Zahlen auf Ostseite (rechts) – unverändert ausgerichtet
+      showKip();
+      kipGroup.classList.add("kip50"); // KIP 50% AN
+      applyNumbersToKipRight(first4, false); // bleiben "gleich" (kein extra Fly nötig)
 
-      if(kipOn){
-        // Nur Anzeige umschalten:
-        wFace.style.display = "none";
-        kipGroup.style.display = "block";
-      }else{
-        kipGroup.style.display = "none";
-        wFace.style.display = "block";
-      }
+      await sleep(5000);
+
+      // 3) 100% Darstellung um Pivot 90° CW rotiert, erst OHNE Zahlen
+      showFull();
+      setRotation(1); // 90° CW
+      clearNumbersFull();
+
+      // kurzer Moment ohne Zahlen
+      await sleep(250);
+
+      // 4) nächste vier Zahlen fliegen rein
+      applyNumbersToFull(second4, true);
+
+      // Sequenz Ende (dein Kontrollpunkt)
+      mode = "mix";
+      btnMain.textContent = "Würfel mischen (12)";
+      btnMain.disabled = false;
+
+      // optionale Buttons wieder aktivieren (für Tests)
+      btnCW.disabled = false;
+      btnCCW.disabled = false;
+      btnKip50.disabled = false;
+
+      running = false;
     }
 
     // ===== Buttons =====
-    btnMix.addEventListener("click", reroll12);
+    btnMain.addEventListener("click", async () => {
+      if(running) return;
 
-    btnKip50.addEventListener("click", () => {
-      setKipMode(!kipOn);
+      if(mode === "start"){
+        // Start: neue 12 Zahlen + Sequenz
+        reroll12_keepLogic();
+        await runStartSequence();
+        return;
+      }
+
+      // Mode "mix": nur neu mischen + zurück auf 100% rot=0 mit erster 4 (ohne Automatik)
+      reroll12_keepLogic();
+      showFull();
+      setRotation(0);
+      clearNumbersFull();
+      applyNumbersToFull(first4, true);
     });
 
-    btnCW.addEventListener("click", stepCW);
-    btnCCW.addEventListener("click", stepCCW);
+    btnKip50.addEventListener("click", () => {
+      // nur als Test-Toggle: zeigt/verbirgt die kipGroup
+      // (im Startablauf wird kipGroup automatisch korrekt ein/aus geschaltet)
+      if(kipGroup.classList.contains("hidden")){
+        showKip();
+        kipGroup.classList.add("kip50");
+        applyNumbersToKipRight(first4, false);
+      }else{
+        showFull();
+      }
+    });
+
+    btnCW.addEventListener("click", () => {
+      rotIndex = (rotIndex + 1) % 4;
+      setRotation(rotIndex);
+    });
+
+    btnCCW.addEventListener("click", () => {
+      rotIndex = (rotIndex + 3) % 4;
+      setRotation(rotIndex);
+    });
 
     // ===== Init =====
     window.addEventListener("load", () => {
@@ -682,10 +797,18 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      reroll12();
 
-      // Startzustand: KIP aus (Rotation/W1 sichtbar)
-      setKipMode(false);
+      // Startzustand: 100% ohne Zahlen
+      showFull();
+      setRotation(0);
+      clearNumbersFull();
+
+      // Buttons: nur Start aktiv
+      mode = "start";
+      btnMain.textContent = "Start";
+      btnKip50.disabled = true;
+      btnCW.disabled = true;
+      btnCCW.disabled = true;
     });
 
     window.addEventListener("resize", () => {
