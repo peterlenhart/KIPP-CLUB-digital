@@ -12,19 +12,16 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      /* echtes 8×8 ohne Zwischenräume */
       --cell-gap: 0px;
       --cell-radius: 0px;
 
       --floor: #7a4a34;
 
-      /* Holz */
       --cube-wood-base: #d7c2a4;
       --cube-wood-deep: #c9b08f;
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
-      /* Innenrahmen */
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -39,10 +36,7 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Zahlendrehung (dein Setup) */
       --rotSign: 1;
-
-      /* ROTATION STATE */
       --rot: 0deg;
     }
 
@@ -312,13 +306,11 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* Slot-Positionen WFace */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* KIP Gruppe */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -421,20 +413,16 @@
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W Paket -->
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
         <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace" aria-label="Würfelfläche"></div>
 
-        <!-- WFace: Zahlenfuß korrekt zum Farbfeld links -->
         <div class="slot s-3b read-west"  data-slot="S1"><div class="num"><span></span></div></div>
         <div class="slot s-4b read-west"  data-slot="S2"><div class="num"><span></span></div></div>
-
         <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- KIP Gruppe -->
       <div id="kipGroup" class="kipGroup" aria-label="KIP Gruppe">
         <div class="kipShadow" aria-hidden="true"></div>
         <div class="kipEdgeCore" aria-hidden="true"></div>
@@ -442,13 +430,11 @@
         <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
         <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
 
-        <!-- W2-Links (Q0) -->
         <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
         <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
         <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
         <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
 
-        <!-- W1-Rechts (Q1) -->
         <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
         <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
         <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
@@ -535,7 +521,21 @@
       if (number === 6 || number === 9) span.classList.add("dot");
     }
 
+    function clearSpan(span){
+      if(!span) return;
+      span.classList.remove("dot","num10","num11");
+      span.innerHTML = "";
+      span.textContent = "";
+      span.removeAttribute("data-val");
+    }
+
     function renderNumber(span, n){
+      // n === null => leer lassen
+      if(n === null || n === undefined){
+        clearSpan(span);
+        return;
+      }
+
       span.classList.remove("num10","num11");
       span.innerHTML = "";
       span.dataset.val = String(n);
@@ -564,21 +564,37 @@
     }
 
     // =========================================================
-    // W1/W2/W3 Zahlen (12er-Puls) + Rotation
+    // LOGIK NEU (dein Physik-Modell):
+    // - 12 Zahlen werden zwar vorbereitet,
+    // - aber Bestückung passiert nur in 100% Ansicht:
+    //   W1 sofort, W2 erst wenn W2 "aufliegt", W3 erst wenn W3 "aufliegt".
+    // - 50% Kippansicht zeigt nur bereits bestückte Flächen, sonst leer.
     // =========================================================
-    let sets = [
-      [0,0,0,0], // W1
-      [0,0,0,0], // W2
-      [0,0,0,0], // W3
+
+    // vorbereitete Gruppen (werden in sets geschrieben, sobald "bestückt")
+    let planned = [
+      [null,null,null,null], // W1 geplant
+      [null,null,null,null], // W2 geplant
+      [null,null,null,null], // W3 geplant
     ];
 
-    let rotIndex  = 0; // 0..3 => 0/90/180/270
-    let faceIndex = 0; // 0..2 => W1/W2/W3
+    // wirklich bestückte Flächen (null = leer)
+    let sets = [
+      [null,null,null,null], // W1
+      [null,null,null,null], // W2
+      [null,null,null,null], // W3
+    ];
+
+    let assigned = [false, false, false]; // W1/W2/W3 schon bestückt?
+
+    let rotIndex  = 0; // 0..3
+    let faceIndex = 0; // 0..2 (welche Fläche liegt in 100% "oben")
     const rotDeg = [0, 90, 180, 270];
 
-    // +1 = CW, -1 = CCW
-    let plannedDir = +1;
+    // geplante Richtung für Kipp-Preview (nur Anzeige)
+    let plannedDir = +1; // +1 CW, -1 CCW
 
+    // Targets 100%
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
@@ -586,6 +602,7 @@
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
+    // Targets 50% rechts = aktuelle Fläche, links = nächste Fläche (Preview)
     const slotTargetsKipRight = [
       kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
@@ -600,15 +617,12 @@
       kipGroup.querySelector('[data-slot="W2_D"] .num > span'),
     ];
 
-    // =========================================================
-    // FIX: KIP 50% -> Zahlenpaare tauschen (Achse <-> Boxrand)
-    // Slot-Reihenfolge in KIP-Arrays:
-    //   [0,1] = Achse-Paar, [2,3] = Boxrand-Paar
-    // Gewünscht: Paare als BLOCK tauschen, interne Reihenfolge bleibt
-    // =========================================================
-    function mapForKip(nums){
-      // Achsen-Slots bekommen das bisherige Rand-Paar, Rand-Slots bekommen das bisherige Achsen-Paar
-      return [nums[2], nums[3], nums[0], nums[1]];
+    function ensureAssigned(idx){
+      if(assigned[idx]) return;
+
+      // Bestückung: 1:1 die geplante 4er-Gruppe übernehmen
+      sets[idx] = planned[idx].slice();
+      assigned[idx] = true;
     }
 
     function applyRotationAndNumbers(){
@@ -616,56 +630,77 @@
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
 
-      // WFace: IMMER aktuelle Fläche (faceIndex) unverändert
-      const curr = sets[faceIndex] || sets[0];
+      // 100%: zeigt aktuelle Fläche. Wenn (theoretisch) noch leer -> leer.
+      const curr = sets[faceIndex];
 
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i]);
-        setDot(slotTargetsW[i], curr[i]);
+        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
+        else slotTargetsW[i].classList.remove("dot");
       }
 
-      // KIP: rechts = aktuelle, links = nächste (plannedDir)
+      // 50%: rechts = aktuelle Fläche (nur wenn bestückt), links = nächste (nur wenn bestückt)
       const nextFaceIndex = (plannedDir === +1)
         ? (faceIndex + 1) % 3
         : (faceIndex + 2) % 3;
 
-      const next = sets[nextFaceIndex] || sets[0];
-
-      // >>> nur in KIP paare tauschen <<<
-      const currK = mapForKip(curr);
-      const nextK = mapForKip(next);
+      const next = sets[nextFaceIndex];
 
       // rechts (aktuell)
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], currK[i]);
-        setDot(slotTargetsKipRight[i], currK[i]);
+        renderNumber(slotTargetsKipRight[i], curr[i]);
+        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
+        else slotTargetsKipRight[i].classList.remove("dot");
       }
 
       // links (nächste)
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], nextK[i]);
-        setDot(slotTargetsKipLeft[i], nextK[i]);
+        renderNumber(slotTargetsKipLeft[i], next[i]);
+        if(next[i] !== null && next[i] !== undefined) setDot(slotTargetsKipLeft[i], next[i]);
+        else slotTargetsKipLeft[i].classList.remove("dot");
       }
     }
 
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
 
-      sets[0] = twelve.slice(0,4);   // W1
-      sets[1] = twelve.slice(4,8);   // W2
-      sets[2] = twelve.slice(8,12);  // W3
+      planned[0] = twelve.slice(0,4);    // W1 geplant
+      planned[1] = twelve.slice(4,8);    // W2 geplant
+      planned[2] = twelve.slice(8,12);   // W3 geplant
 
+      // alles leer setzen
+      sets = [
+        [null,null,null,null],
+        [null,null,null,null],
+        [null,null,null,null],
+      ];
+      assigned = [false,false,false];
+
+      // Startzustand: W1 liegt auf und wird bestückt
       rotIndex  = 0;
       faceIndex = 0;
       plannedDir = +1;
+
+      ensureAssigned(0); // W1 bestücken
       applyRotationAndNumbers();
     }
+
+    // =========================================================
+    // STEP: In 100% Ansicht gilt:
+    // - Wenn neue Fläche "aufliegt" => jetzt bestücken (falls noch leer)
+    // In 50% Ansicht (kipOn) wird NICHT bestückt.
+    // =========================================================
+    let kipOn = false;
 
     function stepCW(){
       plannedDir = +1;
 
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
+
+      if(!kipOn){
+        ensureAssigned(faceIndex); // erst beim Aufliegen in 100%
+      }
 
       applyRotationAndNumbers();
     }
@@ -676,14 +711,16 @@
       rotIndex  = (rotIndex + 3) % 4;
       faceIndex = (faceIndex + 2) % 3;
 
+      if(!kipOn){
+        ensureAssigned(faceIndex);
+      }
+
       applyRotationAndNumbers();
     }
 
     // =========================================================
     // KIP-TOGGLE
     // =========================================================
-    let kipOn = false;
-
     function setKipMode(on){
       kipOn = !!on;
 
@@ -694,6 +731,9 @@
         kipGroup.style.display = "none";
         wFace.style.display = "block";
       }
+
+      // nur Anzeige neu zeichnen
+      applyRotationAndNumbers();
     }
 
     // ===== Buttons =====
