@@ -321,10 +321,13 @@
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
+      /* FIX:
+         In 50% muss erst rotiert werden und dann in Screen-X skaliert.
+         Dafür rotate() und scaleX() tauschen. */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
-        rotate(var(--rot))
         scaleX(0.5)
+        rotate(var(--rot))
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
       will-change: transform;
@@ -563,14 +566,6 @@
       return pool.slice(0, count);
     }
 
-    // =========================================================
-    // LOGIK NEU (dein Physik-Modell):
-    // - 12 Zahlen werden zwar vorbereitet,
-    // - aber Bestückung passiert nur in 100% Ansicht:
-    //   W1 sofort, W2 erst wenn W2 "aufliegt", W3 erst wenn W3 "aufliegt".
-    // - 50% Kippansicht zeigt nur bereits bestückte Flächen, sonst leer.
-    // =========================================================
-
     // vorbereitete Gruppen (werden in sets geschrieben, sobald "bestückt")
     let planned = [
       [null,null,null,null], // W1 geplant
@@ -685,11 +680,6 @@
       applyRotationAndNumbers();
     }
 
-    // =========================================================
-    // STEP: In 100% Ansicht gilt:
-    // - Wenn neue Fläche "aufliegt" => jetzt bestücken (falls noch leer)
-    // In 50% Ansicht (kipOn) wird NICHT bestückt.
-    // =========================================================
     let kipOn = false;
 
     function stepCW(){
@@ -718,9 +708,6 @@
       applyRotationAndNumbers();
     }
 
-    // =========================================================
-    // KIP-TOGGLE
-    // =========================================================
     function setKipMode(on){
       kipOn = !!on;
 
@@ -732,7 +719,6 @@
         wFace.style.display = "block";
       }
 
-      // nur Anzeige neu zeichnen
       applyRotationAndNumbers();
     }
 
