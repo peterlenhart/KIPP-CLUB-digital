@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – W1/W2/W3 Rotation (Pivot-Ecke)</title>
+  <title>KIPP – 8×8 Raster</title>
 
   <style>
     :root{
@@ -24,7 +24,7 @@
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
-      /* Innenrahmen */
+      /* W1 Innenrahmen (Gamma-Rand) */
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -39,11 +39,7 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Zahlendrehung (dein Setup) */
       --rotSign: 1;
-
-      /* ROTATION STATE */
-      --rot: 0deg;
     }
 
     html, body { height: 100%; }
@@ -158,7 +154,11 @@
         inset  0  26px 40px rgba(0,0,0,0.30);
     }
 
-    /* Kugel */
+    /* ==========================
+       Ebenen-Reihenfolge fix:
+       Boden (floor) -> Kugel -> Schatten -> Würfel -> Slots -> Zahlen
+       ========================== */
+
     .ball{
       position:absolute;
       left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
@@ -172,105 +172,64 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 3;
+      z-index: 4; /* Kugel unter Schatten */
       pointer-events: none;
     }
 
-    /* =========================================================
-       WFaceGroup = DAS PAKET (Rotation bleibt exakt wie bei dir)
-       ========================================================= */
-    .wFaceGroup{
+    /* ==========================
+       W2->W1 KIP-Gruppe (Phantom-Methode)
+       Alles, was mitskalieren soll, liegt IN dieser Gruppe.
+       ========================== */
+
+    .kipGroup{
       position:absolute;
       inset:0;
-      z-index: 4;
+      z-index: 5;          /* über Kugel, unter Würfel/Slots intern geregelt */
       pointer-events:none;
 
-      /* Pivot im Board: Mitte = 4*step (bei 8x8) */
-      --pivot-x: calc(4 * var(--step));
-      --pivot-y: calc(4 * var(--step));
-
-      transform:
-        translate(var(--pivot-x), var(--pivot-y))
-        rotate(var(--rot))
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
-      transform-origin: 0 0;
-      will-change: transform;
+      /* Skalierachse = senkrechte Mittellinie der Box */
+      transform-origin: calc(4 * var(--step)) 50%;
+    }
+    .kipGroup.kip50{
+      transform: scaleX(0.5);
     }
 
-    /* ======= WICHTIG: KIP50 wird NICHT mehr am wFaceGroup skaliert! ======= */
-    /* (der alte scaleX(0.5) am Container war genau das, was alles "verzogen" hat) */
-
-    /* ---------- Normalansicht (W1 mit Schlagschatten) ---------- */
-    .normalFace{ position:absolute; inset:0; }
-
-    /* ---------- KIP50-Ansicht (neu nach deinen 7 Punkten) ---------- */
-    .kip50Layer{ position:absolute; inset:0; display:none; }
-
-    /* Wenn kip50 aktiv: normal aus, kipLayer ein */
-    .wFaceGroup.kip50 .normalFace{ display:none; }
-    .wFaceGroup.kip50 .kip50Layer{ display:block; }
-
-    /* Punkt 7:
-       Beide (W1ohne@Q1 und W1ohne-gespiegelt@Q0) werden 50% skaliert
-       um die Achse zwischen Spalte D/E = x = pivot-x.
-       => Nur X-Skalierung, um pivot-x "geankert".
-    */
-    .wFaceGroup.kip50 .kip50Layer{
-      transform:
-        translateX(var(--pivot-x))
-        scaleX(0.5)
-        translateX(calc(-1 * var(--pivot-x)));
-      transform-origin: 0 0;
-    }
-
-    /* Punkt 3:
-       W1ohne auf Q1 platzieren (Q0->Q1 = +3*step nach Osten)
-       => Wir definieren eine "Basis" in Q1
-    */
-    .kipA, .kipB{
+    /* Schatten (Phantom) – wird garantiert mitskaliert */
+    .kipShadow{
       position:absolute;
-      inset:0;
-      transform: translateX(calc(3 * var(--step)));
-      transform-origin: 0 0;
-      pointer-events:none;
-    }
-
-    /* Punkt 5 + 6:
-       Kopie von W1ohne (die in Q1 liegt) um die vertikale Mittelachse (D/E) spiegeln.
-       Dadurch landet sie automatisch in Q0 (links), ohne dass wir extra "nach links" rechnen müssen.
-       Spiegelachse = x = pivot-x.
-    */
-    .kipB{
-      transform:
-        translateX(calc(3 * var(--step)))
-        translateX(var(--pivot-x))
-        scaleX(-1)
-        translateX(calc(-1 * var(--pivot-x)));
-      transform-origin: 0 0;
-    }
-
-    /* =========================================================
-       Bauteile (Face / Shadow / Slots / Numbers)
-       ========================================================= */
-
-    /* Schlagschatten (nur in NORMAL!) */
-    .cubeShadow{
-      position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      left: calc(1 * var(--step));  /* beginnt bei 2B */
+      top:  calc(1 * var(--step));  /* beginnt bei 2B */
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap)); /* über Q0+Q1 */
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      z-index: 1;
       background: transparent;
+      z-index: 1; /* Schatten liegt über Kugel, aber unter Würfel */
       box-shadow:
         0 22px 26px rgba(0,0,0,0.32),
         0 10px 16px rgba(0,0,0,0.18);
     }
 
+    /* zusätzlicher Kernschatten an der zentralen Würfelkante (Phantom-Kante) */
+    .kipEdgeCore{
+      position:absolute;
+      left: calc(4 * var(--step));  /* Mittellinie zwischen Q0 und Q1 */
+      top:  calc(1 * var(--step));
+      width: 6px;
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      transform: translateX(-50%);
+      background:
+        linear-gradient(90deg,
+          rgba(0,0,0,0.00),
+          rgba(0,0,0,0.28),
+          rgba(0,0,0,0.00)
+        );
+      z-index: 1;
+      filter: blur(0.2px);
+      opacity: 0.95;
+    }
+
+    /* Würfelfläche (wie W1 Holz + Innenrahmen) */
     .cubeFace{
       position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
@@ -293,9 +252,21 @@
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
 
-      z-index: 2;
+      z-index: 2; /* Würfel über Schatten */
     }
 
+    /* Q0 Würfelfläche */
+    .faceQ0{
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
+    }
+    /* Q1 Würfelfläche */
+    .faceQ1{
+      left: calc(4 * var(--step));  /* 2E */
+      top:  calc(1 * var(--step));  /* 2E */
+    }
+
+    /* Slots (wie gehabt) */
     .slot{
       position:absolute;
       width: var(--cell);
@@ -309,7 +280,7 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 3;
+      z-index: 3; /* Slots über Würfel */
 
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
@@ -325,8 +296,12 @@
       align-items:center;
       justify-content:center;
       user-select:none;
-      z-index: 4;
+      z-index: 4; /* Zahlen über Slot */
     }
+
+    /* ==========================
+       TYPO: Optik/Kerning
+       ========================== */
 
     .slot .num > span{
       display:inline-flex;
@@ -334,18 +309,21 @@
       justify-content:center;
       font-weight: 900;
       color: #111;
-      font-size: calc(var(--cell) * 0.62);
+      font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
-      line-height: 1;
     }
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
+
     .slot .num > span[data-val="6"],
-    .slot .num > span[data-val="9"]{ --opt-x: -2px; }
+    .slot .num > span[data-val="9"]{
+      --opt-x: -2px;
+    }
 
     .slot .num > span .d{ display:inline-block; line-height: 1; }
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
@@ -369,11 +347,33 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* Slot-Positionen für EIN Face in Q0 */
-    .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
-    .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
+    /* ==========================
+       Slot-Positionen (W2–W1–KIP)
+       gefordert: 4D, 3D, 2B, 2C, 3E, 4E, 2G, 2F
+       Raster: row/col -> top/left = (row-1)/(col-1) * step
+       ========================== */
+
+    /* 4D */
+    .s-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
+    /* 3D */
+    .s-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
+    /* 2B */
+    .s-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    /* 2C */
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
-    .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* 3E */
+    .s-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
+    /* 4E */
+    .s-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    /* 2F */
+    .s-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    /* 2G */
+    .s-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* ==========================
+       Controls
+       ========================== */
 
     .controls{
       width: 100%;
@@ -412,83 +412,55 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
+
+      <!-- Raster -->
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ROTIERBARES PAKET -->
-      <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
+      <!-- KIP-Gruppe (W2 -> W1 KIP) -->
+      <div id="kipGroup" class="kipGroup" aria-label="W2–W1 KIP Gruppe">
+        <!-- Schatten: Kugel darunter, Würfel darüber -->
+        <div class="kipShadow" aria-hidden="true"></div>
+        <div class="kipEdgeCore" aria-hidden="true"></div>
 
-        <!-- =======================
-             NORMAL: W1 (mit Schlagschatten)
-             ======================= -->
-        <div class="normalFace" aria-hidden="false">
-          <div class="cubeShadow" aria-hidden="true"></div>
-          <div class="cubeFace" aria-label="Würfelfläche"></div>
+        <!-- Zwei Würfelflächen (aus W1-Optik abgenommen) -->
+        <div class="cubeFace faceQ0" aria-label="Würfelfläche Q0"></div>
+        <div class="cubeFace faceQ1" aria-label="Würfelfläche Q1"></div>
 
-          <div class="slot s-3b read-east"  data-slot="S1"><div class="num"><span></span></div></div>
-          <div class="slot s-4b read-east"  data-slot="S2"><div class="num"><span></span></div></div>
-          <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
-          <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
-        </div>
+        <!-- 8 Slots (Positionen wie angegeben) -->
+        <div class="slot s-4d read-south" data-slot="W2_A"><div class="num"><span></span></div></div>
+        <div class="slot s-3d read-south" data-slot="W2_B"><div class="num"><span></span></div></div>
+        <div class="slot s-2b read-south" data-slot="W2_C"><div class="num"><span></span></div></div>
+        <div class="slot s-2c read-south" data-slot="W2_D"><div class="num"><span></span></div></div>
 
-        <!-- =======================
-             KIP50: neu nach 7 Punkten
-             - KEIN cubeShadow (Schlagschatten weg)
-             - W1ohne @ Q1
-             - Kopie gespiegelt um D/E => landet @ Q0
-             - beide gemeinsam scaleX(0.5) um D/E
-             ======================= -->
-        <div class="kip50Layer" aria-hidden="true">
-
-          <!-- A = W1ohne auf Q1 -->
-          <div class="kipA" aria-hidden="true">
-            <div class="cubeFace" aria-label="Würfelfläche (ohne Schlagschatten)"></div>
-
-            <div class="slot s-3b read-east"  data-slot="K1A"><div class="num"><span></span></div></div>
-            <div class="slot s-4b read-east"  data-slot="K2A"><div class="num"><span></span></div></div>
-            <div class="slot s-2c read-north" data-slot="K3A"><div class="num"><span></span></div></div>
-            <div class="slot s-2d read-north" data-slot="K4A"><div class="num"><span></span></div></div>
-          </div>
-
-          <!-- B = Kopie von A, gespiegelt um D/E => Q0 -->
-          <div class="kipB" aria-hidden="true">
-            <div class="cubeFace" aria-label="Würfelfläche gespiegelt (ohne Schlagschatten)"></div>
-
-            <div class="slot s-3b read-east"  data-slot="K1B"><div class="num"><span></span></div></div>
-            <div class="slot s-4b read-east"  data-slot="K2B"><div class="num"><span></span></div></div>
-            <div class="slot s-2c read-north" data-slot="K3B"><div class="num"><span></span></div></div>
-            <div class="slot s-2d read-north" data-slot="K4B"><div class="num"><span></span></div></div>
-          </div>
-
-        </div>
+        <!-- Rechte Seite (skalierte W1): diese 4 Slots bekommen die W1-Zahlen -->
+        <div class="slot s-3e read-east"  data-slot="W1_1"><div class="num"><span></span></div></div>
+        <div class="slot s-4e read-east"  data-slot="W1_2"><div class="num"><span></span></div></div>
+        <div class="slot s-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+        <div class="slot s-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
       </div>
 
+      <!-- Kugel (unter Schatten!) -->
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
     <div class="controls">
-      <button id="btnMix" class="btn">Würfel mischen (12)</button>
+      <button id="btnBestuecken" class="btn">Würfel mischen</button>
       <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
-      <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
-      <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
     </div>
   </div>
 
   <script>
-    const boardEl  = document.getElementById("board");
-    const grid     = document.getElementById("grid");
-    const wFace    = document.getElementById("wFaceGroup");
-
-    const btnMix   = document.getElementById("btnMix");
+    const boardEl = document.getElementById("board");
+    const grid = document.getElementById("grid");
+    const btnMix = document.getElementById("btnBestuecken");
     const btnKip50 = document.getElementById("btnKip50");
-    const btnCW    = document.getElementById("btnCW");
-    const btnCCW   = document.getElementById("btnCCW");
+    const kipGroup = document.getElementById("kipGroup");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
     }
 
-    // ===== Raster farbig wie bisher =====
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -533,13 +505,23 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering (10/11 Kerning + 6/9 Punkt) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
       if (number === 6 || number === 9) span.classList.add("dot");
     }
 
+    function getUniqueRandomNumbers(count, min, max){
+      const pool = [];
+      for(let i=min; i<=max; i++) pool.push(i);
+      for(let i=pool.length-1; i>0; i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, count);
+    }
+
+    // rendern: 10/11 als zwei Digits (für Kerning)
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
       span.innerHTML = "";
@@ -558,118 +540,68 @@
       span.textContent = String(n);
     }
 
-    function getUniqueRandomNumbers(count, min, max){
-      const pool = [];
-      for(let i=min; i<=max; i++) pool.push(i);
-      for(let i=pool.length-1; i>0; i--){
-        const j = Math.floor(Math.random() * (i+1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      return pool.slice(0, count);
+    // ==========================
+    // W1 ist "unsichtbar" (kein DOM).
+    // Wir halten nur die 4 Random-Werte als State.
+    // ==========================
+
+    let w1Nums = [0,0,0,0];
+
+    function setRandomW1(){
+      w1Nums = getUniqueRandomNumbers(4, 0, 11);
     }
 
-    // =========================================================
-    // 4er-Rotation (0/90/180/270)
-    // =========================================================
-    let sets = [
-      [0,0,0,0], // W1
-      [0,0,0,0], // W2
-      [0,0,0,0], // W3
-      [0,0,0,0], // 270° = wieder W1
-    ];
+    // Rechte Seite (W1 wandert nach rechts): Slots W1_1..W1_4 bekommen w1Nums
+    function applyW1ToRightSlots(){
+      const targets = [
+        kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
+        kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
+        kipGroup.querySelector('[data-slot="W1_3"] .num > span'),
+        kipGroup.querySelector('[data-slot="W1_4"] .num > span'),
+      ];
 
-    let rotIndex = 0;
-    const rotDeg = [0, 90, 180, 270];
-
-    // Targets normal
-    const slotTargets = [
-      wFace.querySelector('[data-slot="S1"] .num > span'),
-      wFace.querySelector('[data-slot="S2"] .num > span'),
-      wFace.querySelector('[data-slot="S3"] .num > span'),
-      wFace.querySelector('[data-slot="S4"] .num > span'),
-    ];
-
-    // Targets KIP50 A
-    const kipTargetsA = [
-      wFace.querySelector('[data-slot="K1A"] .num > span'),
-      wFace.querySelector('[data-slot="K2A"] .num > span'),
-      wFace.querySelector('[data-slot="K3A"] .num > span'),
-      wFace.querySelector('[data-slot="K4A"] .num > span'),
-    ];
-
-    // Targets KIP50 B
-    const kipTargetsB = [
-      wFace.querySelector('[data-slot="K1B"] .num > span'),
-      wFace.querySelector('[data-slot="K2B"] .num > span'),
-      wFace.querySelector('[data-slot="K3B"] .num > span'),
-      wFace.querySelector('[data-slot="K4B"] .num > span'),
-    ];
-
-    function applyRotationAndNumbers(){
-      // Rotation bleibt wie gehabt
-      const deg = rotDeg[rotIndex];
-      wFace.style.setProperty("--rot", deg + "deg");
-
-      // Zahlen
-      const nums = sets[rotIndex] || sets[0];
-
-      // Normal
       for(let i=0;i<4;i++){
-        renderNumber(slotTargets[i], nums[i]);
-        setDot(slotTargets[i], nums[i]);
-      }
-      // KIP50 A
-      for(let i=0;i<4;i++){
-        renderNumber(kipTargetsA[i], nums[i]);
-        setDot(kipTargetsA[i], nums[i]);
-      }
-      // KIP50 B
-      for(let i=0;i<4;i++){
-        renderNumber(kipTargetsB[i], nums[i]);
-        setDot(kipTargetsB[i], nums[i]);
+        const sp = targets[i];
+        const n = w1Nums[i];
+        renderNumber(sp, n);
+        setDot(sp, n);
       }
     }
 
-    function reroll12(){
-      const twelve = getUniqueRandomNumbers(12, 0, 11);
-
-      sets[0] = twelve.slice(0,4);   // W1 / 0°
-      sets[1] = twelve.slice(4,8);   // W2 / 90°
-      sets[2] = twelve.slice(8,12);  // W3 / 180°
-      sets[3] = sets[0].slice();     // 270° = wieder W1
-
-      rotIndex = 0;
-      applyRotationAndNumbers();
+    // Linke (neue) Slots bleiben erstmal leer (W2 kommt später)
+    function clearLeftSlots(){
+      const leftKeys = ["W2_A","W2_B","W2_C","W2_D"];
+      leftKeys.forEach(k=>{
+        const sp = kipGroup.querySelector(`[data-slot="${k}"] .num > span`);
+        if(!sp) return;
+        sp.classList.remove("dot","num10","num11");
+        sp.innerHTML = "";
+        sp.textContent = "";
+        sp.removeAttribute("data-val");
+      });
     }
 
-    function stepCW(){
-      rotIndex = (rotIndex + 1) % 4;
-      applyRotationAndNumbers();
+    function reroll(){
+      setRandomW1();
+      applyW1ToRightSlots();
+      clearLeftSlots();
     }
 
-    function stepCCW(){
-      rotIndex = (rotIndex + 3) % 4;
-      applyRotationAndNumbers();
-    }
-
-    // ===== Buttons =====
-    btnMix.addEventListener("click", reroll12);
-
-    btnKip50.addEventListener("click", () => {
-      wFace.classList.toggle("kip50");
+    btnMix.addEventListener("click", () => {
+      reroll();
     });
 
-    btnCW.addEventListener("click", stepCW);
-    btnCCW.addEventListener("click", stepCCW);
+    btnKip50.addEventListener("click", () => {
+      kipGroup.classList.toggle("kip50");
+    });
 
-    // ===== Init =====
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      reroll12();
+      reroll();
     });
 
     window.addEventListener("resize", () => {
