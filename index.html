@@ -251,7 +251,8 @@
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
 
-      z-index: 3;
+      /* >>> übernommen aus Zahlen-Code: Slot-Ebene hart über allem in der Gruppe */
+      z-index: 7;
 
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
@@ -267,19 +268,31 @@
       align-items:center;
       justify-content:center;
       user-select:none;
-      z-index: 4;
+
+      /* >>> sicher über Slot-Hintergrund */
+      z-index: 9;
     }
 
+    /* ==========================
+       TYPO: Optik/Kerning (1:1 aus dem funktionierenden Zahlen-Code)
+       ========================== */
     .slot .num > span{
       display:inline-flex;
       align-items:center;
       justify-content:center;
+
       font-weight: 900;
       color: #111;
-      font-size: calc(var(--cell) * 0.62);
+
+      /* aus funktionierendem Code */
+      font-size: clamp(18px, 8vmin, 36px);
+
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+
+      /* translate kommt VOR Rotation => Shift dreht mit */
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
+
       position: relative;
       line-height: 1;
     }
@@ -321,14 +334,8 @@
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
     /* =========================================================
-       KIP-GRUPPE (aus deinem "guten KIP-Code" übernommen)
-       - NICHT rotieren, NICHT anfassen   <-- (bis auf genau die Rotationsfunktion)
-       - Button zeigt diese Gruppe und skaliert sie 50% an Achse D/E
+       KIP-GRUPPE (rotierend um Kugelmittelpunkt, 50% scaleX bleibt)
        ========================================================= */
-
-    /* >>> FIX: KIP-GRUPPE rotiert jetzt ebenfalls um Kugelmittelpunkt,
-              50%-Skalierung bleibt erhalten (scaleX 0.5).
-              Sonst unverändert. */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -336,11 +343,9 @@
       pointer-events:none;
       display:none;
 
-      /* Pivot im Board: Mitte = 4*step (bei 8x8) */
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
-      /* Rotation + 50%-ScaleX um denselben Pivot */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
         rotate(var(--rot))
@@ -447,8 +452,8 @@
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- KIP: korrekte KIP-Gruppe (aus deinem funktionierenden KIP-Code) -->
-      <div id="kipGroup" class="kipGroup kip50" aria-label="KIP Gruppe">
+      <!-- KIP: korrekte KIP-Gruppe -->
+      <div id="kipGroup" class="kipGroup" aria-label="KIP Gruppe">
         <div class="kipShadow" aria-hidden="true"></div>
         <div class="kipEdgeCore" aria-hidden="true"></div>
 
@@ -541,7 +546,7 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering (10/11 Kerning + 6/9 Punkt) =====
+    // ===== Zahlenrendering (1:1 aus funktionierendem Code) =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -577,7 +582,7 @@
     }
 
     // =========================================================
-    // ROTATION (dein aktueller Code, unverändert)
+    // ROTATION (wie gehabt)
     // =========================================================
     let sets = [
       [0,0,0,0], // W1
@@ -596,7 +601,6 @@
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    // KIP-Rechts-Slots (bekommen W1/W2/W3 je nach Rotation-State – nur Zahlen, keine Bewegung)
     const slotTargetsKipRight = [
       kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
@@ -619,33 +623,30 @@
     function applyRotationAndNumbers(){
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
-
-      /* >>> FIX: KIP-Gruppe bekommt denselben Rotationswinkel (nur Rotation, sonst nichts) */
       kipGroup.style.setProperty("--rot", deg + "deg");
 
       const nums = sets[rotIndex] || sets[0];
 
-      // WFace Zahlen
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], nums[i]);
         setDot(slotTargetsW[i], nums[i]);
       }
 
-      // KIP: rechte Seite bekommt die gleichen 4 Werte (nur Anzeige)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], nums[i]);
         setDot(slotTargetsKipRight[i], nums[i]);
       }
+
       clearKipLeftSlots();
     }
 
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
 
-      sets[0] = twelve.slice(0,4);   // W1 / 0°
-      sets[1] = twelve.slice(4,8);   // W2 / 90°
-      sets[2] = twelve.slice(8,12);  // W3 / 180°
-      sets[3] = sets[0].slice();     // 270° = wieder W1
+      sets[0] = twelve.slice(0,4);
+      sets[1] = twelve.slice(4,8);
+      sets[2] = twelve.slice(8,12);
+      sets[3] = sets[0].slice();
 
       rotIndex = 0;
       applyRotationAndNumbers();
@@ -662,7 +663,7 @@
     }
 
     // =========================================================
-    // KIP-TOGGLE: zeigt KIP-Gruppe korrekt, ohne Rotation-Experimente
+    // KIP-TOGGLE
     // =========================================================
     let kipOn = false;
 
@@ -670,7 +671,6 @@
       kipOn = !!on;
 
       if(kipOn){
-        // Nur Anzeige umschalten:
         wFace.style.display = "none";
         kipGroup.style.display = "block";
       }else{
@@ -697,8 +697,6 @@
 
       buildGridOnce();
       reroll12();
-
-      // Startzustand: KIP aus (Rotation/W1 sichtbar)
       setKipMode(false);
     });
 
