@@ -271,7 +271,6 @@
 
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
-
       position: relative;
       line-height: 1;
     }
@@ -321,10 +320,10 @@
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
+      /* ✅ FIX: KEIN scaleX -> keine Verzerrung */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
         rotate(var(--rot))
-        scaleX(0.5)
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
       will-change: transform;
@@ -563,28 +562,42 @@
     }
 
     // =========================================================
-    // LOGIK NEU: Bestückung nur in 100% Ansicht
+    // ✅ FIX LOGIK: "Zahlenpaare bleiben stabil"
+    // Wenn neue Fläche (W2, W3) erstmals auftaucht,
+    // dann wird die 4er-Gruppe so übernommen, dass die Paare
+    // NICHT untereinander tauschen können: [0,1,2,3] -> [1,0,3,2]
+    // => Paarweise Spiegelung, Fuß-zu-Fuß bleibt konsistent.
+    // W1 bleibt original (Startfläche).
     // =========================================================
+    const PAIR_SWAP = [1,0,3,2];
+    function applyPerm(arr, perm){
+      return perm.map(i => arr[i]);
+    }
+
+    // vorbereitete Gruppen (werden in sets geschrieben, sobald "bestückt")
     let planned = [
       [null,null,null,null], // W1 geplant
       [null,null,null,null], // W2 geplant
       [null,null,null,null], // W3 geplant
     ];
 
+    // wirklich bestückte Flächen (null = leer)
     let sets = [
       [null,null,null,null], // W1
       [null,null,null,null], // W2
       [null,null,null,null], // W3
     ];
 
-    let assigned = [false, false, false];
+    let assigned = [false, false, false]; // W1/W2/W3 schon bestückt?
 
-    let rotIndex  = 0;
-    let faceIndex = 0;
+    let rotIndex  = 0; // 0..3
+    let faceIndex = 0; // 0..2 (welche Fläche liegt in 100% "oben")
     const rotDeg = [0, 90, 180, 270];
 
-    let plannedDir = +1;
+    // geplante Richtung für Kipp-Preview (nur Anzeige)
+    let plannedDir = +1; // +1 CW, -1 CCW
 
+    // Targets 100%
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
@@ -592,43 +605,30 @@
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    // KIP rechts = aktuelle Fläche (Q1)
+    // Targets 50% rechts = aktuelle Fläche, links = nächste Fläche (Preview)
     const slotTargetsKipRight = [
-      kipGroup.querySelector('[data-slot="W1_1"] .num > span'), // axis oben
-      kipGroup.querySelector('[data-slot="W1_2"] .num > span'), // axis unten
-      kipGroup.querySelector('[data-slot="W1_3"] .num > span'), // rand links
-      kipGroup.querySelector('[data-slot="W1_4"] .num > span'), // rand rechts
+      kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
+      kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
+      kipGroup.querySelector('[data-slot="W1_3"] .num > span'),
+      kipGroup.querySelector('[data-slot="W1_4"] .num > span'),
     ];
 
-    // =========================
-    // FIX A: Links (Q0) Achsenpaar korrekt "oben -> unten"
-    // Vorher war es unten/oben => daraus entstehen 58/85-Dreher.
-    // Reihenfolge muss sein: (k-3d oben) dann (k-4d unten).
-    // =========================
     const slotTargetsKipLeft = [
-      kipGroup.querySelector('[data-slot="W2_B"] .num > span'), // axis oben  (k-3d)
-      kipGroup.querySelector('[data-slot="W2_A"] .num > span'), // axis unten (k-4d)
-      kipGroup.querySelector('[data-slot="W2_C"] .num > span'), // rand links (k-2b)
-      kipGroup.querySelector('[data-slot="W2_D"] .num > span'), // rand rechts(k-2c)
+      kipGroup.querySelector('[data-slot="W2_A"] .num > span'),
+      kipGroup.querySelector('[data-slot="W2_B"] .num > span'),
+      kipGroup.querySelector('[data-slot="W2_C"] .num > span'),
+      kipGroup.querySelector('[data-slot="W2_D"] .num > span'),
     ];
 
     function ensureAssigned(idx){
       if(assigned[idx]) return;
-      sets[idx] = planned[idx].slice();
-      assigned[idx] = true;
-    }
 
-    // =========================
-    // FIX B: "erst auftauchende" Fläche (Preview links) tauscht Paare:
-    // - Rand-Paar rauf an Achse
-    // - Achsen-Paar runter an Rand
-    // ABER: Reihenfolge innerhalb der Paare bleibt gleich!
-    // mapping: [A,B,C,D] (A,B=Achse; C,D=Rand) -> [C,D,A,B]
-    // =========================
-    function swapPairsForPreview(faceArr){
-      if(!faceArr) return [null,null,null,null];
-      const a = faceArr[0], b = faceArr[1], c = faceArr[2], d = faceArr[3];
-      return [c, d, a, b];
+      // W1: original
+      // W2/W3: paarweise Spiegelung, damit sich Paare nie untereinander tauschen
+      const base = planned[idx].slice();
+      sets[idx] = (idx === 0) ? base : applyPerm(base, PAIR_SWAP);
+
+      assigned[idx] = true;
     }
 
     function applyRotationAndNumbers(){
@@ -638,7 +638,6 @@
 
       const curr = sets[faceIndex];
 
-      // 100% (immer 1:1)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
@@ -651,19 +650,15 @@
 
       const next = sets[nextFaceIndex];
 
-      // 50% rechts = aktuelle Fläche 1:1
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // 50% links = "erst auftauchende" Fläche => Paare tauschen (deine Regel)
-      const nextForPreview = swapPairsForPreview(next);
-
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], nextForPreview[i]);
-        if(nextForPreview[i] !== null && nextForPreview[i] !== undefined) setDot(slotTargetsKipLeft[i], nextForPreview[i]);
+        renderNumber(slotTargetsKipLeft[i], next[i]);
+        if(next[i] !== null && next[i] !== undefined) setDot(slotTargetsKipLeft[i], next[i]);
         else slotTargetsKipLeft[i].classList.remove("dot");
       }
     }
@@ -671,9 +666,9 @@
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
 
-      planned[0] = twelve.slice(0,4);
-      planned[1] = twelve.slice(4,8);
-      planned[2] = twelve.slice(8,12);
+      planned[0] = twelve.slice(0,4);    // W1 geplant
+      planned[1] = twelve.slice(4,8);    // W2 geplant
+      planned[2] = twelve.slice(8,12);   // W3 geplant
 
       sets = [
         [null,null,null,null],
@@ -686,7 +681,7 @@
       faceIndex = 0;
       plannedDir = +1;
 
-      ensureAssigned(0);
+      ensureAssigned(0); // W1 bestücken
       applyRotationAndNumbers();
     }
 
@@ -694,6 +689,7 @@
 
     function stepCW(){
       plannedDir = +1;
+
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
 
@@ -705,6 +701,7 @@
 
     function stepCCW(){
       plannedDir = -1;
+
       rotIndex  = (rotIndex + 3) % 4;
       faceIndex = (faceIndex + 2) % 3;
 
@@ -724,6 +721,7 @@
         kipGroup.style.display = "none";
         wFace.style.display = "block";
       }
+
       applyRotationAndNumbers();
     }
 
