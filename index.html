@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – Startablauf (W1 -> KIP50 -> W2) – FIX</title>
+  <title>KIPP – Startablauf (Debug-FIX)</title>
 
   <style>
     :root{
@@ -14,14 +14,12 @@
 
       --cell-gap: 0px;
       --cell-radius: 0px;
-
       --floor: #7a4a34;
 
       --cube-wood-base: #d7c2a4;
       --cube-wood-deep: #c9b08f;
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
-
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -37,13 +35,9 @@
       --btn-border: rgba(0,0,0,0.35);
 
       --rotSign: 1;
-
-      --pivot-x: calc(4 * var(--step));
-      --pivot-y: calc(4 * var(--step));
     }
 
     html, body { height: 100%; }
-
     body{
       margin:0;
       display:flex;
@@ -51,22 +45,9 @@
       background:
         radial-gradient(ellipse at center, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.38) 100%),
         linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.00) 18%, rgba(0,0,0,0.00) 82%, rgba(0,0,0,0.22)),
-        repeating-linear-gradient(
-          90deg,
-          rgba(0,0,0,0.10) 0px,
-          rgba(0,0,0,0.10) 2px,
-          rgba(255,255,255,0.04) 2px,
-          rgba(255,255,255,0.04) 56px
-        ),
-        repeating-linear-gradient(
-          12deg,
-          rgba(0,0,0,0.05) 0px,
-          rgba(0,0,0,0.05) 8px,
-          rgba(255,255,255,0.03) 8px,
-          rgba(255,255,255,0.03) 16px
-        ),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 2px, rgba(255,255,255,0.04) 2px, rgba(255,255,255,0.04) 56px),
+        repeating-linear-gradient(12deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 8px, rgba(255,255,255,0.03) 8px, rgba(255,255,255,0.03) 16px),
         linear-gradient(180deg, #e0b47c, #c89259);
-
       background-attachment: fixed;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
@@ -77,7 +58,6 @@
       display:flex;
       flex-direction: column;
       gap: 14px;
-      justify-content:flex-start;
       align-items:center;
     }
 
@@ -87,20 +67,15 @@
       height: 0;
       aspect-ratio: 1 / 1;
       box-sizing: border-box;
-
       background: #0b0b0b;
-
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
-
       overflow: visible;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
 
-      box-shadow:
-        10px 18px 42px rgba(0,0,0,0.55),
-        3px 6px 16px rgba(0,0,0,0.35);
+      box-shadow: 10px 18px 42px rgba(0,0,0,0.55), 3px 6px 16px rgba(0,0,0,0.35);
     }
 
     .grid{
@@ -113,23 +88,17 @@
       pointer-events: none;
       z-index: 1;
     }
-
     .cell{
       background:#0b0b0b;
       border-radius: var(--cell-radius);
-      box-sizing: border-box;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
     }
-
     .c-orange{ background: var(--orange); }
     .c-gruen { background: var(--gruen);  }
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
-
     .cell.colorCell{
-      box-shadow:
-        inset 0 0 0 2px #000,
-        0 0 0 1px rgba(0,0,0,0.25);
+      box-shadow: inset 0 0 0 2px #000, 0 0 0 1px rgba(0,0,0,0.25);
     }
 
     .floor{
@@ -138,10 +107,7 @@
       top:  var(--step);
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
-        var(--floor);
-      border-radius: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)), var(--floor);
       z-index: 2;
       pointer-events: none;
       box-shadow:
@@ -170,20 +136,15 @@
       pointer-events: none;
     }
 
-    /* -----------------------------
-       Würfel-Optik
-       ----------------------------- */
+    /* Cube */
     .cubeShadow{
       position:absolute;
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));  /* 2B */
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       z-index: 1;
-      background: transparent;
-      box-shadow:
-        0 22px 26px rgba(0,0,0,0.32),
-        0 10px 16px rgba(0,0,0,0.18);
+      box-shadow: 0 22px 26px rgba(0,0,0,0.32), 0 10px 16px rgba(0,0,0,0.18);
       pointer-events:none;
     }
 
@@ -191,26 +152,13 @@
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      box-sizing: border-box;
-      border-radius: 0;
-
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
-        repeating-linear-gradient(
-          20deg,
-          rgba(0,0,0,0.02) 0px,
-          rgba(0,0,0,0.02) 10px,
-          rgba(255,255,255,0.02) 10px,
-          rgba(255,255,255,0.02) 18px
-        ),
+        repeating-linear-gradient(20deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 18px),
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
-
-      box-shadow:
-        inset 0 0 0 2px var(--w1-innerframe),
-        0 0 0 1px rgba(255,255,255,0.08) inset;
-
+      box-shadow: inset 0 0 0 2px var(--w1-innerframe), 0 0 0 1px rgba(255,255,255,0.08) inset;
       z-index: 2;
       pointer-events:none;
     }
@@ -219,24 +167,16 @@
       position:absolute;
       width: var(--cell);
       height: var(--cell);
-      box-sizing: border-box;
-
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
-        var(--slot-fill);
-
+      background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)), var(--slot-fill);
       border: var(--slot-border-w) solid var(--slot-border);
-      border-radius: var(--cell-radius);
-
       z-index: 3;
-
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
         0 3px 5px rgba(0,0,0,0.22),
         2px 2px 3px -1px rgba(0,0,0,0.20);
-
       pointer-events:none;
+      box-sizing: border-box;
     }
 
     .slot .num{
@@ -245,19 +185,15 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      user-select:none;
-      z-index: 4;
-      opacity: 1;
+      z-index:4;
+      opacity:1;
     }
 
-    /* FIX: Animation auf .num (Wrapper), NICHT auf span */
     @keyframes flyInWrap {
-      0%   { transform: translate(-80px, -70px) scale(0.2); opacity: 0; }
+      0%   { transform: translate(-90px, -80px) scale(0.2); opacity: 0; }
       100% { transform: translate(0,0) scale(1); opacity: 1; }
     }
-    .num.flyin{
-      animation: flyInWrap 520ms ease-out both;
-    }
+    .num.flyin{ animation: flyInWrap 520ms ease-out both; }
 
     .slot .num > span{
       display:inline-flex;
@@ -266,33 +202,10 @@
       font-weight: 900;
       color: #111;
       font-size: calc(var(--cell) * 0.62);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
-      transform-origin: 50% 50%;
-      position: relative;
       line-height: 1;
-    }
-
-    .slot .num > span[data-val="7"]{ --opt-x: 2px; }
-    .slot .num > span.num10{ --opt-x: -2px; }
-    .slot .num > span[data-val="6"],
-    .slot .num > span[data-val="9"]{ --opt-x: -2px; }
-
-    .slot .num > span .d{ display:inline-block; line-height: 1; }
-    .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
-    .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
-
-    .slot .num > span.dot::after{
-      content:"";
-      position:absolute;
-      width: 0.20em;
-      height: 0.20em;
-      border-radius: 50%;
-      background: #111;
-      left: 100%;
-      top: 72%;
-      transform: translate(18%, -50%);
-      box-shadow: 0 1px 0 rgba(255,255,255,0.22);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      transform: rotate(var(--num-rot, 0deg));
+      transform-origin: 50% 50%;
     }
 
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
@@ -300,14 +213,15 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* =========================================================
-       FULL VIEW (100%) – rotierbar um Kugelmittelpunkt
-       ========================================================= */
+    /* FULL (100%) */
     .fullGroup{
       position:absolute;
       inset:0;
       z-index: 6;
       pointer-events:none;
+
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
 
       transform:
         translate(var(--pivot-x), var(--pivot-y))
@@ -315,20 +229,14 @@
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
     }
-
-    .fullFace{
-      left: calc(1 * var(--step));  /* 2B */
-      top:  calc(1 * var(--step));
-    }
+    .fullFace{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
 
     .f-s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .f-s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .f-s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .f-s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* =========================================================
-       KIP VIEW (50%) – korrekt (aus deinem funktionierenden Code)
-       ========================================================= */
+    /* KIP (50%) */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -336,9 +244,7 @@
       pointer-events:none;
       transform-origin: calc(4 * var(--step)) 50%;
     }
-    .kipGroup.kip50{
-      transform: scaleX(0.5);
-    }
+    .kipGroup.kip50{ transform: scaleX(0.5); }
 
     .kipShadow{
       position:absolute;
@@ -346,13 +252,9 @@
       top:  calc(1 * var(--step));
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      background: transparent;
       z-index: 1;
-      box-shadow:
-        0 22px 26px rgba(0,0,0,0.32),
-        0 10px 16px rgba(0,0,0,0.18);
+      box-shadow: 0 22px 26px rgba(0,0,0,0.32), 0 10px 16px rgba(0,0,0,0.18);
     }
-
     .kipEdgeCore{
       position:absolute;
       left: calc(4 * var(--step));
@@ -360,12 +262,7 @@
       width: 6px;
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       transform: translateX(-50%);
-      background:
-        linear-gradient(90deg,
-          rgba(0,0,0,0.00),
-          rgba(0,0,0,0.28),
-          rgba(0,0,0,0.00)
-        );
+      background: linear-gradient(90deg, rgba(0,0,0,0.00), rgba(0,0,0,0.28), rgba(0,0,0,0.00));
       z-index: 1;
       opacity: 0.95;
     }
@@ -402,13 +299,27 @@
       padding: 12px 16px;
       border-radius: 14px;
       cursor: pointer;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
     .btn[disabled]{ opacity:0.65; cursor:default; }
+
+    /* Debug overlay */
+    .debug{
+      position:absolute;
+      left: 10px;
+      top: 10px;
+      z-index: 999;
+      background: rgba(0,0,0,0.72);
+      color: #fff;
+      font: 12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      padding: 10px 10px;
+      border-radius: 10px;
+      width: min(92%, 360px);
+      pointer-events:none;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 
@@ -418,9 +329,7 @@
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- FULL VIEW -->
       <div id="fullGroup" class="fullGroup" aria-label="100% View">
-        <!-- FIX: Schatten wieder drin -->
         <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace fullFace" aria-label="Würfelfläche"></div>
 
@@ -430,7 +339,6 @@
         <div class="slot f-s-2d read-north" data-full="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- KIP VIEW -->
       <div id="kipGroup" class="kipGroup kip50" aria-label="KIP 50%">
         <div class="kipShadow" aria-hidden="true"></div>
         <div class="kipEdgeCore" aria-hidden="true"></div>
@@ -450,6 +358,7 @@
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
+      <div id="debug" class="debug">debug…</div>
     </div>
 
     <div class="controls">
@@ -460,10 +369,12 @@
   <script>
     const boardEl  = document.getElementById("board");
     const grid     = document.getElementById("grid");
-
     const fullGroup = document.getElementById("fullGroup");
     const kipGroup  = document.getElementById("kipGroup");
     const btnStart  = document.getElementById("btnStart");
+    const dbgEl = document.getElementById("debug");
+
+    function dbg(msg){ dbgEl.textContent = msg; }
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -473,7 +384,6 @@
     // Raster
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
-
     const colorMap = new Map([
       [key(3,"A"), "c-orange"], [key(4,"A"), "c-gruen"], [key(5,"A"), "c-violett"], [key(6,"A"), "c-blau"],
       [key(8,"C"), "c-gruen"], [key(8,"D"), "c-orange"], [key(8,"E"), "c-gruen"], [key(8,"F"), "c-orange"],
@@ -498,39 +408,7 @@
       grid.dataset.built = "1";
     }
 
-    // Numbers
-    function setDot(span, number){
-      if(!span) return;
-      span.classList.remove("dot");
-      if (number === 6 || number === 9) span.classList.add("dot");
-    }
-
-    function renderNumber(span, n){
-      if(!span) return;
-      span.classList.remove("num10","num11");
-      span.innerHTML = "";
-      span.dataset.val = String(n);
-
-      if (n === 10){
-        span.classList.add("num10");
-        span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
-        return;
-      }
-      if (n === 11){
-        span.classList.add("num11");
-        span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
-        return;
-      }
-      span.textContent = String(n);
-    }
-
-    function clearSpan(span){
-      if(!span) return;
-      span.classList.remove("dot","num10","num11");
-      span.innerHTML = "";
-      span.textContent = "";
-      span.removeAttribute("data-val");
-    }
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
     function getUniqueRandomNumbers(count, min, max){
       const pool = [];
@@ -542,60 +420,19 @@
       return pool.slice(0, count);
     }
 
-    // Targets (Span + NumWrapper)
-    const fullSlots = [
-      fullGroup.querySelector('[data-full="S1"] .num'),
-      fullGroup.querySelector('[data-full="S2"] .num'),
-      fullGroup.querySelector('[data-full="S3"] .num'),
-      fullGroup.querySelector('[data-full="S4"] .num'),
-    ];
-    const fullTargets = fullSlots.map(n => n.querySelector("span"));
-
-    const kipRightSlots = [
-      kipGroup.querySelector('[data-kip="W1_1"] .num'),
-      kipGroup.querySelector('[data-kip="W1_2"] .num'),
-      kipGroup.querySelector('[data-kip="W1_3"] .num'),
-      kipGroup.querySelector('[data-kip="W1_4"] .num'),
-    ];
-    const kipRightTargets = kipRightSlots.map(n => n.querySelector("span"));
-
-    const kipLeftSlots = [
-      kipGroup.querySelector('[data-kip="W2_A"] .num'),
-      kipGroup.querySelector('[data-kip="W2_B"] .num'),
-      kipGroup.querySelector('[data-kip="W2_C"] .num'),
-      kipGroup.querySelector('[data-kip="W2_D"] .num'),
-    ];
-    const kipLeftTargets = kipLeftSlots.map(n => n.querySelector("span"));
-
-    function clearFullNumbers(){
-      fullTargets.forEach(clearSpan);
-      fullSlots.forEach(n => n.classList.remove("flyin"));
-    }
-    function clearKipAllNumbers(){
-      kipLeftTargets.forEach(clearSpan);
-      kipRightTargets.forEach(clearSpan);
-      kipLeftSlots.forEach(n => n.classList.remove("flyin"));
-      kipRightSlots.forEach(n => n.classList.remove("flyin"));
+    function renderNumber(span, n){
+      if(!span) return false;
+      span.textContent = String(n);
+      span.dataset.val = String(n);
+      return true;
     }
 
-    function applyNumbers(nums, targets, slotWrappers, fly){
-      for(let i=0;i<targets.length;i++){
-        const sp = targets[i];
-        const wrap = slotWrappers[i];
-        const n = nums[i];
-
-        renderNumber(sp, n);
-        setDot(sp, n);
-
-        if(fly){
-          wrap.classList.remove("flyin");
-          void wrap.offsetWidth;
-          wrap.classList.add("flyin");
-        }
-      }
+    function clearSpan(span){
+      if(!span) return;
+      span.textContent = "";
+      span.removeAttribute("data-val");
     }
 
-    // Views
     function showOnly(which){
       if(which === "full"){
         fullGroup.style.display = "block";
@@ -610,7 +447,23 @@
       fullGroup.style.setProperty("--full-rot", deg + "deg");
     }
 
-    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+    function applyNumbers(nums, spanTargets, numWrapTargets, fly){
+      let okCount = 0;
+      for(let i=0;i<4;i++){
+        const ok = renderNumber(spanTargets[i], nums[i]);
+        if(ok) okCount++;
+
+        const wrap = numWrapTargets[i];
+        if(wrap){
+          wrap.classList.remove("flyin");
+          if(fly){
+            void wrap.offsetWidth;
+            wrap.classList.add("flyin");
+          }
+        }
+      }
+      return okCount;
+    }
 
     let isRunning = false;
 
@@ -619,36 +472,73 @@
       isRunning = true;
       btnStart.disabled = true;
 
-      const twelve = getUniqueRandomNumbers(12, 0, 11);
-      const first4  = twelve.slice(0,4);
-      const second4 = twelve.slice(4,8);
+      try {
+        // Targets NACH Start holen (robust)
+        const fullNumsWraps = [
+          fullGroup.querySelector('[data-full="S1"] .num'),
+          fullGroup.querySelector('[data-full="S2"] .num'),
+          fullGroup.querySelector('[data-full="S3"] .num'),
+          fullGroup.querySelector('[data-full="S4"] .num'),
+        ];
+        const fullSpans = fullNumsWraps.map(w => w ? w.querySelector("span") : null);
 
-      // Schritt 1: FULL Q0 + Zahlen fliegen rein
-      showOnly("full");
-      setFullRot(0);
-      clearFullNumbers();
-      await sleep(120);
-      applyNumbers(first4, fullTargets, fullSlots, true);
-      await sleep(5000);
+        const kipRightWraps = [
+          kipGroup.querySelector('[data-kip="W1_1"] .num'),
+          kipGroup.querySelector('[data-kip="W1_2"] .num'),
+          kipGroup.querySelector('[data-kip="W1_3"] .num'),
+          kipGroup.querySelector('[data-kip="W1_4"] .num'),
+        ];
+        const kipRightSpans = kipRightWraps.map(w => w ? w.querySelector("span") : null);
 
-      // Schritt 2: KIP50 + gleiche Zahlen rechts (ohne Fly)
-      showOnly("kip");
-      clearKipAllNumbers();
-      await sleep(120);
-      applyNumbers(first4, kipRightTargets, kipRightSlots, false);
-      await sleep(5000);
+        // Debug: ob gefunden
+        const fullOk = fullSpans.filter(Boolean).length;
+        const kipOk  = kipRightSpans.filter(Boolean).length;
 
-      // Schritt 3: FULL Q1 (90° CW) + nächste Zahlen fliegen rein
-      showOnly("full");
-      setFullRot(90);
-      clearFullNumbers();
-      await sleep(120);
-      applyNumbers(second4, fullTargets, fullSlots, true);
-      await sleep(5000);
+        const twelve = getUniqueRandomNumbers(12, 0, 11);
+        const first4  = twelve.slice(0,4);
+        const second4 = twelve.slice(4,8);
 
-      btnStart.textContent = "Würfel mischen";
-      btnStart.disabled = false;
-      isRunning = false;
+        dbg(
+          `STEP 1\nFULL targets: ${fullOk}/4\nKIP-right targets: ${kipOk}/4\n`+
+          `12: [${twelve.join(", ")}]\n`+
+          `W1(4): [${first4.join(", ")}]\nW2(4): [${second4.join(", ")}]`
+        );
+
+        // STEP 1: FULL Q0 + fly-in
+        showOnly("full");
+        setFullRot(0);
+        fullSpans.forEach(clearSpan);
+        await sleep(120);
+        const c1 = applyNumbers(first4, fullSpans, fullNumsWraps, true);
+        dbg(dbgEl.textContent + `\nApplied FULL: ${c1}/4`);
+        await sleep(5000);
+
+        // STEP 2: KIP50 + gleiche Zahlen rechts (ohne fly)
+        dbg(dbgEl.textContent + `\n\nSTEP 2`);
+        showOnly("kip");
+        kipRightSpans.forEach(clearSpan);
+        await sleep(120);
+        const c2 = applyNumbers(first4, kipRightSpans, kipRightWraps, false);
+        dbg(dbgEl.textContent + `\nApplied KIP-right: ${c2}/4`);
+        await sleep(5000);
+
+        // STEP 3: FULL Q1 (90° CW) + next fly-in
+        dbg(dbgEl.textContent + `\n\nSTEP 3`);
+        showOnly("full");
+        setFullRot(90);
+        fullSpans.forEach(clearSpan);
+        await sleep(120);
+        const c3 = applyNumbers(second4, fullSpans, fullNumsWraps, true);
+        dbg(dbgEl.textContent + `\nApplied FULL (W2): ${c3}/4`);
+        await sleep(5000);
+
+        btnStart.textContent = "Würfel mischen";
+      } catch (err) {
+        dbg(`❌ JS-ERROR:\n${String(err && err.stack ? err.stack : err)}`);
+      } finally {
+        btnStart.disabled = false;
+        isRunning = false;
+      }
     }
 
     btnStart.addEventListener("click", runSequence);
@@ -659,11 +549,10 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-
       showOnly("full");
       setFullRot(0);
-      clearFullNumbers();
-      clearKipAllNumbers();
+
+      dbg("bereit. Klick Start.\n(Wenn Zahlen fehlen, siehst du hier warum.)");
     });
 
     window.addEventListener("resize", () => {
