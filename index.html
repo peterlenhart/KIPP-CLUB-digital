@@ -12,19 +12,16 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      /* echtes 8×8 ohne Zwischenräume */
       --cell-gap: 0px;
       --cell-radius: 0px;
 
       --floor: #7a4a34;
 
-      /* Holz */
       --cube-wood-base: #d7c2a4;
       --cube-wood-deep: #c9b08f;
       --cube-wood-warm: rgba(155, 70, 110, 0.10);
       --cube-wood-gold: rgba(249, 150, 30, 0.10);
 
-      /* Innenrahmen */
       --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
@@ -39,10 +36,7 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* Zahlendrehung (dein Setup) */
       --rotSign: 1;
-
-      /* ROTATION STATE */
       --rot: 0deg;
     }
 
@@ -312,13 +306,11 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* Slot-Positionen WFace */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* KIP Gruppe */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -421,20 +413,16 @@
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- W Paket -->
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
         <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace" aria-label="Würfelfläche"></div>
 
-        <!-- WFace: Zahlenfuß korrekt zum Farbfeld links -->
         <div class="slot s-3b read-west"  data-slot="S1"><div class="num"><span></span></div></div>
         <div class="slot s-4b read-west"  data-slot="S2"><div class="num"><span></span></div></div>
-
         <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <!-- KIP Gruppe -->
       <div id="kipGroup" class="kipGroup" aria-label="KIP Gruppe">
         <div class="kipShadow" aria-hidden="true"></div>
         <div class="kipEdgeCore" aria-hidden="true"></div>
@@ -442,23 +430,13 @@
         <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
         <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
 
-        <!--
-          W2-Links (Q0):
-          - Slots an der Mittelkante (k-3d,k-4d) => Zahlenfuß ZUR ACHSE => read-east
-          - Slots am Boxrand (k-2b,k-2c) => Zahlenfuß ZUM RAND => read-north
-        -->
-        <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
-        <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
-        <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
-        <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
+        <div class="slot k-4d read-south" data-slot="W2_A"><div class="num"><span></span></div></div>
+        <div class="slot k-3d read-south" data-slot="W2_B"><div class="num"><span></span></div></div>
+        <div class="slot k-2b read-south" data-slot="W2_C"><div class="num"><span></span></div></div>
+        <div class="slot k-2c read-south" data-slot="W2_D"><div class="num"><span></span></div></div>
 
-        <!--
-          W1-Rechts (Q1):
-          - Slots an der Mittelkante (k-3e,k-4e) => Zahlenfuß ZUR ACHSE => read-west
-          - Slots am Boxrand (k-2f,k-2g) => Zahlenfuß ZUM RAND => read-north
-        -->
-        <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
-        <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
+        <div class="slot k-3e read-east"  data-slot="W1_1"><div class="num"><span></span></div></div>
+        <div class="slot k-4e read-east"  data-slot="W1_2"><div class="num"><span></span></div></div>
         <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
         <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
       </div>
@@ -491,7 +469,6 @@
       boardEl.style.height = w + "px";
     }
 
-    // ===== Raster farbig =====
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -536,7 +513,6 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -571,24 +547,16 @@
       return pool.slice(0, count);
     }
 
-    // =========================================================
-    // W1/W2/W3 Zahlen (12er-Puls) + Rotation
-    // - rotIndex: Winkel 0/90/180/270
-    // - faceIndex: W1/W2/W3 zyklisch (mod 3) => exakt dein Wunsch
-    // =========================================================
     let sets = [
       [0,0,0,0], // W1
       [0,0,0,0], // W2
       [0,0,0,0], // W3
     ];
 
-    let rotIndex  = 0; // 0..3 => 0/90/180/270
-    let faceIndex = 0; // 0..2 => W1/W2/W3
-    const rotDeg = [0, 90, 180, 270];
+    let rotIndex  = 0;
+    let faceIndex = 0;
 
-    // Merker: welche Richtung der nächste "Zwischenkipp" zeigen soll
-    // +1 = CW, -1 = CCW
-    let plannedDir = +1;
+    const rotDeg = [0, 90, 180, 270];
 
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
@@ -597,7 +565,6 @@
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    // KIP: rechts = aktuelle Fläche, links = nächste Fläche (in plannedDir)
     const slotTargetsKipRight = [
       kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
@@ -612,39 +579,36 @@
       kipGroup.querySelector('[data-slot="W2_D"] .num > span'),
     ];
 
+    // =========================================================
+    // NEU: KIP-Paare tauschen (Achse <-> Boxwand) pro 50%-Fläche
+    // perm [2,3,0,1] = "die unteren zwei rauf / die oberen zwei runter"
+    // =========================================================
+    const swapPairsPerm = [2,3,0,1];
+
+    function renderSetIntoTargetsWithPerm(targets, nums, perm){
+      for(let i=0;i<4;i++){
+        const n = nums[perm ? perm[i] : i];
+        renderNumber(targets[i], n);
+        setDot(targets[i], n);
+      }
+    }
+
     function applyRotationAndNumbers(){
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
 
-      // WFace: zeigt IMMER die aktuelle Fläche (faceIndex)
       const curr = sets[faceIndex] || sets[0];
 
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], curr[i]);
-        setDot(slotTargetsW[i], curr[i]);
-      }
+      // W-Face bleibt 1:1
+      renderSetIntoTargetsWithPerm(slotTargetsW, curr, null);
 
-      // KIP: Zwischenkipp zeigt ZWEI Flächen:
-      // rechts = aktuelle (curr)
-      // links  = nächste (in geplante Richtung)
-      const nextFaceIndex = (plannedDir === +1)
-        ? (faceIndex + 1) % 3
-        : (faceIndex + 2) % 3;
+      // KIP: rechte Fläche (aktuelle 4) + Paare tauschen
+      renderSetIntoTargetsWithPerm(slotTargetsKipRight, curr, swapPairsPerm);
 
-      const next = sets[nextFaceIndex] || sets[0];
-
-      // rechts: aktuelle Fläche unverändert
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], curr[i]);
-        setDot(slotTargetsKipRight[i], curr[i]);
-      }
-
-      // links: nächste Fläche unverändert
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], next[i]);
-        setDot(slotTargetsKipLeft[i], next[i]);
-      }
+      // KIP: linke Fläche = nächste 4 (W2 nach W1), ebenfalls Paare tauschen
+      const next = sets[(faceIndex + 1) % 3] || sets[1];
+      renderSetIntoTargetsWithPerm(slotTargetsKipLeft, next, swapPairsPerm);
     }
 
     function reroll12(){
@@ -656,36 +620,25 @@
 
       rotIndex  = 0;
       faceIndex = 0;
-      plannedDir = +1; // Start: CW als "nächster" Zwischenkipp
       applyRotationAndNumbers();
     }
 
     function stepCW(){
-      plannedDir = +1;
-
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
-
       applyRotationAndNumbers();
     }
 
     function stepCCW(){
-      plannedDir = -1;
-
       rotIndex  = (rotIndex + 3) % 4;
-      faceIndex = (faceIndex + 2) % 3; // -1 mod 3
-
+      faceIndex = (faceIndex + 2) % 3;
       applyRotationAndNumbers();
     }
 
-    // =========================================================
-    // KIP-TOGGLE
-    // =========================================================
     let kipOn = false;
 
     function setKipMode(on){
       kipOn = !!on;
-
       if(kipOn){
         wFace.style.display = "none";
         kipGroup.style.display = "block";
@@ -695,13 +648,11 @@
       }
     }
 
-    // ===== Buttons =====
     btnMix.addEventListener("click", reroll12);
     btnKip50.addEventListener("click", () => setKipMode(!kipOn));
     btnCW.addEventListener("click", stepCW);
     btnCCW.addEventListener("click", stepCCW);
 
-    // ===== Init =====
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
