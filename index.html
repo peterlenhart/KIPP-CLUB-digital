@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – Startablauf (W1 -> KIP50 -> W2)</title>
+  <title>KIPP – Startablauf (W1 -> KIP50 -> W2) – FIX</title>
 
   <style>
     :root{
@@ -38,9 +38,8 @@
 
       --rotSign: 1;
 
-      /* Pivot: Board-Mitte */
-      --pivot-x: 0px;
-      --pivot-y: 0px;
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
     }
 
     html, body { height: 100%; }
@@ -172,8 +171,22 @@
     }
 
     /* -----------------------------
-       Gemeinsame Würfel-Optik
+       Würfel-Optik
        ----------------------------- */
+    .cubeShadow{
+      position:absolute;
+      left: calc(1 * var(--step));  /* 2B */
+      top:  calc(1 * var(--step));  /* 2B */
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 1;
+      background: transparent;
+      box-shadow:
+        0 22px 26px rgba(0,0,0,0.32),
+        0 10px 16px rgba(0,0,0,0.18);
+      pointer-events:none;
+    }
+
     .cubeFace{
       position:absolute;
       width: calc(3 * var(--cell) + 2 * var(--cell-gap));
@@ -234,6 +247,16 @@
       justify-content:center;
       user-select:none;
       z-index: 4;
+      opacity: 1;
+    }
+
+    /* FIX: Animation auf .num (Wrapper), NICHT auf span */
+    @keyframes flyInWrap {
+      0%   { transform: translate(-80px, -70px) scale(0.2); opacity: 0; }
+      100% { transform: translate(0,0) scale(1); opacity: 1; }
+    }
+    .num.flyin{
+      animation: flyInWrap 520ms ease-out both;
     }
 
     .slot .num > span{
@@ -248,7 +271,6 @@
       transform-origin: 50% 50%;
       position: relative;
       line-height: 1;
-      opacity: 1;
     }
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
@@ -278,21 +300,8 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* -----------------------------
-       Fly-In Animation für Zahlen
-       ----------------------------- */
-    @keyframes flyIn {
-      0%   { transform: translate(-80px, -70px) scale(0.2); opacity: 0; }
-      60%  { opacity: 1; }
-      100% { transform: translate(0,0) scale(1); opacity: 1; }
-    }
-    .flyin{
-      animation: flyIn 520ms ease-out both;
-    }
-
     /* =========================================================
        FULL VIEW (100%) – rotierbar um Kugelmittelpunkt
-       Q0 und Q1 kommen nur über Rotation zustande
        ========================================================= */
     .fullGroup{
       position:absolute;
@@ -307,13 +316,11 @@
       transform-origin: 0 0;
     }
 
-    /* Würfelfläche liegt in Q0 bei 2B (wie immer) */
     .fullFace{
-      left: calc(1 * var(--step));
+      left: calc(1 * var(--step));  /* 2B */
       top:  calc(1 * var(--step));
     }
 
-    /* Slot-Positionen für FULL (dein W1/Q0 Layout) */
     .f-s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .f-s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .f-s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
@@ -327,8 +334,6 @@
       inset:0;
       z-index: 6;
       pointer-events:none;
-
-      /* Skalierachse = senkrechte Mittellinie der Box (Grenze D/E) */
       transform-origin: calc(4 * var(--step)) 50%;
     }
     .kipGroup.kip50{
@@ -347,6 +352,7 @@
         0 22px 26px rgba(0,0,0,0.32),
         0 10px 16px rgba(0,0,0,0.18);
     }
+
     .kipEdgeCore{
       position:absolute;
       left: calc(4 * var(--step));
@@ -361,14 +367,12 @@
           rgba(0,0,0,0.00)
         );
       z-index: 1;
-      filter: blur(0.2px);
       opacity: 0.95;
     }
 
     .faceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
     .faceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* Slots KIP (dein korrektes Layout) */
     .s-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
     .s-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
     .s-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
@@ -379,9 +383,6 @@
     .s-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .s-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* -----------------------------
-       Controls
-       ----------------------------- */
     .controls{
       width: 100%;
       display:flex;
@@ -407,14 +408,7 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
-    .btn[disabled]{
-      opacity: 0.65;
-      cursor: default;
-    }
+    .btn[disabled]{ opacity:0.65; cursor:default; }
   </style>
 </head>
 
@@ -422,11 +416,12 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
       <!-- FULL VIEW -->
       <div id="fullGroup" class="fullGroup" aria-label="100% View">
+        <!-- FIX: Schatten wieder drin -->
+        <div class="cubeShadow" aria-hidden="true"></div>
         <div class="cubeFace fullFace" aria-label="Würfelfläche"></div>
 
         <div class="slot f-s-3b read-east"  data-full="S1"><div class="num"><span></span></div></div>
@@ -443,13 +438,11 @@
         <div class="cubeFace faceQ0" aria-label="Würfelfläche Q0"></div>
         <div class="cubeFace faceQ1" aria-label="Würfelfläche Q1"></div>
 
-        <!-- links: leer -->
         <div class="slot s-4d read-south" data-kip="W2_A"><div class="num"><span></span></div></div>
         <div class="slot s-3d read-south" data-kip="W2_B"><div class="num"><span></span></div></div>
         <div class="slot s-2b read-south" data-kip="W2_C"><div class="num"><span></span></div></div>
         <div class="slot s-2c read-south" data-kip="W2_D"><div class="num"><span></span></div></div>
 
-        <!-- rechts: zeigt W1 Zahlen -->
         <div class="slot s-3e read-east"  data-kip="W1_1"><div class="num"><span></span></div></div>
         <div class="slot s-4e read-east"  data-kip="W1_2"><div class="num"><span></span></div></div>
         <div class="slot s-2f read-north" data-kip="W1_3"><div class="num"><span></span></div></div>
@@ -482,25 +475,10 @@
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
     const colorMap = new Map([
-      [key(3,"A"), "c-orange"],
-      [key(4,"A"), "c-gruen"],
-      [key(5,"A"), "c-violett"],
-      [key(6,"A"), "c-blau"],
-
-      [key(8,"C"), "c-gruen"],
-      [key(8,"D"), "c-orange"],
-      [key(8,"E"), "c-gruen"],
-      [key(8,"F"), "c-orange"],
-
-      [key(6,"H"), "c-violett"],
-      [key(5,"H"), "c-blau"],
-      [key(4,"H"), "c-orange"],
-      [key(3,"H"), "c-gruen"],
-
-      [key(1,"F"), "c-blau"],
-      [key(1,"E"), "c-violett"],
-      [key(1,"D"), "c-blau"],
-      [key(1,"C"), "c-violett"],
+      [key(3,"A"), "c-orange"], [key(4,"A"), "c-gruen"], [key(5,"A"), "c-violett"], [key(6,"A"), "c-blau"],
+      [key(8,"C"), "c-gruen"], [key(8,"D"), "c-orange"], [key(8,"E"), "c-gruen"], [key(8,"F"), "c-orange"],
+      [key(6,"H"), "c-violett"], [key(5,"H"), "c-blau"], [key(4,"H"), "c-orange"], [key(3,"H"), "c-gruen"],
+      [key(1,"F"), "c-blau"], [key(1,"E"), "c-violett"], [key(1,"D"), "c-blau"], [key(1,"C"), "c-violett"],
     ]);
 
     function buildGridOnce(){
@@ -529,7 +507,7 @@
 
     function renderNumber(span, n){
       if(!span) return;
-      span.classList.remove("num10","num11","flyin");
+      span.classList.remove("num10","num11");
       span.innerHTML = "";
       span.dataset.val = String(n);
 
@@ -548,7 +526,7 @@
 
     function clearSpan(span){
       if(!span) return;
-      span.classList.remove("dot","num10","num11","flyin");
+      span.classList.remove("dot","num10","num11");
       span.innerHTML = "";
       span.textContent = "";
       span.removeAttribute("data-val");
@@ -564,56 +542,61 @@
       return pool.slice(0, count);
     }
 
-    // Targets FULL
-    const fullTargets = [
-      fullGroup.querySelector('[data-full="S1"] .num > span'),
-      fullGroup.querySelector('[data-full="S2"] .num > span'),
-      fullGroup.querySelector('[data-full="S3"] .num > span'),
-      fullGroup.querySelector('[data-full="S4"] .num > span'),
+    // Targets (Span + NumWrapper)
+    const fullSlots = [
+      fullGroup.querySelector('[data-full="S1"] .num'),
+      fullGroup.querySelector('[data-full="S2"] .num'),
+      fullGroup.querySelector('[data-full="S3"] .num'),
+      fullGroup.querySelector('[data-full="S4"] .num'),
     ];
+    const fullTargets = fullSlots.map(n => n.querySelector("span"));
 
-    // Targets KIP (rechts = W1)
-    const kipRightTargets = [
-      kipGroup.querySelector('[data-kip="W1_1"] .num > span'),
-      kipGroup.querySelector('[data-kip="W1_2"] .num > span'),
-      kipGroup.querySelector('[data-kip="W1_3"] .num > span'),
-      kipGroup.querySelector('[data-kip="W1_4"] .num > span'),
+    const kipRightSlots = [
+      kipGroup.querySelector('[data-kip="W1_1"] .num'),
+      kipGroup.querySelector('[data-kip="W1_2"] .num'),
+      kipGroup.querySelector('[data-kip="W1_3"] .num'),
+      kipGroup.querySelector('[data-kip="W1_4"] .num'),
     ];
+    const kipRightTargets = kipRightSlots.map(n => n.querySelector("span"));
 
-    // links (W2) leer halten
-    const kipLeftTargets = [
-      kipGroup.querySelector('[data-kip="W2_A"] .num > span'),
-      kipGroup.querySelector('[data-kip="W2_B"] .num > span'),
-      kipGroup.querySelector('[data-kip="W2_C"] .num > span'),
-      kipGroup.querySelector('[data-kip="W2_D"] .num > span'),
+    const kipLeftSlots = [
+      kipGroup.querySelector('[data-kip="W2_A"] .num'),
+      kipGroup.querySelector('[data-kip="W2_B"] .num'),
+      kipGroup.querySelector('[data-kip="W2_C"] .num'),
+      kipGroup.querySelector('[data-kip="W2_D"] .num'),
     ];
+    const kipLeftTargets = kipLeftSlots.map(n => n.querySelector("span"));
 
     function clearFullNumbers(){
       fullTargets.forEach(clearSpan);
+      fullSlots.forEach(n => n.classList.remove("flyin"));
     }
     function clearKipAllNumbers(){
       kipLeftTargets.forEach(clearSpan);
       kipRightTargets.forEach(clearSpan);
+      kipLeftSlots.forEach(n => n.classList.remove("flyin"));
+      kipRightSlots.forEach(n => n.classList.remove("flyin"));
     }
 
-    function applyNumbersToTargets(nums, targets, fly){
+    function applyNumbers(nums, targets, slotWrappers, fly){
       for(let i=0;i<targets.length;i++){
         const sp = targets[i];
+        const wrap = slotWrappers[i];
         const n = nums[i];
+
         renderNumber(sp, n);
         setDot(sp, n);
+
         if(fly){
-          // trigger animation reliably
-          sp.classList.remove("flyin");
-          void sp.offsetWidth;
-          sp.classList.add("flyin");
+          wrap.classList.remove("flyin");
+          void wrap.offsetWidth;
+          wrap.classList.add("flyin");
         }
       }
     }
 
     // Views
     function showOnly(which){
-      // which: "full" or "kip"
       if(which === "full"){
         fullGroup.style.display = "block";
         kipGroup.style.display = "none";
@@ -623,20 +606,8 @@
       }
     }
 
-    function setPivotVars(){
-      // Pivot = 4*step,4*step
-      const step = getComputedStyle(boardEl).getPropertyValue("--step").trim();
-      // step ist calc(...) -> wir setzen pivot via CSS calc(4 * var(--step)) direkt im CSS nicht als px.
-      // Deshalb hier nichts rechnen, nur für Sicherheit:
-      boardEl.style.setProperty("--pivot-x", "calc(4 * var(--step))");
-      boardEl.style.setProperty("--pivot-y", "calc(4 * var(--step))");
-    }
-
-    function setFullRotationCW90(){
-      fullGroup.style.setProperty("--full-rot", "90deg");
-    }
-    function setFullRotation0(){
-      fullGroup.style.setProperty("--full-rot", "0deg");
+    function setFullRot(deg){
+      fullGroup.style.setProperty("--full-rot", deg + "deg");
     }
 
     function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
@@ -648,45 +619,39 @@
       isRunning = true;
       btnStart.disabled = true;
 
-      // 12 Zahlen erzeugen
       const twelve = getUniqueRandomNumbers(12, 0, 11);
       const first4  = twelve.slice(0,4);
       const second4 = twelve.slice(4,8);
-      // const third4  = twelve.slice(8,12); // später
 
-      // --- Schritt 1: FULL Q0 + 4 Zahlen fliegen rein
+      // Schritt 1: FULL Q0 + Zahlen fliegen rein
       showOnly("full");
-      setFullRotation0();
+      setFullRot(0);
       clearFullNumbers();
-      await sleep(120); // kurzer Frame für sauberes Rendering
-      applyNumbersToTargets(first4, fullTargets, true);
+      await sleep(120);
+      applyNumbers(first4, fullTargets, fullSlots, true);
       await sleep(5000);
 
-      // --- Schritt 2: KIP50 + gleiche 4 Zahlen rechts
+      // Schritt 2: KIP50 + gleiche Zahlen rechts (ohne Fly)
       showOnly("kip");
       clearKipAllNumbers();
       await sleep(120);
-      applyNumbersToTargets(first4, kipRightTargets, false); // hier NICHT nochmal "fliegen" – du wolltest nur Darstellung
+      applyNumbers(first4, kipRightTargets, kipRightSlots, false);
       await sleep(5000);
 
-      // --- Schritt 3: FULL Q1 (90° CW) + nächste 4 Zahlen fliegen rein
+      // Schritt 3: FULL Q1 (90° CW) + nächste Zahlen fliegen rein
       showOnly("full");
-      setFullRotationCW90();
+      setFullRot(90);
       clearFullNumbers();
       await sleep(120);
-      applyNumbersToTargets(second4, fullTargets, true);
+      applyNumbers(second4, fullTargets, fullSlots, true);
       await sleep(5000);
 
-      // Ende: Button wird "Würfel mischen"
       btnStart.textContent = "Würfel mischen";
       btnStart.disabled = false;
       isRunning = false;
     }
 
-    btnStart.addEventListener("click", () => {
-      // nach der ersten Sequenz: "Würfel mischen" startet die Sequenz neu (wie Start)
-      runSequence();
-    });
+    btnStart.addEventListener("click", runSequence);
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -694,20 +659,16 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      setPivotVars();
 
-      // Startzustand: nur FULL sichtbar (leer)
       showOnly("full");
-      setFullRotation0();
+      setFullRot(0);
       clearFullNumbers();
       clearKipAllNumbers();
-      kipGroup.style.display = "none";
     });
 
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-      setPivotVars();
     });
   </script>
 </body>
