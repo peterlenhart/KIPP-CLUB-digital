@@ -271,6 +271,7 @@
 
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
+
       position: relative;
       line-height: 1;
     }
@@ -310,6 +311,11 @@
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
+    /* =========================
+       KIP Gruppe (FIX: keine Verzerrung mehr)
+       Außen: nur ROTATION
+       Innen: scaleX(0.5)
+       ========================= */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -320,10 +326,24 @@
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
-      /* ✅ FIX: KEIN scaleX -> keine Verzerrung */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
         rotate(var(--rot))
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .kipScale{
+      position:absolute;
+      inset:0;
+
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        scaleX(0.5)
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
       will-change: transform;
@@ -423,21 +443,24 @@
       </div>
 
       <div id="kipGroup" class="kipGroup" aria-label="KIP Gruppe">
-        <div class="kipShadow" aria-hidden="true"></div>
-        <div class="kipEdgeCore" aria-hidden="true"></div>
+        <!-- FIX: Alles innen wird skaliert, außen nur rotiert -->
+        <div class="kipScale">
+          <div class="kipShadow" aria-hidden="true"></div>
+          <div class="kipEdgeCore" aria-hidden="true"></div>
 
-        <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
-        <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
+          <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
+          <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
 
-        <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
-        <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
-        <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
-        <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
+          <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
+          <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
+          <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
+          <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
 
-        <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
-        <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
-        <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
-        <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+          <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
+          <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
+          <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+          <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+        </div>
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
@@ -562,42 +585,29 @@
     }
 
     // =========================================================
-    // ✅ FIX LOGIK: "Zahlenpaare bleiben stabil"
-    // Wenn neue Fläche (W2, W3) erstmals auftaucht,
-    // dann wird die 4er-Gruppe so übernommen, dass die Paare
-    // NICHT untereinander tauschen können: [0,1,2,3] -> [1,0,3,2]
-    // => Paarweise Spiegelung, Fuß-zu-Fuß bleibt konsistent.
-    // W1 bleibt original (Startfläche).
+    // LOGIK (Bestückung nur in 100%):
     // =========================================================
-    const PAIR_SWAP = [1,0,3,2];
-    function applyPerm(arr, perm){
-      return perm.map(i => arr[i]);
-    }
-
-    // vorbereitete Gruppen (werden in sets geschrieben, sobald "bestückt")
     let planned = [
-      [null,null,null,null], // W1 geplant
-      [null,null,null,null], // W2 geplant
-      [null,null,null,null], // W3 geplant
+      [null,null,null,null],
+      [null,null,null,null],
+      [null,null,null,null],
     ];
 
-    // wirklich bestückte Flächen (null = leer)
     let sets = [
-      [null,null,null,null], // W1
-      [null,null,null,null], // W2
-      [null,null,null,null], // W3
+      [null,null,null,null],
+      [null,null,null,null],
+      [null,null,null,null],
     ];
 
-    let assigned = [false, false, false]; // W1/W2/W3 schon bestückt?
+    let assigned = [false, false, false];
 
-    let rotIndex  = 0; // 0..3
-    let faceIndex = 0; // 0..2 (welche Fläche liegt in 100% "oben")
+    let rotIndex  = 0;
+    let faceIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
-    // geplante Richtung für Kipp-Preview (nur Anzeige)
+    // geplante Richtung für Preview
     let plannedDir = +1; // +1 CW, -1 CCW
 
-    // Targets 100%
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
@@ -605,7 +615,6 @@
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
 
-    // Targets 50% rechts = aktuelle Fläche, links = nächste Fläche (Preview)
     const slotTargetsKipRight = [
       kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
       kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
@@ -622,13 +631,23 @@
 
     function ensureAssigned(idx){
       if(assigned[idx]) return;
-
-      // W1: original
-      // W2/W3: paarweise Spiegelung, damit sich Paare nie untereinander tauschen
-      const base = planned[idx].slice();
-      sets[idx] = (idx === 0) ? base : applyPerm(base, PAIR_SWAP);
-
+      sets[idx] = planned[idx].slice();
       assigned[idx] = true;
+    }
+
+    // =========================================================
+    // DEIN FELD-ID KERN (CW):
+    // "1→4" und "2→3" entlang der auftauchenden Fläche
+    // Wir ändern NICHTS an den Zahlen selbst, nur die Slot-Projection.
+    // Face ist [F1,F2,F3,F4] in 100%-Logik.
+    // =========================================================
+    function mapHiddenToVisible_CW(face){
+      const [f1,f2,f3,f4] = face;
+      // Damit am Achsenrand die Paare stimmen:
+      // vorher F1 liegt unter/neben neuer F4
+      // vorher F2 liegt unter/neben neuer F3
+      // => auftauchende Fläche braucht Slot-Permutation
+      return [f4, f3, f2, f1];
     }
 
     function applyRotationAndNumbers(){
@@ -638,6 +657,7 @@
 
       const curr = sets[faceIndex];
 
+      // 100%
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
@@ -650,15 +670,20 @@
 
       const next = sets[nextFaceIndex];
 
+      // rechts: aktuelle Fläche 1:1 (nur skaliert)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
+      // links: erst auftauchende Fläche
+      // FIX: NUR bei CW Projection-Mapping anwenden
+      const nextForPreview = (plannedDir === +1) ? mapHiddenToVisible_CW(next) : next;
+
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], next[i]);
-        if(next[i] !== null && next[i] !== undefined) setDot(slotTargetsKipLeft[i], next[i]);
+        renderNumber(slotTargetsKipLeft[i], nextForPreview[i]);
+        if(nextForPreview[i] !== null && nextForPreview[i] !== undefined) setDot(slotTargetsKipLeft[i], nextForPreview[i]);
         else slotTargetsKipLeft[i].classList.remove("dot");
       }
     }
@@ -666,9 +691,9 @@
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
 
-      planned[0] = twelve.slice(0,4);    // W1 geplant
-      planned[1] = twelve.slice(4,8);    // W2 geplant
-      planned[2] = twelve.slice(8,12);   // W3 geplant
+      planned[0] = twelve.slice(0,4);
+      planned[1] = twelve.slice(4,8);
+      planned[2] = twelve.slice(8,12);
 
       sets = [
         [null,null,null,null],
@@ -696,6 +721,7 @@
       if(!kipOn){
         ensureAssigned(faceIndex);
       }
+
       applyRotationAndNumbers();
     }
 
@@ -708,6 +734,7 @@
       if(!kipOn){
         ensureAssigned(faceIndex);
       }
+
       applyRotationAndNumbers();
     }
 
