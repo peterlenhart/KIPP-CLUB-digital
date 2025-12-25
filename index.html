@@ -64,7 +64,6 @@
           rgba(255,255,255,0.03) 16px
         ),
         linear-gradient(180deg, #e0b47c, #c89259);
-
       background-attachment: fixed;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
@@ -85,12 +84,9 @@
       height: 0;
       aspect-ratio: 1 / 1;
       box-sizing: border-box;
-
       background: #0b0b0b;
-
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
-
       overflow: visible;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
@@ -125,9 +121,7 @@
     .c-blau  { background: var(--blau);   }
 
     .cell.colorCell{
-      box-shadow:
-        inset 0 0 0 2px #000,
-        0 0 0 1px rgba(0,0,0,0.25);
+      box-shadow: inset 0 0 0 2px #000, 0 0 0 1px rgba(0,0,0,0.25);
     }
 
     .floor{
@@ -168,9 +162,7 @@
       pointer-events: none;
     }
 
-    /* =======================
-       ROTIERBARES PAKET
-       ======================= */
+    /* ROTIERBARES PAKET */
     .wFaceGroup{
       position:absolute;
       inset:0;
@@ -188,47 +180,31 @@
       will-change: transform;
     }
 
-    /* Zwei Hälften für KIP50 */
+    /* Zwei Hälften */
     .wFaceGroup .half{
       position:absolute;
       inset:0;
       pointer-events:none;
+
+      /* dx/dy werden per JS gesetzt */
+      --dx: 0px;
+      --dy: 0px;
     }
 
-    /* Normal: nur Hälfte A sichtbar (unverändert) */
     .wFaceGroup .halfB{ display:none; }
-
-    /* ===== KIP 50% nach deiner Vorgabe =====
-       1) Hälfte A wird so verschoben, dass die UNTERE LINKE Ecke am Kugelmittelpunkt sitzt:
-          - unsere Face-Box liegt bei (1*step,1*step) und ist 3*step hoch
-          - untere linke Ecke davon ist (1*step, 4*step)
-          - Kugelmittelpunkt ist (4*step,4*step)
-          -> also +3*step nach rechts, 0 nach unten
-       2) Dann X-Quetschung auf 50% um den Kugelmittelpunkt
-       3) Hälfte B ist Kopie, horizontal gespiegelt (scaleX(-0.5))
-    */
     .wFaceGroup.kip50 .halfB{ display:block; }
 
+    /* KIP50: KEIN RATESPIEL MEHR – nur dx/dy + skalieren um Pivot */
     .wFaceGroup.kip50 .halfA,
     .wFaceGroup.kip50 .halfB{
       transform:
-        translate(calc(3 * var(--step)), 0px)
+        translate(var(--dx), var(--dy))
         translate(var(--pivot-x), var(--pivot-y))
         scaleX(0.5)
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
     }
 
-    .wFaceGroup.kip50 .halfB{
-      transform:
-        translate(calc(3 * var(--step)), 0px)
-        translate(var(--pivot-x), var(--pivot-y))
-        scaleX(-0.5)
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
-      transform-origin: 0 0;
-    }
-
-    /* Schatten */
     .cubeShadow{
       position:absolute;
       left: calc(1 * var(--step));
@@ -250,24 +226,18 @@
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
       border-radius: 0;
-
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
-        repeating-linear-gradient(
-          20deg,
-          rgba(0,0,0,0.02) 0px,
-          rgba(0,0,0,0.02) 10px,
-          rgba(255,255,255,0.02) 10px,
-          rgba(255,255,255,0.02) 18px
+        repeating-linear-gradient(20deg,
+          rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 10px,
+          rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 18px
         ),
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
-
       box-shadow:
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
-
       z-index: 2;
     }
 
@@ -315,7 +285,6 @@
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
-
     .slot .num > span[data-val="6"],
     .slot .num > span[data-val="9"]{ --opt-x: -2px; }
 
@@ -383,27 +352,21 @@
   <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ROTIERBARES PAKET -->
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
-        <!-- Hälfte A -->
         <div class="half halfA">
           <div class="cubeShadow" aria-hidden="true"></div>
           <div class="cubeFace" aria-label="Würfelfläche"></div>
-
           <div class="slot s-3b read-east"  data-slot="S1"><div class="num"><span></span></div></div>
           <div class="slot s-4b read-east"  data-slot="S2"><div class="num"><span></span></div></div>
           <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
           <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
         </div>
 
-        <!-- Hälfte B (Kopie, wird im KIP50 sichtbar und gespiegelt) -->
         <div class="half halfB">
           <div class="cubeShadow" aria-hidden="true"></div>
           <div class="cubeFace" aria-label="Würfelfläche"></div>
-
           <div class="slot s-3b read-east"  data-slot="S1B"><div class="num"><span></span></div></div>
           <div class="slot s-4b read-east"  data-slot="S2B"><div class="num"><span></span></div></div>
           <div class="slot s-2c read-north" data-slot="S3B"><div class="num"><span></span></div></div>
@@ -426,6 +389,9 @@
     const boardEl  = document.getElementById("board");
     const grid     = document.getElementById("grid");
     const wFace    = document.getElementById("wFaceGroup");
+
+    const halfA = wFace.querySelector(".halfA");
+    const halfB = wFace.querySelector(".halfB");
 
     const btnMix   = document.getElementById("btnMix");
     const btnKip50 = document.getElementById("btnKip50");
@@ -465,13 +431,11 @@
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
-
       for(let r=1; r<=8; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
-
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
             cell.classList.add("colorCell");
@@ -488,12 +452,10 @@
       span.classList.remove("dot");
       if (number === 6 || number === 9) span.classList.add("dot");
     }
-
     function renderNumber(span, n){
       span.classList.remove("num10","num11");
       span.innerHTML = "";
       span.dataset.val = String(n);
-
       if (n === 10){
         span.classList.add("num10");
         span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
@@ -506,7 +468,6 @@
       }
       span.textContent = String(n);
     }
-
     function getUniqueRandomNumbers(count, min, max){
       const pool = [];
       for(let i=min; i<=max; i++) pool.push(i);
@@ -517,26 +478,22 @@
       return pool.slice(0, count);
     }
 
-    // ===== 4er Rotation (0/90/180/270) =====
+    // ===== Rotation 0/90/180/270 =====
     let sets = [
-      [0,0,0,0], // W1 / 0°
-      [0,0,0,0], // W2 / 90°
-      [0,0,0,0], // W3 / 180°
-      [0,0,0,0], // 270° = wieder W1
+      [0,0,0,0],
+      [0,0,0,0],
+      [0,0,0,0],
+      [0,0,0,0],
     ];
-
     let rotIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
-    // Targets in Hälfte A
     const slotTargetsA = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
       wFace.querySelector('[data-slot="S2"] .num > span'),
       wFace.querySelector('[data-slot="S3"] .num > span'),
       wFace.querySelector('[data-slot="S4"] .num > span'),
     ];
-
-    // Targets in Hälfte B (Kopie)
     const slotTargetsB = [
       wFace.querySelector('[data-slot="S1B"] .num > span'),
       wFace.querySelector('[data-slot="S2B"] .num > span'),
@@ -549,27 +506,27 @@
       wFace.style.setProperty("--rot", deg + "deg");
 
       const nums = sets[rotIndex] || sets[0];
-
-      // Hälfte A
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsA[i], nums[i]);
         setDot(slotTargetsA[i], nums[i]);
       }
-      // Hälfte B = exakt gleiche Zahlen (weil es eine Kopie der gequetschten ganzen W1 ist)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsB[i], nums[i]);
         setDot(slotTargetsB[i], nums[i]);
+      }
+
+      // wichtig: wenn kip50 aktiv ist, nach Rotation neu ausrichten
+      if (wFace.classList.contains("kip50")){
+        requestAnimationFrame(fixKip50Alignment);
       }
     }
 
     function reroll12(){
       const twelve = getUniqueRandomNumbers(12, 0, 11);
-
       sets[0] = twelve.slice(0,4);
       sets[1] = twelve.slice(4,8);
       sets[2] = twelve.slice(8,12);
-      sets[3] = sets[0].slice(); // 270° = wieder W1
-
+      sets[3] = sets[0].slice();
       rotIndex = 0;
       applyRotationAndNumbers();
     }
@@ -578,10 +535,57 @@
       rotIndex = (rotIndex + 1) % 4;
       applyRotationAndNumbers();
     }
-
     function stepCCW(){
       rotIndex = (rotIndex + 3) % 4;
       applyRotationAndNumbers();
+    }
+
+    // ===== KIP50: Ecken automatisch auf Kugelmittelpunkt setzen =====
+    function getPivotInViewport(){
+      const br = boardEl.getBoundingClientRect();
+      // Pivot = (4*step, 4*step) im Board -> in px ist das br.left + 0.5*br.width etc
+      // weil step = width/8 bei gap=0
+      const px = br.left + br.width  * 0.5;
+      const py = br.top  + br.height * 0.5;
+      return {px, py};
+    }
+
+    function cornerOf(el, which){
+      const r = el.getBoundingClientRect();
+      switch(which){
+        case "br": return {x: r.right, y: r.bottom};
+        case "bl": return {x: r.left,  y: r.bottom};
+        case "tr": return {x: r.right, y: r.top};
+        case "tl": return {x: r.left,  y: r.top};
+        default:   return {x: r.left,  y: r.top};
+      }
+    }
+
+    function fixKip50Alignment(){
+      // Wir richten NICHT nach Theorie aus, sondern nach Messung.
+      // Markierung laut deiner Beschreibung:
+      // - Hälfte A: markierte Ecke = unten rechts (br)
+      // - Hälfte B: markierte Ecke = unten links  (bl)
+      const {px, py} = getPivotInViewport();
+
+      const faceA = halfA.querySelector(".cubeFace");
+      const faceB = halfB.querySelector(".cubeFace");
+      if(!faceA || !faceB) return;
+
+      // Wir setzen dx/dy so, dass die jeweilige Ecke exakt am Pivot liegt.
+      const a = cornerOf(faceA, "br");
+      const b = cornerOf(faceB, "bl");
+
+      const dxA = (px - a.x);
+      const dyA = (py - a.y);
+      const dxB = (px - b.x);
+      const dyB = (py - b.y);
+
+      halfA.style.setProperty("--dx", dxA.toFixed(2) + "px");
+      halfA.style.setProperty("--dy", dyA.toFixed(2) + "px");
+
+      halfB.style.setProperty("--dx", dxB.toFixed(2) + "px");
+      halfB.style.setProperty("--dy", dyB.toFixed(2) + "px");
     }
 
     // Buttons
@@ -589,6 +593,17 @@
 
     btnKip50.addEventListener("click", () => {
       wFace.classList.toggle("kip50");
+
+      // Reset dx/dy
+      halfA.style.setProperty("--dx", "0px");
+      halfA.style.setProperty("--dy", "0px");
+      halfB.style.setProperty("--dx", "0px");
+      halfB.style.setProperty("--dy", "0px");
+
+      if (wFace.classList.contains("kip50")){
+        // erst rendern lassen, dann messen & verschieben
+        requestAnimationFrame(() => requestAnimationFrame(fixKip50Alignment));
+      }
     });
 
     btnCW.addEventListener("click", stepCW);
@@ -607,6 +622,9 @@
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
+      if (wFace.classList.contains("kip50")){
+        requestAnimationFrame(() => requestAnimationFrame(fixKip50Alignment));
+      }
     });
   </script>
 </body>
