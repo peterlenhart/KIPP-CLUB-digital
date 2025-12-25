@@ -39,12 +39,12 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* =========================
-         KIP50 – NUR POSITION FIX
-         Werte in "Raster-Spalten (step)"
-         ========================= */
-      --kipA-nudge-steps: -1.5;  /* Hälfte A: 1,5 nach Westen */
-      --kipB-nudge-steps: -4.5;  /* Hälfte B: 4,5 nach Westen */
+      /* ======================================================
+         KIP50: NUR POSITIONIERUNG (keine Skalierung, kein Spiegeln)
+         Werte in "Raster-Spalten (step)".
+         ====================================================== */
+      --kipA-nudge-steps: -1.5; /* Hälfte A: nach Westen */
+      --kipB-nudge-steps: -4.5; /* Hälfte B: weiter nach Westen */
     }
 
     html, body { height: 100%; }
@@ -195,39 +195,26 @@
       will-change: transform;
     }
 
-    /* Zwei Hälften für KIP50 */
     .wFaceGroup .half{
       position:absolute;
       inset:0;
       pointer-events:none;
+      transform: none; /* wichtig: baseline sauber */
     }
 
-    /* Normal: nur Hälfte A sichtbar */
     .wFaceGroup .halfB{ display:none; }
 
-    /* ===== KIP 50%: NUR SKALIEREN + NUR VERSCHIEBEN =====
-       - KEIN Spiegeln
-       - KEIN Zusatz-Translate außer dem von dir gewünschten "nach Westen"
-       - Jede Hälfte separat verschieben
-    */
+    /* ======================================================
+       KIP50: NUR VERSCHIEBEN (keine Skalierung, kein Spiegeln)
+       ====================================================== */
     .wFaceGroup.kip50 .halfB{ display:block; }
 
     .wFaceGroup.kip50 .halfA{
-      transform:
-        translate(var(--pivot-x), var(--pivot-y))
-        scaleX(0.5)
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)))
-        translateX(calc(var(--kipA-nudge-steps) * var(--step)));
-      transform-origin: 0 0;
+      transform: translateX(calc(var(--kipA-nudge-steps) * var(--step)));
     }
 
     .wFaceGroup.kip50 .halfB{
-      transform:
-        translate(var(--pivot-x), var(--pivot-y))
-        scaleX(0.5)
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)))
-        translateX(calc(var(--kipB-nudge-steps) * var(--step)));
-      transform-origin: 0 0;
+      transform: translateX(calc(var(--kipB-nudge-steps) * var(--step)));
     }
 
     /* Schatten */
@@ -387,9 +374,7 @@
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <!-- ROTIERBARES PAKET -->
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
-        <!-- Hälfte A -->
         <div class="half halfA">
           <div class="cubeShadow" aria-hidden="true"></div>
           <div class="cubeFace" aria-label="Würfelfläche"></div>
@@ -400,7 +385,6 @@
           <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
         </div>
 
-        <!-- Hälfte B -->
         <div class="half halfB">
           <div class="cubeShadow" aria-hidden="true"></div>
           <div class="cubeFace" aria-label="Würfelfläche"></div>
@@ -438,7 +422,6 @@
       boardEl.style.height = w + "px";
     }
 
-    // Raster
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -483,7 +466,6 @@
       grid.dataset.built = "1";
     }
 
-    // Zahlenrendering
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -518,12 +500,11 @@
       return pool.slice(0, count);
     }
 
-    // ===== 4er Rotation (0/90/180/270) =====
     let sets = [
-      [0,0,0,0], // 0°
-      [0,0,0,0], // 90°
-      [0,0,0,0], // 180°
-      [0,0,0,0], // 270°
+      [0,0,0,0],
+      [0,0,0,0],
+      [0,0,0,0],
+      [0,0,0,0],
     ];
 
     let rotIndex = 0;
@@ -582,11 +563,7 @@
     }
 
     btnMix.addEventListener("click", reroll12);
-
-    btnKip50.addEventListener("click", () => {
-      wFace.classList.toggle("kip50");
-    });
-
+    btnKip50.addEventListener("click", () => wFace.classList.toggle("kip50"));
     btnCW.addEventListener("click", stepCW);
     btnCCW.addEventListener("click", stepCCW);
 
