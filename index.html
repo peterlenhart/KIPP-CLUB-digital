@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiKipp – Prototype UI (loose elements)</title>
+  <title>DigiKipp – Prototyp</title>
 
   <style>
     :root{
@@ -36,12 +36,14 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      --ui-brown: #5f3b2a;
-      --ui-beige: #ead7be;
-      --ui-black: #0b0b0b;
-
       --rotSign: 1;
       --rot: 0deg;
+
+      /* UI */
+      --ui-pad: clamp(12px, 3.0vmin, 20px);
+      --ui-text: #1a0f08;
+      --ui-brown: #5a3524;       /* dunkler Schlitz */
+      --ui-brown-deep: #3f2418;  /* etwas tiefer */
     }
 
     html, body { height: 100%; }
@@ -75,7 +77,7 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 5vh; /* etwas höher */
+      margin-top: 10vh;
       display:flex;
       flex-direction: column;
       gap: 12px;
@@ -86,25 +88,18 @@
     /* ===== Titel ===== */
     .title{
       width: 100%;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      user-select:none;
-      margin-bottom: 2px;
-    }
-    .title h1{
-      margin: 0;
+      text-align:center;
       font-weight: 1000;
-      letter-spacing: 0.09em;
-      font-size: clamp(24px, 6.2vmin, 44px); /* größer */
-      color: rgba(0,0,0,0.92);
-      text-transform: uppercase; /* DIGIKIPP */
+      color: var(--cube-wood-base);      /* Beige wie Würfel */
       text-shadow:
-        0 1px 0 rgba(255,255,255,0.35),
-        0 10px 18px rgba(0,0,0,0.25);
+        0 2px 0 rgba(0,0,0,0.18),
+        0 12px 26px rgba(0,0,0,0.25);
+      letter-spacing: 0.02em;           /* enger gesetzt */
+      font-size: clamp(22px, 6.2vmin, 36px);
+      margin-top: -2vh;                 /* höher setzen */
+      user-select:none;
     }
 
-    /* ===== Board ===== */
     .board{
       position:relative;
       width: 100%;
@@ -290,13 +285,14 @@
       align-items:center;
       justify-content:center;
 
-      font-weight: 900;
+      font-weight: 1000;
       color: #111;
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
+
       position: relative;
       line-height: 1;
     }
@@ -313,8 +309,8 @@
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
     .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
 
-    /* ✅ FIX: 12 wieder NICHT zu eng (wie vorher gut) */
-    .slot .num > span.num12 .d + .d{ margin-left: -3px; }
+    /* 12: NICHT zu eng – nur leicht enger */
+    .slot .num > span.num12 .d + .d{ margin-left: -0.12em; }
 
     .slot .num > span.dot::after{
       content:"";
@@ -339,7 +335,9 @@
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== KIP Gruppe ===== */
+    /* =========================
+       KIP Gruppe
+       ========================= */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -417,86 +415,106 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ========= UI loose ========= */
-    .uiLoose{
+    /* =========================
+       HUD (lose Elemente, mehr "Spiel", weniger "Webseite")
+       ========================= */
+    .hud{
       width: 100%;
+      margin-top: 8px;
       display:flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 4px;
+      gap: 10px;
+      color: var(--ui-text);
     }
 
-    /* ✅ Regler: NUR Schlitz, Breite B..G (6/8 = 75%), zentriert */
-    .sliderStrip{
-      width: 75%;
-      margin: 0 auto;
+    /* Slider Row */
+    .speedRow{
+      position: relative;
+      width: 100%;
+      height: 46px;
+    }
+
+    /* EXACT: B..G => left: 1*step, width: 6 Spalten */
+    .speedWrap{
+      position:absolute;
+      left:  calc(1 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      top: 8px;
+      height: 34px;
       display:flex;
       align-items:center;
-      gap: 10px;
-      user-select:none;
+      justify-content:center;
+      pointer-events:auto;
     }
 
-    .icon{
-      width: 26px;
-      height: 26px;
-      flex: 0 0 auto;
-      opacity: 0.95;
-      transform: translateY(10px); /* „drückt“ optisch nach unten */
-    }
-    .icon svg{
-      width:100%;
-      height:100%;
-      fill: none;
-      stroke: rgba(0,0,0,0.92);
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    /* Schlitz dunkelbraun, ohne Rahmen rundherum */
-    input[type="range"]{
-      -webkit-appearance: none;
-      appearance: none;
+    .speedTrack{
+      position: relative;
       width: 100%;
-      height: 12px;
+      height: 14px;
       border-radius: 999px;
-      background: var(--ui-brown);
-      outline: none;
-      border: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.18)),
+        var(--ui-brown);
       box-shadow:
         inset 0 2px 6px rgba(0,0,0,0.35),
-        inset 0 0 0 1px rgba(255,255,255,0.08);
-    }
-    /* Knopf beige */
-    input[type="range"]::-webkit-slider-thumb{
-      -webkit-appearance: none;
-      appearance: none;
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      background: var(--ui-beige);
-      border: 2px solid rgba(0,0,0,0.40);
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      cursor: pointer;
-    }
-    input[type="range"]::-moz-range-thumb{
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      background: var(--ui-beige);
-      border: 2px solid rgba(0,0,0,0.40);
-      cursor: pointer;
+        0 10px 20px rgba(0,0,0,0.22);
     }
 
-    .infoRow{
-      width: 100%;
+    /* Input über dem Track, aber unsichtbar – nur fürs Handling */
+    .speedInput{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .speedKnob{
+      position:absolute;
+      top: 50%;
+      left: 45%;
+      transform: translate(-50%, -50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.20), rgba(0,0,0,0.10)),
+        var(--cube-wood-base);
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.28),
+        0 0 0 2px rgba(0,0,0,0.30);
+      pointer-events:none;
+    }
+
+    /* Turtle / Hare placeholder (später echte Piktogramme) */
+    .speedIcon{
+      position:absolute;
+      top: 8px;
+      width: 34px;
+      height: 34px;
       display:flex;
-      align-items:flex-start;
-      justify-content: space-between;
-      gap: 14px;
+      align-items:center;
+      justify-content:center;
+      color: rgba(0,0,0,0.70);
       user-select:none;
+      pointer-events:none;
+      font-weight: 900;
+    }
+    .speedIcon.left{ left: calc(1 * var(--step) - 38px); }
+    .speedIcon.right{ left: calc(1 * var(--step) + (6 * var(--cell) + 5 * var(--cell-gap)) + 4px); }
+
+    /* Kippziel + Score Row */
+    .infoRow{
+      width:100%;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items:start;
+      padding-left: calc(1 * var(--step));   /* weiter rein */
+      padding-right: calc(1 * var(--step));  /* weiter rein */
+      box-sizing: border-box;
     }
 
     .kippBlock{
@@ -505,102 +523,107 @@
       gap: 8px;
     }
 
-    .kippHead{
+    .kippTop{
       display:flex;
       align-items:center;
       gap: 12px;
     }
 
-    /* ✅ Kippziel größer */
     .kippLabel{
-      font-weight: 1100;
-      letter-spacing: 0.02em;
-      font-size: clamp(22px, 5.0vmin, 32px);
-      color: rgba(0,0,0,0.92);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      font-weight: 1000;
+      letter-spacing: 0.02em; /* enger */
+      font-size: clamp(18px, 5.2vmin, 28px);
+      color: rgba(0,0,0,0.80);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.12);
     }
 
     .targetSquare{
-      width: 54px;
-      height: 54px;
-      border-radius: 0px;
-      background: var(--blau);
-      border: 4px solid #000;
-      box-shadow: 0 12px 22px rgba(0,0,0,0.22);
+      width: 64px;
+      height: 64px;
+      border-radius: 0;                      /* ohne Radien */
+      background: var(--blau);               /* Platzhalter */
+      box-shadow:
+        0 12px 22px rgba(0,0,0,0.22);
+      border: 4px solid #000;               /* gleiche "Wucht" wie Raster-Trennung */
       display:flex;
       align-items:center;
       justify-content:center;
-      font-weight: 1100;
-      font-size: 34px; /* Zahl etwas größer */
-      color: #0b0b0b;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
     }
 
-    /* ✅ Ziel 0/11 größer, weniger filigran */
-    .subLine{
-      font-weight: 900;
-      opacity: 0.92;
-      color: rgba(0,0,0,0.86);
-      font-size: 15px;
-    }
-
-    .scoreBlock{
-      text-align:right;
-      display:flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items:flex-end;
-      min-width: 120px;
-    }
-
-    /* ✅ Score-Zahl deutlich größer */
-    .scoreBig{
-      font-size: clamp(40px, 10.5vmin, 76px);
-      font-weight: 1200;
-      letter-spacing: 0.02em;
-      color: rgba(0,0,0,0.92);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    .targetSquare span{
+      font-weight: 1000;                    /* dicker */
+      font-size: 34px;                      /* größer */
+      color: #111;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.28);
       line-height: 1;
     }
 
-    .hiLine{
-      font-size: 15px;
+    .zielText{
       font-weight: 900;
-      opacity: 0.92;
-      color: rgba(0,0,0,0.86);
+      font-size: clamp(14px, 3.8vmin, 18px); /* größer, weniger filigran */
+      color: rgba(0,0,0,0.72);
     }
 
-    .startBtn{
+    .scoreBlock{
+      justify-self:end;
+      text-align:right;
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .scoreBig{
+      font-weight: 1000;
+      font-size: clamp(34px, 10vmin, 56px);  /* deutlich größer */
+      color: rgba(0,0,0,0.78);
+      line-height: 1;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.14);
+    }
+
+    .highscore{
+      font-weight: 900;
+      font-size: clamp(14px, 3.6vmin, 18px);
+      color: rgba(0,0,0,0.70);
+    }
+
+    .startRow{
       width: 100%;
+      padding-left: calc(1 * var(--step));
+      padding-right: calc(1 * var(--step));
+      box-sizing: border-box;
+    }
+
+    .btnBig{
+      width:100%;
       border: 1px solid var(--btn-border);
-      background: var(--btn-bg);
+      background: rgba(234,215,190,0.88);
       color: var(--btn-text);
       font-weight: 1000;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
-      padding: 14px 16px;
-      border-radius: 14px;
+      padding: 16px 16px;
+      border-radius: 18px;
       cursor: pointer;
       box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
+        0 14px 26px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .startBtn:active{
+    .btnBig:active{
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
 
+    /* Debug/Old Controls (lassen wir fürs Testen unten) */
     .controls{
       width: 100%;
       display:flex;
       justify-content:center;
       gap: 12px;
       padding: 0 6px;
-      margin-top: 6px;
+      margin-top: 8px;
       flex-wrap: wrap;
-      opacity: 0.98;
     }
 
     .btn{
@@ -628,10 +651,7 @@
 
 <body>
   <div class="stage">
-
-    <div class="title" aria-label="Titel">
-      <h1>DIGIKIPP</h1>
-    </div>
+    <div class="title">DIGIKIPP</div>
 
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
@@ -670,60 +690,48 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <div class="uiLoose" aria-label="UI loose">
+    <!-- ===== HUD (lose, spielig, kräftig) ===== -->
+    <div class="hud">
+      <div class="speedRow">
+        <div class="speedIcon left">🐢</div>
+        <div class="speedIcon right">🐇</div>
 
-      <div class="sliderStrip" aria-label="Kippspeed">
-        <div class="icon" aria-hidden="true" title="langsam">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 14c0 2 2 3 4 3h5c4 0 7-2 7-5 0-3-3-5-7-5H9"/>
-            <path d="M9 12h5"/>
-            <path d="M6 17v2"/>
-            <path d="M10 17v2"/>
-            <path d="M16 16v2"/>
-            <path d="M20 12h2"/>
-            <path d="M6 11l-2-1"/>
-          </svg>
-        </div>
-
-        <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
-
-        <div class="icon" aria-hidden="true" title="schnell">
-          <svg viewBox="0 0 24 24">
-            <path d="M6 14c0 3 3 5 7 5 4 0 7-2 7-5 0-2-2-4-5-4H9c-2 0-3 2-3 4Z"/>
-            <path d="M9 10V6c0-2 2-3 3-3"/>
-            <path d="M12 10l2-6"/>
-            <path d="M7 16l-2 2"/>
-            <path d="M17 16l2 2"/>
-            <path d="M14 13h1"/>
-          </svg>
-        </div>
-      </div>
-
-      <div class="infoRow" aria-label="Kippziel + Score">
-        <div class="kippBlock">
-          <div class="kippHead">
-            <div class="kippLabel">Kippziel</div>
-            <div id="targetSquare" class="targetSquare" aria-label="Ziel (Dummy)">7</div>
+        <!-- B..G -->
+        <div class="speedWrap">
+          <div class="speedTrack" id="speedTrack">
+            <div class="speedKnob" id="speedKnob"></div>
+            <input id="speedSlider" class="speedInput" type="range" min="0" max="10" value="5" />
           </div>
-          <div class="subLine">Ziel: <span id="progressVal">0</span> / 11</div>
-        </div>
-
-        <div class="scoreBlock" aria-label="Score Block">
-          <div class="scoreBig"><span id="scoreVal">0</span></div>
-          <div class="hiLine">Highscore: <span id="hiVal">66</span></div>
         </div>
       </div>
 
-      <button id="btnStart" class="startBtn">START</button>
+      <div class="infoRow">
+        <div class="kippBlock">
+          <div class="kippTop">
+            <div class="kippLabel">KIPPZIEL</div>
+            <div class="targetSquare" id="targetSquare"><span id="targetNum">7</span></div>
+          </div>
+          <div class="zielText" id="zielText">Ziel: 0 / 11</div>
+        </div>
+
+        <div class="scoreBlock">
+          <div class="scoreBig" id="scoreBig">0</div>
+          <div class="highscore" id="highscoreText">Highscore: 66</div>
+        </div>
+      </div>
+
+      <div class="startRow">
+        <button id="btnStart" class="btnBig">START</button>
+      </div>
     </div>
 
+    <!-- Debug Buttons bleiben fürs Testen -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
       <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
       <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
       <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
     </div>
-
   </div>
 
   <script>
@@ -738,11 +746,9 @@
     const btnCW     = document.getElementById("btnCW");
     const btnCCW    = document.getElementById("btnCCW");
 
-    // UI (Dummy)
-    const btnStart = document.getElementById("btnStart");
-    btnStart.addEventListener("click", () => {
-      btnStart.textContent = "ZAHLEN NEU SETZEN";
-    });
+    // HUD Elements (noch ohne Gameplay-Verkabelung)
+    const speedSlider = document.getElementById("speedSlider");
+    const speedKnob   = document.getElementById("speedKnob");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -849,7 +855,7 @@
     }
 
     // =========================================================
-    // LOGIK (Golden)
+    // LOGIK
     // =========================================================
     let planned = [
       [null,null,null,null],
@@ -963,27 +969,19 @@
 
     function stepCW(){
       plannedDir = +1;
-
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
 
-      if(!kipOn){
-        ensureAssigned(faceIndex);
-      }
-
+      if(!kipOn) ensureAssigned(faceIndex);
       applyRotationAndNumbers();
     }
 
     function stepCCW(){
       plannedDir = -1;
-
       rotIndex  = (rotIndex + 3) % 4;
       faceIndex = (faceIndex + 2) % 3;
 
-      if(!kipOn){
-        ensureAssigned(faceIndex);
-      }
-
+      if(!kipOn) ensureAssigned(faceIndex);
       applyRotationAndNumbers();
     }
 
@@ -1001,6 +999,14 @@
       applyRotationAndNumbers();
     }
 
+    // ===== Slider Knob sync (nur optisch) =====
+    function updateKnob(){
+      const v = Number(speedSlider.value);
+      const t = v / 10;
+      speedKnob.style.left = (t * 100) + "%";
+    }
+    speedSlider.addEventListener("input", updateKnob);
+
     btnMix.addEventListener("click", reroll12);
     btnKip50.addEventListener("click", () => setKipMode(!kipOn));
     btnCW.addEventListener("click", stepCW);
@@ -1014,6 +1020,7 @@
       buildGridOnce();
       reroll12();
       setKipMode(false);
+      updateKnob();
     });
 
     window.addEventListener("resize", () => {
