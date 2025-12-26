@@ -432,7 +432,6 @@
       border: 1px solid var(--ui-panel-border);
       background: var(--ui-panel-bg);
       backdrop-filter: blur(6px);
-      /* ✅ NUR HIER: schwarzer Innenrahmen 4px */
       box-shadow:
         inset 0 0 0 4px #000,
         0 12px 22px rgba(0,0,0,0.22),
@@ -620,14 +619,16 @@
       cursor: default;
     }
 
-    /* ========= Fly-In Animation (nur Zahlen) ========= */
-    @keyframes flyIn {
-      0%   { opacity: 0; transform: translateY(-46px) scale(0.72); filter: blur(0.4px); }
-      70%  { opacity: 1; transform: translateY(6px) scale(1.03);  filter: blur(0px); }
-      100% { opacity: 1; transform: translateY(0px) scale(1.00);  filter: blur(0px); }
+    /* ========= Fly-In + Wobble (Zahlen) ========= */
+    @keyframes flyInWobble{
+      0%   { opacity: 0; transform: translateY(-46px) scale(0.72) rotate(-6deg); filter: blur(0.4px); }
+      65%  { opacity: 1; transform: translateY(6px) scale(1.05) rotate(4deg);  filter: blur(0px); }
+      80%  { opacity: 1; transform: translateY(-2px) scale(0.99) rotate(-3deg); }
+      92%  { opacity: 1; transform: translateY(1px) scale(1.01) rotate(2deg); }
+      100% { opacity: 1; transform: translateY(0px) scale(1.00) rotate(0deg); }
     }
     .flyin{
-      animation: flyIn 420ms cubic-bezier(.18,.84,.22,1) both;
+      animation: flyInWobble 520ms cubic-bezier(.18,.84,.22,1) both;
     }
   </style>
 </head>
@@ -841,7 +842,7 @@
     }
 
     // =========================================================
-    // LOGIK (Bestückung nur in 100%):
+    // GOLDENE LOGIK (3 Faces à 4 Werte)
     // =========================================================
     let planned = [
       [null,null,null,null],
@@ -903,12 +904,14 @@
 
       const curr = sets[faceIndex];
 
+      // W-Ansicht (4 Slots)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
         else slotTargetsW[i].classList.remove("dot");
       }
 
+      // KIP-Ansicht (rechts = current, links = next)
       const nextFaceIndex = (plannedDir === +1)
         ? (faceIndex + 1) % 3
         : (faceIndex + 2) % 3;
@@ -930,7 +933,7 @@
       }
     }
 
-    // ===== Anzeige-Modus (KIP ist fürs spätere Spiel, bleibt aktuell aus) =====
+    // ===== Anzeige-Modus umschalten =====
     let kipOn = false;
     function setKipMode(on){
       kipOn = !!on;
@@ -948,12 +951,11 @@
     function triggerFlyIn(spans){
       for(const s of spans){
         if(!s) continue;
-        // nur animieren, wenn da wirklich eine Zahl steht
         const hasContent = (s.textContent && s.textContent.trim().length) || (s.querySelector && s.querySelector(".d"));
         if(!hasContent) continue;
 
         s.classList.remove("flyin");
-        void s.offsetWidth; // reflow (wichtig)
+        void s.offsetWidth; // reflow
         s.classList.add("flyin");
       }
     }
@@ -967,9 +969,9 @@
     function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
     // =========================================================
-    // START-Ablauf: W1 -> W2 -> W3 -> W1 (automatisch + Fly-In)
+    // START-Ablauf MIT Zwischendarstellungen:
+    // W1 -> KIP(W1/W2) -> W2 -> KIP(W2/W3) -> W3 -> KIP(W3/W1) -> W1
     // =========================================================
-    let startedOnce = false;
     let isRunning = false;
 
     async function runAutoBestueckung(){
@@ -977,8 +979,11 @@
       isRunning = true;
 
       btnStart.disabled = true;
-      const oldText = btnStart.textContent;
       btnStart.textContent = "BESTÜCKE…";
+
+      // Timing (einheitlich) – kannst du später „gefühlmäßig“ sagen, dann drehe ich’s
+      const tFly  = 560;
+      const tHold = 420;
 
       // 1) neue Random-Planung
       const twelve = getUniqueRandomNumbers(12, 1, 12);
@@ -986,7 +991,7 @@
       planned[1] = twelve.slice(4,8);
       planned[2] = twelve.slice(8,12);
 
-      // 2) alles leer zeigen
+      // 2) reset
       sets = [
         [null,null,null,null],
         [null,null,null,null],
@@ -998,47 +1003,69 @@
       rotIndex = 0;
       faceIndex = 0;
 
-      setKipMode(false);
       clearAllSlots();
+      setKipMode(false);
       applyRotationAndNumbers();
       await sleep(120);
 
-      // Schritt W1
+      // === W1 (normal) ===
       ensureAssigned(0);
+      setKipMode(false);
+      rotIndex = 0; faceIndex = 0;
       applyRotationAndNumbers();
       triggerFlyIn(slotTargetsW);
-      await sleep(520);
+      await sleep(tFly);
 
-      // Schritt W2 (CW)
-      rotIndex  = 1;
-      faceIndex = 1;
+      // === Zwischenschritt: KIP W1↔W2 ===
+      // W2 wird jetzt „bestückt“ (links), W1 bleibt (rechts)
       ensureAssigned(1);
+      plannedDir = +1;
+      rotIndex = 0; faceIndex = 0;  // current=W1, next=W2
+      setKipMode(true);
       applyRotationAndNumbers();
-      triggerFlyIn(slotTargetsW);
-      await sleep(520);
+      triggerFlyIn(slotTargetsKipLeft); // NUR die linke Seite fliegt rein
+      await sleep(tFly);
+      await sleep(tHold);
 
-      // Schritt W3 (CW)
-      rotIndex  = 2;
-      faceIndex = 2;
+      // === W2 (normal) ===
+      setKipMode(false);
+      rotIndex = 1; faceIndex = 1;
+      applyRotationAndNumbers();
+      await sleep(tHold);
+
+      // === Zwischenschritt: KIP W2↔W3 ===
       ensureAssigned(2);
+      plannedDir = +1;
+      rotIndex = 1; faceIndex = 1;  // current=W2, next=W3
+      setKipMode(true);
       applyRotationAndNumbers();
-      triggerFlyIn(slotTargetsW);
-      await sleep(520);
+      triggerFlyIn(slotTargetsKipLeft); // W3 fliegt rein (links)
+      await sleep(tFly);
+      await sleep(tHold);
 
-      // zurück W1 (CW)
-      rotIndex  = 3;
-      faceIndex = 0;
-      ensureAssigned(0);
+      // === W3 (normal) ===
+      setKipMode(false);
+      rotIndex = 2; faceIndex = 2;
       applyRotationAndNumbers();
-      triggerFlyIn(slotTargetsW);
-      await sleep(520);
+      await sleep(tHold);
 
-      // final: wieder sauber auf W1 / rot=0 fürs Spiel
-      rotIndex  = 0;
-      faceIndex = 0;
+      // === Zwischenschritt: KIP W3↔W1 ===
+      plannedDir = +1;
+      rotIndex = 2; faceIndex = 2;  // current=W3, next=W1 (ist schon da)
+      setKipMode(true);
+      applyRotationAndNumbers();
+      await sleep(tHold);
+
+      // === zurück W1 (normal) ===
+      setKipMode(false);
+      rotIndex = 3; faceIndex = 0;
+      applyRotationAndNumbers();
+      await sleep(tHold);
+
+      // final: wieder „sauber“ auf W1 / rot=0
+      rotIndex = 0; faceIndex = 0;
       applyRotationAndNumbers();
 
-      startedOnce = true;
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
       isRunning = false;
@@ -1054,15 +1081,18 @@
 
       buildGridOnce();
 
-      // Startzustand: leer (keine Auto-Bestückung beim Laden)
+      // Startzustand: leer
       sets = [
         [null,null,null,null],
         [null,null,null,null],
         [null,null,null,null],
       ];
       assigned = [false,false,false];
+
       rotIndex = 0;
       faceIndex = 0;
+      plannedDir = +1;
+
       setKipMode(false);
       applyRotationAndNumbers();
     });
