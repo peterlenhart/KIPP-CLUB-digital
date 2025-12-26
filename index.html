@@ -198,7 +198,6 @@
       pointer-events: none;
     }
 
-    /* ====== Rotation-Gruppen: immer im DOM, Umschalten per opacity ====== */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -222,9 +221,7 @@
       opacity: 1;
     }
 
-    .isHidden{
-      opacity: 0;
-    }
+    .isHidden{ opacity: 0; }
 
     .cubeShadow{
       position:absolute;
@@ -317,7 +314,6 @@
       line-height: 1;
     }
 
-    /* Fly-In + settle wobble */
     @keyframes flyIn {
       0%   { transform: translateY(-26px) scale(0.80) rotate(var(--num-rot,0deg)); opacity: 0; filter: blur(0.4px); }
       70%  { transform: translateY(  2px) scale(1.03) rotate(var(--num-rot,0deg)); opacity: 1; filter: blur(0px); }
@@ -329,7 +325,6 @@
       60%  { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) rotate(-1.4deg); }
       100% { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) rotate(0deg); }
     }
-
     .fly{
       animation: flyIn 320ms cubic-bezier(.15,.9,.25,1) both,
                  settleWobble 420ms ease 320ms both;
@@ -737,10 +732,9 @@
     // Speed -> Timing
     function getTiming(){
       const v = Number(speedSlider.value || 3); // 0..9
-      // 0 = langsam, 9 = schnell
       const rotMs = Math.round(620 - v * 46);      // ~620 .. ~206
-      const holdMsFull = Math.round(320 - v * 18); // ~320 .. ~158
-      const holdMsKip  = Math.round(260 - v * 14); // ~260 .. ~134
+      const holdMsFull = Math.round(260 - v * 14); // ~260 .. ~134
+      const holdMsKip  = Math.round(240 - v * 12); // ~240 .. ~132
       const fadeMs = 140;
       return { rotMs, holdMsFull, holdMsKip, fadeMs };
     }
@@ -809,7 +803,6 @@
       span.removeAttribute("data-val");
     }
 
-    // Für Fly-In: merken, was zuletzt gerendert war
     const lastVal = new WeakMap();
 
     function renderNumber(span, n, animate=false){
@@ -843,7 +836,6 @@
       lastVal.set(span, n);
 
       if(animate && prev !== n){
-        // Reflow-Trick, damit Animation immer triggert
         void span.offsetWidth;
         span.classList.add("fly");
       }
@@ -859,7 +851,7 @@
       return pool.slice(0, count);
     }
 
-    // ====== GOLDENE LOGIK (unverändert in der Idee) ======
+    // ====== GOLDENE LOGIK ======
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -977,11 +969,10 @@
       faceIndex = 0;
       plannedDir = +1;
 
-      // Alles leeren (damit W1 NICHT "von Haus aus drauf" ist)
       [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => clearSpan(s));
     }
 
-    // ===== Ein "Vollschritt CW" (entspricht deinem 90°) =====
+    // ===== Vollschritt CW (90°) =====
     function advanceFullCW(){
       plannedDir = +1;
       rotIndex  = (rotIndex + 1) % 4;
@@ -990,8 +981,7 @@
       applyRotationAndNumbers(true);
     }
 
-    // ====== AUTOMATIK: kontinuierlich vorwärts, ohne sichtbaren Rücksprung ======
-    let startedOnce = false;
+    // ====== AUTOMATIK (FIX): Rotation NUR in TOTAL ======
     let running = false;
 
     async function runAutoCycle(){
@@ -1000,61 +990,62 @@
       btnStart.disabled = true;
 
       applyTimingToCSS();
-      const { holdMsFull, holdMsKip, rotMs } = getTiming();
+      const { holdMsFull, holdMsKip, rotMs, fadeMs } = getTiming();
 
-      // 1) Neu mischen, aber leer starten
       reroll12_keepEmpty();
 
-      // Startzustand: W1 Vollansicht sichtbar, KIP verborgen
+      // Startzustand: TOTAL sichtbar
       setKipMode(false);
       applyRotationAndNumbers(false);
 
-      // 2) W1 BESTÜCKEN (Fly-In)
+      // W1 bestücken (Fly-In)
       ensureAssigned(0);
       applyRotationAndNumbers(true);
       await sleep(holdMsFull);
 
-      // 3) Zwischenschritt zeigen (50% AN)
+      // === Schritt 1: TOTAL -> ZWISCHEN -> TOTAL -> ROTATE(TOTAL) ===
+      // ZWISCHEN
       setKipMode(true);
       await sleep(holdMsKip);
 
-      // 4) Nächste Vollansicht (W2) – OHNE sichtbares Zurückspringen:
-      //    Wir bleiben "visuell" auf KIP, drehen/assignen intern, dann blenden wir direkt auf W2-Voll.
+      // TOTAL (gleiches Bild, kein Rückschritt – das ist exakt dein "50% aus")
+      setKipMode(false);
+      await sleep(Math.max(40, fadeMs)); // nur fürs saubere Umschalten
+
+      // ROTATE in TOTAL (hier darf/ soll man es sehen)
       advanceFullCW();
       await sleep(rotMs);
-      setKipMode(false);
       await sleep(holdMsFull);
 
-      // 5) Zwischenschritt (50% AN)
+      // === Schritt 2 ===
       setKipMode(true);
       await sleep(holdMsKip);
 
-      // 6) Nächste Vollansicht (W3) – wieder vorwärts, ohne Backstep
+      setKipMode(false);
+      await sleep(Math.max(40, fadeMs));
+
       advanceFullCW();
       await sleep(rotMs);
-      setKipMode(false);
       await sleep(holdMsFull);
 
-      // 7) Zwischenschritt (50% AN) – jetzt sind beide Seiten bestückt sichtbar
+      // === Schritt 3 ===
       setKipMode(true);
       await sleep(holdMsKip);
 
-      // 8) Zurück zu W1 (Vollansicht) – letzter Vollschritt im Kreis
+      setKipMode(false);
+      await sleep(Math.max(40, fadeMs));
+
       advanceFullCW();
       await sleep(rotMs);
-      setKipMode(false);
       await sleep(holdMsFull);
 
-      // Fertig
-      startedOnce = true;
+      // fertig
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
       running = false;
     }
 
-    btnStart.addEventListener("click", () => {
-      runAutoCycle();
-    });
+    btnStart.addEventListener("click", () => runAutoCycle());
 
     // Layout + Init
     window.addEventListener("load", () => {
@@ -1066,7 +1057,6 @@
 
       applyTimingToCSS();
 
-      // Start: leer, W1 sichtbar, KIP unsichtbar
       reroll12_keepEmpty();
       setKipMode(false);
       applyRotationAndNumbers(false);
