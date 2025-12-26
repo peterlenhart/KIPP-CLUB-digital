@@ -36,7 +36,7 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* ✅ UI-Tablett: NUR HIER geändert */
+      /* ✅ UI-Tablett */
       --ui-panel-bg: rgba(122, 74, 52, 1);
       --ui-panel-border: rgba(0,0,0,0.35);
 
@@ -432,7 +432,9 @@
       border: 1px solid var(--ui-panel-border);
       background: var(--ui-panel-bg);
       backdrop-filter: blur(6px);
+      /* ✅ NUR HIER: schwarzer Innenrahmen 4px ergänzt */
       box-shadow:
+        inset 0 0 0 4px #000,
         0 12px 22px rgba(0,0,0,0.22),
         0 0 0 1px rgba(255,255,255,0.10) inset;
       display:flex;
@@ -464,7 +466,6 @@
       margin-left: 0;
     }
 
-    /* ✅ Ziel-Text: exakt "(00/11)" */
     .progressText{
       color: var(--ui-text);
       font-weight: 900;
@@ -474,11 +475,10 @@
       font-variant-numeric: tabular-nums;
       user-select:none;
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
-      min-width: 64px; /* stabil, nichts springt */
+      min-width: 64px;
       text-align:left;
     }
 
-    /* ✅ Blaues Quadrat: scharfe Ecken + beiger Innenrahmen (2px), KEIN Außenrahmen */
     .targetSquare{
       width: 44px;
       height: 44px;
@@ -495,7 +495,6 @@
       user-select:none;
     }
 
-    /* ✅ Zahl im Quadrat: exakt Slot-Typo (Gewicht/Größe) */
     .targetSquare span{
       display:inline-flex;
       align-items:center;
@@ -508,7 +507,6 @@
       transform: translateY(0px);
     }
 
-    /* ✅ Rechts: 0p + Highscore darunter, kleiner Abstand */
     .pointsBlock{
       display:flex;
       flex-direction: column;
@@ -562,15 +560,16 @@
       filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
     }
 
+    /* ✅ NUR HIER: Schlitz/Track schwarz */
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
       height: 10px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.18);
+      background: #000;
       outline: none;
-      border: 1px solid rgba(0,0,0,0.25);
+      border: 1px solid #000;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
     }
     input[type="range"]::-webkit-slider-thumb{
@@ -655,12 +654,10 @@
 <body>
   <div class="stage">
 
-    <!-- ===== UI TOP: Titel ===== -->
     <div class="title" aria-label="Titel">
       <h1>DigiKipp</h1>
     </div>
 
-    <!-- ===== Board ===== -->
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
@@ -698,10 +695,8 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <!-- ===== UI PANEL ===== -->
     <div class="uiPanel" aria-label="UI Panel (noch ohne Logik)">
 
-      <!-- Slider -->
       <div class="sliderRow" aria-label="Kippspeed">
         <div class="icon" aria-hidden="true" title="langsam">
           <svg viewBox="0 0 24 24">
@@ -729,7 +724,6 @@
         </div>
       </div>
 
-      <!-- ✅ Kippziel + Quadrat + (00/11)  |  ✅ rechts 0p + Highscore -->
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
           <div class="uiLabel">Kippziel</div>
@@ -745,11 +739,9 @@
         </div>
       </div>
 
-      <!-- Start / Neu setzen -->
       <button id="btnStart" class="startBtn">START</button>
     </div>
 
-    <!-- ===== DEV Controls ===== -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
       <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
@@ -775,12 +767,10 @@
     const btnStart = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
 
-    // rein optisch: Buttontext toggeln (ohne irgendeine Spiellogik)
     let startedOnce = false;
     btnStart.addEventListener("click", () => {
       startedOnce = true;
       btnStart.textContent = "ZAHLEN NEU SETZEN";
-      // Keine Logik hier. Nur Optik.
     });
 
     function setBoardSquare(){
@@ -788,7 +778,6 @@
       boardEl.style.height = w + "px";
     }
 
-    // ===== Raster farbig =====
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -833,7 +822,6 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -887,9 +875,6 @@
       return pool.slice(0, count);
     }
 
-    // =========================================================
-    // LOGIK (Bestückung nur in 100%):
-    // =========================================================
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -908,8 +893,7 @@
     let faceIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
-    // geplante Richtung für Preview
-    let plannedDir = +1; // +1 CW, -1 CCW
+    let plannedDir = +1;
 
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
