@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KIPP – Rotation perfekt + KIP-Gruppe korrekt</title>
+  <title>DigiKipp – Prototype UI + Golden Logic</title>
 
   <style>
     :root{
@@ -36,15 +36,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
+      --ui-panel-bg: rgba(234, 215, 190, 0.90);
+      --ui-panel-border: rgba(0,0,0,0.35);
+
       --rotSign: 1;
       --rot: 0deg;
-
-      /* Regler-Styling */
-      --rail-dark: rgba(70, 45, 32, 0.95);
-      --rail-border: rgba(255,255,255,0.22);
-      --rail-border2: rgba(0,0,0,0.55);
-      --thumb: #ead7be;
-      --thumb-border: rgba(0,0,0,0.55);
     }
 
     html, body { height: 100%; }
@@ -78,7 +74,7 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 14vh;
+      margin-top: 8vh;
       display:flex;
       flex-direction: column;
       gap: 14px;
@@ -86,12 +82,34 @@
       align-items:center;
     }
 
-    /* ✅ Board jetzt 8×9 (eine Zusatzzeile unten) */
+    /* ========= UI TOP ========= */
+    .title{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-bottom: 2px;
+      user-select:none;
+    }
+    .title h1{
+      margin: 0;
+      padding: 0;
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      font-size: clamp(18px, 4.6vmin, 34px);
+      color: rgba(0,0,0,0.92);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.35),
+        0 10px 18px rgba(0,0,0,0.25);
+    }
+
+    /* ========= Board ========= */
     .board{
       position:relative;
       width: 100%;
       height: 0;
-      aspect-ratio: 8 / 9; /* <-- NEU */
+      aspect-ratio: 1 / 1;
       box-sizing: border-box;
 
       background: #0b0b0b;
@@ -109,20 +127,19 @@
         3px 6px 16px rgba(0,0,0,0.35);
     }
 
-    /* ✅ Grid jetzt 8×9 */
     .grid{
       position:absolute;
       inset:0;
       display:grid;
       grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(9, 1fr); /* <-- NEU */
+      grid-template-rows: repeat(8, 1fr);
       gap: var(--cell-gap);
       pointer-events: none;
       z-index: 1;
     }
 
     .cell{
-      background:#0b0b0b; /* schwarz */
+      background:#0b0b0b;
       border-radius: var(--cell-radius);
       box-sizing: border-box;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
@@ -296,6 +313,8 @@
     .slot .num > span .d{ display:inline-block; line-height: 1; }
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
     .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
+
+    /* ===== 12 enger (ca. -3px) ===== */
     .slot .num > span.num12 .d + .d{ margin-left: -3px; }
 
     .slot .num > span.dot::after{
@@ -321,7 +340,11 @@
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* KIP Gruppe (unverändert) */
+    /* =========================
+       KIP Gruppe (FIX: keine Verzerrung mehr)
+       Außen: nur ROTATION
+       Innen: scaleX(0.7)   <-- HIER geändert (von 0.5 auf 0.7)
+       ========================= */
     .kipGroup{
       position:absolute;
       inset:0;
@@ -349,7 +372,7 @@
 
       transform:
         translate(var(--pivot-x), var(--pivot-y))
-        scaleX(0.5)
+        scaleX(0.7)
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
       will-change: transform;
@@ -399,92 +422,227 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ✅ Regler in der neuen 9. Rasterzeile */
-    .speedRow{
-      position:absolute;
-      left: 0;
-      right: 0;
-      top: calc(8 * var(--step)); /* Row 9 beginnt bei 8*step */
-      height: var(--cell);
-      z-index: 6;
+    /* ========= UI PANEL (unter der Box) ========= */
+    .uiPanel{
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 12px 10px;
+      border-radius: 16px;
+      border: 1px solid var(--ui-panel-border);
+      background: var(--ui-panel-bg);
+      backdrop-filter: blur(6px);
+      box-shadow:
+        0 12px 22px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.16) inset;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .uiRow{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .uiLabel{
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      color: rgba(0,0,0,0.85);
+      user-select:none;
+    }
+
+    .mini{
+      font-size: 12px;
+      font-weight: 800;
+      opacity: 0.9;
+    }
+
+    .targetWrap{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .targetCard{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .targetSquare{
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--blau);
+      border: 2px solid rgba(0,0,0,0.55);
+      box-shadow:
+        0 6px 12px rgba(0,0,0,0.18),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
       display:flex;
       align-items:center;
       justify-content:center;
-      pointer-events: auto;
+      font-weight: 1000;
+      font-size: 22px;
+      color: #0b0b0b;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      user-select:none;
     }
 
-    /* Slot von halbem B bis halbem G */
-    .speedWrap{
-      position:relative;
-      height: calc(var(--cell) * 0.55);
+    .scoreBox{
+      display:flex;
+      align-items:baseline;
+      gap: 10px;
+      width: 100%;
+      justify-content: space-between;
+      user-select:none;
+    }
+
+    .scoreBig{
+      font-size: 22px;
+      font-weight: 1000;
+      letter-spacing: 0.04em;
+      color: rgba(0,0,0,0.88);
+    }
+
+    .scoreRight{
+      text-align:right;
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      align-items:flex-end;
+    }
+
+    /* ========= Slider ========= */
+    .sliderRow{
       display:flex;
       align-items:center;
-      justify-content:center;
-
-      left: 0;
-      width: calc(5 * var(--cell) + 4 * var(--cell-gap)); /* (B½ → G½) */
-      margin-left: calc(1 * var(--step) + 0.5 * var(--cell));
-      margin-right: auto;
+      gap: 10px;
+      user-select:none;
     }
 
-    .speedRange{
+    .icon{
+      width: 26px;
+      height: 26px;
+      flex: 0 0 auto;
+      opacity: 0.92;
+    }
+    .icon svg{
+      width:100%;
+      height:100%;
+      fill: none;
+      stroke: rgba(0,0,0,0.92);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 10px;                 /* dünner Slot */
-      background: var(--rail-dark); /* dunkelbraun */
+      height: 10px;
       border-radius: 999px;
-      border: 1px solid var(--rail-border2);
-      box-shadow:
-        0 0 0 1px var(--rail-border) inset,
-        0 8px 14px rgba(0,0,0,0.28);
+      background: rgba(0,0,0,0.18);
       outline: none;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px; /* quadratisch-ish */
+      background: #0b0b0b;
+      border: 2px solid rgba(255,255,255,0.22);
+      box-shadow:
+        0 8px 14px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(0,0,0,0.35);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #0b0b0b;
+      border: 2px solid rgba(255,255,255,0.22);
       cursor: pointer;
     }
 
-    .speedRange::-webkit-slider-thumb{
-      -webkit-appearance: none;
-      appearance: none;
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      background: var(--thumb);      /* beige Knopf */
-      border: 2px solid var(--thumb-border);
+    .startBtn{
+      width: 100%;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 14px 16px;
+      border-radius: 14px;
+      cursor: pointer;
       box-shadow:
-        0 10px 14px rgba(0,0,0,0.30),
-        0 0 0 1px rgba(255,255,255,0.22) inset;
-      margin-top: -10px; /* zentrieren über 10px Track */
+        0 10px 18px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(255,255,255,0.15) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .startBtn:active{
+      transform: translateY(1px) scale(0.99);
+      filter: brightness(0.97);
     }
 
-    .speedRange::-moz-range-thumb{
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      background: var(--thumb);
-      border: 2px solid var(--thumb-border);
+    /* ========= DEV Controls (lassen wir fürs Testen da) ========= */
+    .controls{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      gap: 12px;
+      padding: 0 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+      opacity: 0.95;
+    }
+
+    .btn{
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      border-radius: 14px;
+      cursor: pointer;
       box-shadow:
-        0 10px 14px rgba(0,0,0,0.30),
-        0 0 0 1px rgba(255,255,255,0.22) inset;
+        0 10px 18px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(255,255,255,0.15) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    .speedRange::-moz-range-track{
-      height: 10px;
-      background: var(--rail-dark);
-      border-radius: 999px;
-      border: 1px solid var(--rail-border2);
+    .btn:active{
+      transform: translateY(1px) scale(0.99);
+      filter: brightness(0.97);
     }
-
-    /* Buttons-Container bleibt zwar im Code möglich,
-       aber wir zeigen ihn NICHT (du wolltest die 3 Buttons weg). */
-    .controls{ display:none; }
   </style>
 </head>
 
 <body>
   <div class="stage">
+
+    <!-- ===== UI TOP: Titel ===== -->
+    <div class="title" aria-label="Titel">
+      <h1>DigiKipp</h1>
+    </div>
+
+    <!-- ===== Board ===== -->
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-      <div id="grid" class="grid" aria-label="8×9 Raster"></div>
+      <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
         <div class="cubeShadow" aria-hidden="true"></div>
@@ -517,22 +675,69 @@
       </div>
 
       <div class="ball" aria-label="Kugel"></div>
-
-      <!-- ✅ Regler sitzt jetzt IN der neuen schwarzen 9. Rasterzeile -->
-      <div class="speedRow" aria-label="Kippspeed Regler">
-        <div class="speedWrap">
-          <input id="speed" class="speedRange" type="range" min="0" max="9" value="5" />
-        </div>
-      </div>
     </div>
 
-    <!-- (Buttons sind bewusst ausgeblendet, siehe CSS .controls{display:none}) -->
+    <!-- ===== UI PANEL (Attrappen / Dummy) ===== -->
+    <div class="uiPanel" aria-label="UI Panel (noch ohne Logik)">
+      <!-- Slider: Turtle / Hare Piktogramme -->
+      <div class="sliderRow" aria-label="Kippspeed">
+        <div class="icon" aria-hidden="true" title="langsam">
+          <!-- Turtle (Outline) -->
+          <svg viewBox="0 0 24 24">
+            <path d="M4 14c0 2 2 3 4 3h5c4 0 7-2 7-5 0-3-3-5-7-5H9"/>
+            <path d="M9 12h5"/>
+            <path d="M6 17v2"/>
+            <path d="M10 17v2"/>
+            <path d="M16 16v2"/>
+            <path d="M20 12h2"/>
+            <path d="M6 11l-2-1"/>
+          </svg>
+        </div>
+
+        <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
+
+        <div class="icon" aria-hidden="true" title="schnell">
+          <!-- Hare (Outline) -->
+          <svg viewBox="0 0 24 24">
+            <path d="M6 14c0 3 3 5 7 5 4 0 7-2 7-5 0-2-2-4-5-4H9c-2 0-3 2-3 4Z"/>
+            <path d="M9 10V6c0-2 2-3 3-3"/>
+            <path d="M12 10l2-6"/>
+            <path d="M7 16l-2 2"/>
+            <path d="M17 16l2 2"/>
+            <path d="M14 13h1"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Kippziel -->
+      <div class="uiRow">
+        <div class="uiLabel">Kippziel</div>
+        <div class="targetCard">
+          <div id="targetSquare" class="targetSquare" aria-label="Ziel (Dummy)">7</div>
+        </div>
+      </div>
+
+      <!-- Punkte / Progress / Highscore -->
+      <div class="scoreBox" aria-label="Punkteblock">
+        <div class="scoreBig">Punkte: <span id="scoreVal">0</span></div>
+        <div class="scoreRight">
+          <div class="mini">Ziel: <span id="progressVal">0</span> / 11</div>
+          <div class="mini">Highscore: <span id="hiVal">66</span></div>
+        </div>
+      </div>
+
+      <!-- Start / Neu setzen -->
+      <button id="btnStart" class="startBtn">START</button>
+    </div>
+
+    <!-- ===== DEV Controls (für dich weiterhin zum Testen) ===== -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
       <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
       <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
       <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
     </div>
+
   </div>
 
   <script>
@@ -547,13 +752,21 @@
     const btnCW     = document.getElementById("btnCW");
     const btnCCW    = document.getElementById("btnCCW");
 
-    const speedEl   = document.getElementById("speed");
+    // ===== UI (Dummy, nicht verkabelt) =====
+    const btnStart = document.getElementById("btnStart");
+    const speedSlider = document.getElementById("speedSlider");
+
+    // rein optisch: Buttontext toggeln (ohne irgendeine Spiellogik)
+    let startedOnce = false;
+    btnStart.addEventListener("click", () => {
+      startedOnce = true;
+      btnStart.textContent = "ZAHLEN NEU SETZEN";
+      // Keine Logik hier. Nur Optik.
+    });
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
-      // Höhe ergibt sich aus aspect-ratio (8/9), wir setzen sie NICHT fix
-      // aber manche Browser mögen dennoch ein Pixel-Update:
-      boardEl.style.height = "auto";
+      boardEl.style.height = w + "px";
     }
 
     // ===== Raster farbig =====
@@ -580,14 +793,12 @@
       [key(1,"E"), "c-violett"],
       [key(1,"D"), "c-blau"],
       [key(1,"C"), "c-violett"],
-      // Row 9 bleibt bewusst schwarz (kein Eintrag)
     ]);
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
 
-      // ✅ jetzt 9 Zeilen
-      for(let r=1; r<=9; r++){
+      for(let r=1; r<=8; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
@@ -708,6 +919,10 @@
       assigned[idx] = true;
     }
 
+    // =========================================================
+    // DEIN FELD-ID KERN (CW):
+    // Face ist [F1,F2,F3,F4] in 100%-Logik.
+    // =========================================================
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
@@ -814,18 +1029,10 @@
       applyRotationAndNumbers();
     }
 
-    // Buttons sind ausgeblendet, aber Logik bleibt erreichbar:
-    // (Falls du später wieder Buttons willst, sind Events schon da.)
     btnMix.addEventListener("click", reroll12);
     btnKip50.addEventListener("click", () => setKipMode(!kipOn));
     btnCW.addEventListener("click", stepCW);
     btnCCW.addEventListener("click", stepCCW);
-
-    // Regler hat derzeit nur UI – die Kipp-Zeit koppeln wir später dran.
-    speedEl.addEventListener("input", () => {
-      // Placeholder: hier später Map 0..9 -> 5.0s .. 0.5s (oder was du willst)
-      // console.log("speed:", speedEl.value);
-    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
