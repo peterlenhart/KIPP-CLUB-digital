@@ -188,7 +188,6 @@
       pointer-events: none;
     }
 
-    /* Gruppen: Rotation ist SNAP, aber ohne Transition */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -206,7 +205,6 @@
       transform-origin: 0 0;
     }
 
-    /* ✅ KNALLHART (kein opacity) -> kein Blinken möglich */
     .hidden{ display:none !important; }
 
     .cubeShadow{
@@ -256,16 +254,12 @@
       width: var(--cell);
       height: var(--cell);
       box-sizing: border-box;
-
       background:
         linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
         var(--slot-fill);
-
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
-
       z-index: 7;
-
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -287,12 +281,10 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-
       font-weight: 900;
       color: #111;
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
@@ -334,13 +326,11 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* W Vollansicht Slots */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* KIP Darstellung */
     .kipScale{
       position:absolute;
       inset:0;
@@ -391,7 +381,6 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* UI */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -765,7 +754,6 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
-    // ✅ Nur W rendern (wenn W sichtbar ist)
     function renderW(animate=false){
       setRotationSnap();
       const curr = sets[faceIndex];
@@ -776,22 +764,27 @@
       }
     }
 
-    // ✅ Nur KIP rendern (wenn KIP sichtbar ist)
+    // ✅ FIX: Linke KIP-Seite NUR anzeigen, wenn die nächste Fläche bereits assigned/bestückt ist.
     function renderKip(){
       setRotationSnap();
       const curr = sets[faceIndex];
       const nextFaceIndex = (faceIndex + 1) % 3;
-      const next = sets[nextFaceIndex];
 
-      // rechts: aktuelle (die “wegkippt”)
+      // rechts: aktuelle (die “wegkippt”) -> darf Zahlen haben, wenn sie hat
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], curr[i], false);
         if(curr[i] != null) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links: nächste (die “auftaucht”)
-      const nextPreview = mapHiddenToVisible_CW(next);
+      // links: nächste (die “auftaucht”) -> nur wenn assigned, sonst LEER
+      let nextPreview;
+      if(assigned[nextFaceIndex]){
+        nextPreview = mapHiddenToVisible_CW(sets[nextFaceIndex]);
+      } else {
+        nextPreview = [null,null,null,null];
+      }
+
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipLeft[i], nextPreview[i], false);
         if(nextPreview[i] != null) setDot(slotTargetsKipLeft[i], nextPreview[i]);
@@ -846,7 +839,7 @@
 
       reroll12_keepEmpty();
 
-      // 1) W1 leer (kurz, damit man es sieht)
+      // 1) W1 leer
       showW();
       renderW(false);
       await sleep(STEP_MS);
@@ -856,31 +849,29 @@
       renderW(true);
       await sleep(STEP_MS);
 
-      // 3) KIP W1->W2 (W2 muss fürs Bild existieren!)
-      ensureAssigned(1);
+      // 3) KIP W1->W2 (W2 ist NOCH NICHT bestückt => muss leer sein)
       showKip();
       renderKip();
       await sleep(STEP_MS);
 
       // 4) W2 bestückt
-      advanceFullCW_andAssign(); // jetzt ist faceIndex=1
+      advanceFullCW_andAssign(); // faceIndex=1 + assigned(1)
       showW();
       renderW(true);
       await sleep(STEP_MS);
 
-      // 5) KIP W2->W3
-      ensureAssigned(2);
+      // 5) KIP W2->W3 (W3 NOCH NICHT bestückt => leer)
       showKip();
       renderKip();
       await sleep(STEP_MS);
 
       // 6) W3 bestückt
-      advanceFullCW_andAssign(); // faceIndex=2
+      advanceFullCW_andAssign(); // faceIndex=2 + assigned(2)
       showW();
       renderW(true);
       await sleep(STEP_MS);
 
-      // 7) KIP W3->W1 (W1 existiert schon)
+      // 7) KIP W3->W1 (W1 existiert schon => links darf Zahlen zeigen)
       showKip();
       renderKip();
       await sleep(STEP_MS);
