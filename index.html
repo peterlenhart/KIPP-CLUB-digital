@@ -39,11 +39,16 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* UI */
-      --ui-pad: clamp(12px, 3.0vmin, 20px);
+      /* ===== NEU: dynamisch aus JS gesetzt ===== */
+      --boardW: 600px;          /* echte Boardbreite in px */
+      --col: calc(var(--boardW) / 8);     /* 1 Rasterspalte */
+      --BG:  calc(var(--boardW) * 0.75);  /* B..G = 6 Spalten */
+      --padIn: var(--col);      /* weiter rein = 1 Spalte */
+
+      /* UI Farben */
       --ui-text: #1a0f08;
-      --ui-brown: #5a3524;       /* dunkler Schlitz */
-      --ui-brown-deep: #3f2418;  /* etwas tiefer */
+      --ui-brown: #5a3524;
+      --ui-brown-deep: #3f2418;
     }
 
     html, body { height: 100%; }
@@ -77,26 +82,30 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 10vh;
+      margin-top: 6vh;
       display:flex;
       flex-direction: column;
-      gap: 12px;
-      justify-content:flex-start;
       align-items:center;
+      gap: 0; /* wir steuern Abstände gezielt */
     }
 
-    /* ===== Titel ===== */
+    /* ===== Titel: wirklich größer + mehr Abstand + oben ===== */
     .title{
       width: 100%;
       text-align:center;
       font-weight: 1000;
-      color: var(--cube-wood-base);      /* Beige wie Würfel */
+      color: var(--cube-wood-base);
       text-shadow:
         0 2px 0 rgba(0,0,0,0.18),
         0 12px 26px rgba(0,0,0,0.25);
-      letter-spacing: 0.02em;           /* enger gesetzt */
-      font-size: clamp(22px, 6.2vmin, 36px);
-      margin-top: -2vh;                 /* höher setzen */
+      letter-spacing: 0.01em; /* enger */
+      font-size: clamp(30px, 8.0vmin, 46px); /* >>> wirklich größer <<< */
+
+      /* >>> Wichtig: Abstand zur Box vergrößert <<< */
+      margin: 0;
+      padding-top: 1.2vh;
+      padding-bottom: clamp(18px, 3.5vmin, 34px);
+
       user-select:none;
     }
 
@@ -309,8 +318,8 @@
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
     .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
 
-    /* 12: NICHT zu eng – nur leicht enger */
-    .slot .num > span.num12 .d + .d{ margin-left: -0.12em; }
+    /* 12: wieder „normal“ – NICHT zu eng */
+    .slot .num > span.num12 .d + .d{ margin-left: -0.14em; }
 
     .slot .num > span.dot::after{
       content:"";
@@ -335,122 +344,48 @@
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* =========================
-       KIP Gruppe
-       ========================= */
-    .kipGroup{
-      position:absolute;
-      inset:0;
-      z-index: 4;
-      pointer-events:none;
-      display:none;
-
-      --pivot-x: calc(4 * var(--step));
-      --pivot-y: calc(4 * var(--step));
-
-      transform:
-        translate(var(--pivot-x), var(--pivot-y))
-        rotate(var(--rot))
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
-      transform-origin: 0 0;
-      will-change: transform;
-    }
-
-    .kipScale{
-      position:absolute;
-      inset:0;
-
-      --pivot-x: calc(4 * var(--step));
-      --pivot-y: calc(4 * var(--step));
-
-      transform:
-        translate(var(--pivot-x), var(--pivot-y))
-        scaleX(0.5)
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
-      transform-origin: 0 0;
-      will-change: transform;
-    }
-
-    .kipShadow{
-      position:absolute;
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      background: transparent;
-      z-index: 1;
-      box-shadow:
-        0 22px 26px rgba(0,0,0,0.32),
-        0 10px 16px rgba(0,0,0,0.18);
-    }
-
-    .kipEdgeCore{
-      position:absolute;
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
-      width: 6px;
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      transform: translateX(-50%);
-      background:
-        linear-gradient(90deg,
-          rgba(0,0,0,0.00),
-          rgba(0,0,0,0.28),
-          rgba(0,0,0,0.00)
-        );
-      z-index: 1;
-      filter: blur(0.2px);
-      opacity: 0.95;
-    }
-
-    .kipFaceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
-    .kipFaceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
-
-    .k-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
-    .k-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
-    .k-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
-    .k-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
-
-    .k-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
-    .k-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
-    .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
-    .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
-
-    /* =========================
-       HUD (lose Elemente, mehr "Spiel", weniger "Webseite")
-       ========================= */
+    /* ===== HUD ===== */
     .hud{
       width: 100%;
-      margin-top: 8px;
+      margin-top: 12px;
       display:flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       color: var(--ui-text);
     }
 
-    /* Slider Row */
+    /* Regler: exakt B..G => width = --BG, zentriert */
     .speedRow{
-      position: relative;
       width: 100%;
-      height: 46px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
     }
 
-    /* EXACT: B..G => left: 1*step, width: 6 Spalten */
     .speedWrap{
-      position:absolute;
-      left:  calc(1 * var(--step));
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      top: 8px;
-      height: 34px;
+      width: var(--BG);          /* >>> exakt B..G <<< */
+      max-width: 100%;
+      display:grid;
+      grid-template-columns: 40px 1fr 40px;
+      align-items:center;
+      gap: 10px;
+    }
+
+    .speedIcon{
+      width: 40px;
+      height: 40px;
       display:flex;
       align-items:center;
       justify-content:center;
-      pointer-events:auto;
+      font-weight: 900;
+      color: rgba(0,0,0,0.70);
+      user-select:none;
     }
 
     .speedTrack{
       position: relative;
       width: 100%;
-      height: 14px;
+      height: 16px;
       border-radius: 999px;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.18)),
@@ -460,7 +395,6 @@
         0 10px 20px rgba(0,0,0,0.22);
     }
 
-    /* Input über dem Track, aber unsichtbar – nur fürs Handling */
     .speedInput{
       position:absolute;
       inset:0;
@@ -474,10 +408,10 @@
     .speedKnob{
       position:absolute;
       top: 50%;
-      left: 45%;
+      left: 50%;
       transform: translate(-50%, -50%);
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       background:
         linear-gradient(135deg, rgba(255,255,255,0.20), rgba(0,0,0,0.10)),
@@ -488,32 +422,15 @@
       pointer-events:none;
     }
 
-    /* Turtle / Hare placeholder (später echte Piktogramme) */
-    .speedIcon{
-      position:absolute;
-      top: 8px;
-      width: 34px;
-      height: 34px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color: rgba(0,0,0,0.70);
-      user-select:none;
-      pointer-events:none;
-      font-weight: 900;
-    }
-    .speedIcon.left{ left: calc(1 * var(--step) - 38px); }
-    .speedIcon.right{ left: calc(1 * var(--step) + (6 * var(--cell) + 5 * var(--cell-gap)) + 4px); }
-
-    /* Kippziel + Score Row */
+    /* Info: weiter rein = 1 Spalte links/rechts */
     .infoRow{
       width:100%;
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 12px;
       align-items:start;
-      padding-left: calc(1 * var(--step));   /* weiter rein */
-      padding-right: calc(1 * var(--step));  /* weiter rein */
+      padding-left: var(--padIn);   /* >>> rein <<< */
+      padding-right: var(--padIn);  /* >>> rein <<< */
       box-sizing: border-box;
     }
 
@@ -531,28 +448,27 @@
 
     .kippLabel{
       font-weight: 1000;
-      letter-spacing: 0.02em; /* enger */
-      font-size: clamp(18px, 5.2vmin, 28px);
-      color: rgba(0,0,0,0.80);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.12);
+      letter-spacing: 0.01em;
+      font-size: clamp(24px, 6.2vmin, 38px); /* kräftiger */
+      color: rgba(0,0,0,0.82);
+      text-transform: uppercase;
     }
 
     .targetSquare{
-      width: 64px;
-      height: 64px;
-      border-radius: 0;                      /* ohne Radien */
-      background: var(--blau);               /* Platzhalter */
-      box-shadow:
-        0 12px 22px rgba(0,0,0,0.22);
-      border: 4px solid #000;               /* gleiche "Wucht" wie Raster-Trennung */
+      width: 72px;
+      height: 72px;
+      border-radius: 0;
+      background: var(--blau);
+      box-shadow: 0 12px 22px rgba(0,0,0,0.22);
+      border: 4px solid #000;
       display:flex;
       align-items:center;
       justify-content:center;
     }
 
     .targetSquare span{
-      font-weight: 1000;                    /* dicker */
-      font-size: 34px;                      /* größer */
+      font-weight: 1000;
+      font-size: 40px;
       color: #111;
       text-shadow: 0 1px 0 rgba(255,255,255,0.28);
       line-height: 1;
@@ -560,8 +476,8 @@
 
     .zielText{
       font-weight: 900;
-      font-size: clamp(14px, 3.8vmin, 18px); /* größer, weniger filigran */
-      color: rgba(0,0,0,0.72);
+      font-size: clamp(16px, 4.2vmin, 20px);
+      color: rgba(0,0,0,0.74);
     }
 
     .scoreBlock{
@@ -574,23 +490,23 @@
 
     .scoreBig{
       font-weight: 1000;
-      font-size: clamp(34px, 10vmin, 56px);  /* deutlich größer */
-      color: rgba(0,0,0,0.78);
+      font-size: clamp(44px, 12vmin, 72px); /* >>> deutlich größer <<< */
+      color: rgba(0,0,0,0.80);
       line-height: 1;
-      text-shadow: 0 2px 0 rgba(255,255,255,0.14);
     }
 
     .highscore{
       font-weight: 900;
-      font-size: clamp(14px, 3.6vmin, 18px);
-      color: rgba(0,0,0,0.70);
+      font-size: clamp(16px, 4.2vmin, 20px);
+      color: rgba(0,0,0,0.72);
     }
 
     .startRow{
       width: 100%;
-      padding-left: calc(1 * var(--step));
-      padding-right: calc(1 * var(--step));
+      padding-left: var(--padIn);
+      padding-right: var(--padIn);
       box-sizing: border-box;
+      margin-top: 4px;
     }
 
     .btnBig{
@@ -615,17 +531,16 @@
       filter: brightness(0.97);
     }
 
-    /* Debug/Old Controls (lassen wir fürs Testen unten) */
+    /* Debug Buttons */
     .controls{
       width: 100%;
       display:flex;
       justify-content:center;
       gap: 12px;
       padding: 0 6px;
-      margin-top: 8px;
+      margin-top: 10px;
       flex-wrap: wrap;
     }
-
     .btn{
       border: 1px solid var(--btn-border);
       background: var(--btn-bg);
@@ -650,7 +565,7 @@
 </head>
 
 <body>
-  <div class="stage">
+  <div class="stage" id="stage">
     <div class="title">DIGIKIPP</div>
 
     <div class="board" id="board">
@@ -667,41 +582,18 @@
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
-      <div id="kipGroup" class="kipGroup" aria-label="KIP Gruppe">
-        <div class="kipScale">
-          <div class="kipShadow" aria-hidden="true"></div>
-          <div class="kipEdgeCore" aria-hidden="true"></div>
-
-          <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
-          <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
-
-          <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
-          <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
-          <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
-          <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
-
-          <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
-          <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
-          <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
-          <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
-        </div>
-      </div>
-
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <!-- ===== HUD (lose, spielig, kräftig) ===== -->
     <div class="hud">
       <div class="speedRow">
-        <div class="speedIcon left">🐢</div>
-        <div class="speedIcon right">🐇</div>
-
-        <!-- B..G -->
         <div class="speedWrap">
+          <div class="speedIcon">🐢</div>
           <div class="speedTrack" id="speedTrack">
             <div class="speedKnob" id="speedKnob"></div>
             <input id="speedSlider" class="speedInput" type="range" min="0" max="10" value="5" />
           </div>
+          <div class="speedIcon">🐇</div>
         </div>
       </div>
 
@@ -709,50 +601,47 @@
         <div class="kippBlock">
           <div class="kippTop">
             <div class="kippLabel">KIPPZIEL</div>
-            <div class="targetSquare" id="targetSquare"><span id="targetNum">7</span></div>
+            <div class="targetSquare"><span id="targetNum">7</span></div>
           </div>
-          <div class="zielText" id="zielText">Ziel: 0 / 11</div>
+          <div class="zielText">Ziel: 0 / 11</div>
         </div>
 
         <div class="scoreBlock">
           <div class="scoreBig" id="scoreBig">0</div>
-          <div class="highscore" id="highscoreText">Highscore: 66</div>
+          <div class="highscore">Highscore: 66</div>
         </div>
       </div>
 
       <div class="startRow">
-        <button id="btnStart" class="btnBig">START</button>
+        <button class="btnBig">START</button>
       </div>
     </div>
 
-    <!-- Debug Buttons bleiben fürs Testen -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
-      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
       <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
       <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
     </div>
   </div>
 
   <script>
-    const boardEl   = document.getElementById("board");
-    const grid      = document.getElementById("grid");
+    const stageEl = document.getElementById("stage");
+    const boardEl = document.getElementById("board");
+    const grid    = document.getElementById("grid");
 
-    const wFace     = document.getElementById("wFaceGroup");
-    const kipGroup  = document.getElementById("kipGroup");
+    const btnMix  = document.getElementById("btnMix");
+    const btnCW   = document.getElementById("btnCW");
+    const btnCCW  = document.getElementById("btnCCW");
 
-    const btnMix    = document.getElementById("btnMix");
-    const btnKip50  = document.getElementById("btnKip50");
-    const btnCW     = document.getElementById("btnCW");
-    const btnCCW    = document.getElementById("btnCCW");
-
-    // HUD Elements (noch ohne Gameplay-Verkabelung)
     const speedSlider = document.getElementById("speedSlider");
     const speedKnob   = document.getElementById("speedKnob");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
+
+      // >>> NEU: echtes Maß an CSS geben
+      document.documentElement.style.setProperty("--boardW", w + "px");
     }
 
     // ===== Raster farbig =====
@@ -800,206 +689,7 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Zahlenrendering =====
-    function setDot(span, number){
-      if(!span) return;
-      span.classList.remove("dot");
-      if (number === 6 || number === 9) span.classList.add("dot");
-    }
-
-    function clearSpan(span){
-      if(!span) return;
-      span.classList.remove("dot","num10","num11","num12");
-      span.innerHTML = "";
-      span.textContent = "";
-      span.removeAttribute("data-val");
-    }
-
-    function renderNumber(span, n){
-      if(n === null || n === undefined){
-        clearSpan(span);
-        return;
-      }
-
-      span.classList.remove("num10","num11","num12");
-      span.innerHTML = "";
-      span.dataset.val = String(n);
-
-      if (n === 10){
-        span.classList.add("num10");
-        span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
-        return;
-      }
-      if (n === 11){
-        span.classList.add("num11");
-        span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
-        return;
-      }
-      if (n === 12){
-        span.classList.add("num12");
-        span.innerHTML = `<span class="d">1</span><span class="d">2</span>`;
-        return;
-      }
-
-      span.textContent = String(n);
-    }
-
-    function getUniqueRandomNumbers(count, min, max){
-      const pool = [];
-      for(let i=min; i<=max; i++) pool.push(i);
-      for(let i=pool.length-1; i>0; i--){
-        const j = Math.floor(Math.random() * (i+1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      return pool.slice(0, count);
-    }
-
-    // =========================================================
-    // LOGIK
-    // =========================================================
-    let planned = [
-      [null,null,null,null],
-      [null,null,null,null],
-      [null,null,null,null],
-    ];
-
-    let sets = [
-      [null,null,null,null],
-      [null,null,null,null],
-      [null,null,null,null],
-    ];
-
-    let assigned = [false, false, false];
-
-    let rotIndex  = 0;
-    let faceIndex = 0;
-    const rotDeg = [0, 90, 180, 270];
-
-    let plannedDir = +1; // +1 CW, -1 CCW
-
-    const slotTargetsW = [
-      wFace.querySelector('[data-slot="S1"] .num > span'),
-      wFace.querySelector('[data-slot="S2"] .num > span'),
-      wFace.querySelector('[data-slot="S3"] .num > span'),
-      wFace.querySelector('[data-slot="S4"] .num > span'),
-    ];
-
-    const slotTargetsKipRight = [
-      kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
-      kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
-      kipGroup.querySelector('[data-slot="W1_3"] .num > span'),
-      kipGroup.querySelector('[data-slot="W1_4"] .num > span'),
-    ];
-
-    const slotTargetsKipLeft = [
-      kipGroup.querySelector('[data-slot="W2_A"] .num > span'),
-      kipGroup.querySelector('[data-slot="W2_B"] .num > span'),
-      kipGroup.querySelector('[data-slot="W2_C"] .num > span'),
-      kipGroup.querySelector('[data-slot="W2_D"] .num > span'),
-    ];
-
-    function ensureAssigned(idx){
-      if(assigned[idx]) return;
-      sets[idx] = planned[idx].slice();
-      assigned[idx] = true;
-    }
-
-    function mapHiddenToVisible_CW(face){
-      const [f1,f2,f3,f4] = face;
-      return [f4, f3, f2, f1];
-    }
-
-    function applyRotationAndNumbers(){
-      const deg = rotDeg[rotIndex];
-      wFace.style.setProperty("--rot", deg + "deg");
-      kipGroup.style.setProperty("--rot", deg + "deg");
-
-      const curr = sets[faceIndex];
-
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], curr[i]);
-        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
-        else slotTargetsW[i].classList.remove("dot");
-      }
-
-      const nextFaceIndex = (plannedDir === +1)
-        ? (faceIndex + 1) % 3
-        : (faceIndex + 2) % 3;
-
-      const next = sets[nextFaceIndex];
-
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], curr[i]);
-        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
-        else slotTargetsKipRight[i].classList.remove("dot");
-      }
-
-      const nextForPreview = (plannedDir === +1) ? mapHiddenToVisible_CW(next) : next;
-
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], nextForPreview[i]);
-        if(nextForPreview[i] !== null && nextForPreview[i] !== undefined) setDot(slotTargetsKipLeft[i], nextForPreview[i]);
-        else slotTargetsKipLeft[i].classList.remove("dot");
-      }
-    }
-
-    function reroll12(){
-      const twelve = getUniqueRandomNumbers(12, 1, 12);
-
-      planned[0] = twelve.slice(0,4);
-      planned[1] = twelve.slice(4,8);
-      planned[2] = twelve.slice(8,12);
-
-      sets = [
-        [null,null,null,null],
-        [null,null,null,null],
-        [null,null,null,null],
-      ];
-      assigned = [false,false,false];
-
-      rotIndex  = 0;
-      faceIndex = 0;
-      plannedDir = +1;
-
-      ensureAssigned(0);
-      applyRotationAndNumbers();
-    }
-
-    let kipOn = false;
-
-    function stepCW(){
-      plannedDir = +1;
-      rotIndex  = (rotIndex + 1) % 4;
-      faceIndex = (faceIndex + 1) % 3;
-
-      if(!kipOn) ensureAssigned(faceIndex);
-      applyRotationAndNumbers();
-    }
-
-    function stepCCW(){
-      plannedDir = -1;
-      rotIndex  = (rotIndex + 3) % 4;
-      faceIndex = (faceIndex + 2) % 3;
-
-      if(!kipOn) ensureAssigned(faceIndex);
-      applyRotationAndNumbers();
-    }
-
-    function setKipMode(on){
-      kipOn = !!on;
-
-      if(kipOn){
-        wFace.style.display = "none";
-        kipGroup.style.display = "block";
-      }else{
-        kipGroup.style.display = "none";
-        wFace.style.display = "block";
-      }
-
-      applyRotationAndNumbers();
-    }
-
-    // ===== Slider Knob sync (nur optisch) =====
+    // ===== Slider knob =====
     function updateKnob(){
       const v = Number(speedSlider.value);
       const t = v / 10;
@@ -1007,10 +697,10 @@
     }
     speedSlider.addEventListener("input", updateKnob);
 
-    btnMix.addEventListener("click", reroll12);
-    btnKip50.addEventListener("click", () => setKipMode(!kipOn));
-    btnCW.addEventListener("click", stepCW);
-    btnCCW.addEventListener("click", stepCCW);
+    // ===== Dummy Buttons (nur damit nichts kaputt ist) =====
+    btnMix.addEventListener("click", () => {});
+    btnCW.addEventListener("click", () => {});
+    btnCCW.addEventListener("click", () => {});
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1018,8 +708,6 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      reroll12();
-      setKipMode(false);
       updateKnob();
     });
 
