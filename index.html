@@ -432,7 +432,7 @@
       border: 1px solid var(--ui-panel-border);
       background: var(--ui-panel-bg);
       backdrop-filter: blur(6px);
-      /* ✅ NUR HIER: schwarzer Innenrahmen 4px ergänzt */
+      /* ✅ NUR HIER: schwarzer Innenrahmen 4px */
       box-shadow:
         inset 0 0 0 4px #000,
         0 12px 22px rgba(0,0,0,0.22),
@@ -560,7 +560,7 @@
       filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
     }
 
-    /* ✅ NUR HIER: Schlitz/Track schwarz */
+    /* ✅ Schlitz/Track schwarz */
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
@@ -615,38 +615,19 @@
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
-
-    /* ========= DEV Controls ========= */
-    .controls{
-      width: 100%;
-      display:flex;
-      justify-content:center;
-      gap: 12px;
-      padding: 0 6px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-      opacity: 0.95;
+    .startBtn[disabled]{
+      opacity: 0.75;
+      cursor: default;
     }
 
-    .btn{
-      border: 1px solid var(--btn-border);
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 12px 16px;
-      border-radius: 14px;
-      cursor: pointer;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+    /* ========= Fly-In Animation (nur Zahlen) ========= */
+    @keyframes flyIn {
+      0%   { opacity: 0; transform: translateY(-46px) scale(0.72); filter: blur(0.4px); }
+      70%  { opacity: 1; transform: translateY(6px) scale(1.03);  filter: blur(0px); }
+      100% { opacity: 1; transform: translateY(0px) scale(1.00);  filter: blur(0px); }
     }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
+    .flyin{
+      animation: flyIn 420ms cubic-bezier(.18,.84,.22,1) both;
     }
   </style>
 </head>
@@ -695,7 +676,7 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <div class="uiPanel" aria-label="UI Panel (noch ohne Logik)">
+    <div class="uiPanel" aria-label="UI Panel">
 
       <div class="sliderRow" aria-label="Kippspeed">
         <div class="icon" aria-hidden="true" title="langsam">
@@ -742,13 +723,6 @@
       <button id="btnStart" class="startBtn">START</button>
     </div>
 
-    <div class="controls">
-      <button id="btnMix" class="btn">Würfel mischen (12)</button>
-      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
-      <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
-      <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
-    </div>
-
   </div>
 
   <script>
@@ -758,26 +732,16 @@
     const wFace     = document.getElementById("wFaceGroup");
     const kipGroup  = document.getElementById("kipGroup");
 
-    const btnMix    = document.getElementById("btnMix");
-    const btnKip50  = document.getElementById("btnKip50");
-    const btnCW     = document.getElementById("btnCW");
-    const btnCCW    = document.getElementById("btnCCW");
-
-    // ===== UI (Dummy, nicht verkabelt) =====
+    // ===== UI =====
     const btnStart = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
-
-    let startedOnce = false;
-    btnStart.addEventListener("click", () => {
-      startedOnce = true;
-      btnStart.textContent = "ZAHLEN NEU SETZEN";
-    });
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
     }
 
+    // ===== Raster farbig =====
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -822,6 +786,7 @@
       grid.dataset.built = "1";
     }
 
+    // ===== Zahlenrendering =====
     function setDot(span, number){
       if(!span) return;
       span.classList.remove("dot");
@@ -830,7 +795,7 @@
 
     function clearSpan(span){
       if(!span) return;
-      span.classList.remove("dot","num10","num11","num12");
+      span.classList.remove("dot","num10","num11","num12","flyin");
       span.innerHTML = "";
       span.textContent = "";
       span.removeAttribute("data-val");
@@ -842,7 +807,7 @@
         return;
       }
 
-      span.classList.remove("num10","num11","num12");
+      span.classList.remove("num10","num11","num12","flyin");
       span.innerHTML = "";
       span.dataset.val = String(n);
 
@@ -875,6 +840,9 @@
       return pool.slice(0, count);
     }
 
+    // =========================================================
+    // LOGIK (Bestückung nur in 100%):
+    // =========================================================
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -893,7 +861,8 @@
     let faceIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
-    let plannedDir = +1;
+    // geplante Richtung für Preview
+    let plannedDir = +1; // +1 CW, -1 CCW
 
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
@@ -961,59 +930,10 @@
       }
     }
 
-    function reroll12(){
-      const twelve = getUniqueRandomNumbers(12, 1, 12);
-
-      planned[0] = twelve.slice(0,4);
-      planned[1] = twelve.slice(4,8);
-      planned[2] = twelve.slice(8,12);
-
-      sets = [
-        [null,null,null,null],
-        [null,null,null,null],
-        [null,null,null,null],
-      ];
-      assigned = [false,false,false];
-
-      rotIndex  = 0;
-      faceIndex = 0;
-      plannedDir = +1;
-
-      ensureAssigned(0);
-      applyRotationAndNumbers();
-    }
-
+    // ===== Anzeige-Modus (KIP ist fürs spätere Spiel, bleibt aktuell aus) =====
     let kipOn = false;
-
-    function stepCW(){
-      plannedDir = +1;
-
-      rotIndex  = (rotIndex + 1) % 4;
-      faceIndex = (faceIndex + 1) % 3;
-
-      if(!kipOn){
-        ensureAssigned(faceIndex);
-      }
-
-      applyRotationAndNumbers();
-    }
-
-    function stepCCW(){
-      plannedDir = -1;
-
-      rotIndex  = (rotIndex + 3) % 4;
-      faceIndex = (faceIndex + 2) % 3;
-
-      if(!kipOn){
-        ensureAssigned(faceIndex);
-      }
-
-      applyRotationAndNumbers();
-    }
-
     function setKipMode(on){
       kipOn = !!on;
-
       if(kipOn){
         wFace.style.display = "none";
         kipGroup.style.display = "block";
@@ -1021,23 +941,130 @@
         kipGroup.style.display = "none";
         wFace.style.display = "block";
       }
-
       applyRotationAndNumbers();
     }
 
-    btnMix.addEventListener("click", reroll12);
-    btnKip50.addEventListener("click", () => setKipMode(!kipOn));
-    btnCW.addEventListener("click", stepCW);
-    btnCCW.addEventListener("click", stepCCW);
+    // ===== Fly-In Helper =====
+    function triggerFlyIn(spans){
+      for(const s of spans){
+        if(!s) continue;
+        // nur animieren, wenn da wirklich eine Zahl steht
+        const hasContent = (s.textContent && s.textContent.trim().length) || (s.querySelector && s.querySelector(".d"));
+        if(!hasContent) continue;
 
+        s.classList.remove("flyin");
+        void s.offsetWidth; // reflow (wichtig)
+        s.classList.add("flyin");
+      }
+    }
+
+    function clearAllSlots(){
+      for(const s of slotTargetsW) clearSpan(s);
+      for(const s of slotTargetsKipRight) clearSpan(s);
+      for(const s of slotTargetsKipLeft) clearSpan(s);
+    }
+
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    // =========================================================
+    // START-Ablauf: W1 -> W2 -> W3 -> W1 (automatisch + Fly-In)
+    // =========================================================
+    let startedOnce = false;
+    let isRunning = false;
+
+    async function runAutoBestueckung(){
+      if(isRunning) return;
+      isRunning = true;
+
+      btnStart.disabled = true;
+      const oldText = btnStart.textContent;
+      btnStart.textContent = "BESTÜCKE…";
+
+      // 1) neue Random-Planung
+      const twelve = getUniqueRandomNumbers(12, 1, 12);
+      planned[0] = twelve.slice(0,4);
+      planned[1] = twelve.slice(4,8);
+      planned[2] = twelve.slice(8,12);
+
+      // 2) alles leer zeigen
+      sets = [
+        [null,null,null,null],
+        [null,null,null,null],
+        [null,null,null,null],
+      ];
+      assigned = [false,false,false];
+
+      plannedDir = +1;
+      rotIndex = 0;
+      faceIndex = 0;
+
+      setKipMode(false);
+      clearAllSlots();
+      applyRotationAndNumbers();
+      await sleep(120);
+
+      // Schritt W1
+      ensureAssigned(0);
+      applyRotationAndNumbers();
+      triggerFlyIn(slotTargetsW);
+      await sleep(520);
+
+      // Schritt W2 (CW)
+      rotIndex  = 1;
+      faceIndex = 1;
+      ensureAssigned(1);
+      applyRotationAndNumbers();
+      triggerFlyIn(slotTargetsW);
+      await sleep(520);
+
+      // Schritt W3 (CW)
+      rotIndex  = 2;
+      faceIndex = 2;
+      ensureAssigned(2);
+      applyRotationAndNumbers();
+      triggerFlyIn(slotTargetsW);
+      await sleep(520);
+
+      // zurück W1 (CW)
+      rotIndex  = 3;
+      faceIndex = 0;
+      ensureAssigned(0);
+      applyRotationAndNumbers();
+      triggerFlyIn(slotTargetsW);
+      await sleep(520);
+
+      // final: wieder sauber auf W1 / rot=0 fürs Spiel
+      rotIndex  = 0;
+      faceIndex = 0;
+      applyRotationAndNumbers();
+
+      startedOnce = true;
+      btnStart.textContent = "ZAHLEN NEU SETZEN";
+      btnStart.disabled = false;
+      isRunning = false;
+    }
+
+    btnStart.addEventListener("click", runAutoBestueckung);
+
+    // ===== Boot =====
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      reroll12();
+
+      // Startzustand: leer (keine Auto-Bestückung beim Laden)
+      sets = [
+        [null,null,null,null],
+        [null,null,null,null],
+        [null,null,null,null],
+      ];
+      assigned = [false,false,false];
+      rotIndex = 0;
+      faceIndex = 0;
       setKipMode(false);
+      applyRotationAndNumbers();
     });
 
     window.addEventListener("resize", () => {
