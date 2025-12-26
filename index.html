@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiKipp – Prototyp</title>
+  <title>KIPP – Rotation perfekt + KIP-Gruppe korrekt</title>
 
   <style>
     :root{
@@ -39,16 +39,12 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* ===== NEU: dynamisch aus JS gesetzt ===== */
-      --boardW: 600px;          /* echte Boardbreite in px */
-      --col: calc(var(--boardW) / 8);     /* 1 Rasterspalte */
-      --BG:  calc(var(--boardW) * 0.75);  /* B..G = 6 Spalten */
-      --padIn: var(--col);      /* weiter rein = 1 Spalte */
-
-      /* UI Farben */
-      --ui-text: #1a0f08;
-      --ui-brown: #5a3524;
-      --ui-brown-deep: #3f2418;
+      /* Regler-Styling */
+      --rail-dark: rgba(70, 45, 32, 0.95);
+      --rail-border: rgba(255,255,255,0.22);
+      --rail-border2: rgba(0,0,0,0.55);
+      --thumb: #ead7be;
+      --thumb-border: rgba(0,0,0,0.55);
     }
 
     html, body { height: 100%; }
@@ -82,38 +78,20 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 6vh;
+      margin-top: 14vh;
       display:flex;
       flex-direction: column;
+      gap: 14px;
+      justify-content:flex-start;
       align-items:center;
-      gap: 0; /* wir steuern Abstände gezielt */
     }
 
-    /* ===== Titel: wirklich größer + mehr Abstand + oben ===== */
-    .title{
-      width: 100%;
-      text-align:center;
-      font-weight: 1000;
-      color: var(--cube-wood-base);
-      text-shadow:
-        0 2px 0 rgba(0,0,0,0.18),
-        0 12px 26px rgba(0,0,0,0.25);
-      letter-spacing: 0.01em; /* enger */
-      font-size: clamp(30px, 8.0vmin, 46px); /* >>> wirklich größer <<< */
-
-      /* >>> Wichtig: Abstand zur Box vergrößert <<< */
-      margin: 0;
-      padding-top: 1.2vh;
-      padding-bottom: clamp(18px, 3.5vmin, 34px);
-
-      user-select:none;
-    }
-
+    /* ✅ Board jetzt 8×9 (eine Zusatzzeile unten) */
     .board{
       position:relative;
       width: 100%;
       height: 0;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 8 / 9; /* <-- NEU */
       box-sizing: border-box;
 
       background: #0b0b0b;
@@ -131,19 +109,20 @@
         3px 6px 16px rgba(0,0,0,0.35);
     }
 
+    /* ✅ Grid jetzt 8×9 */
     .grid{
       position:absolute;
       inset:0;
       display:grid;
       grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
+      grid-template-rows: repeat(9, 1fr); /* <-- NEU */
       gap: var(--cell-gap);
       pointer-events: none;
       z-index: 1;
     }
 
     .cell{
-      background:#0b0b0b;
+      background:#0b0b0b; /* schwarz */
       border-radius: var(--cell-radius);
       box-sizing: border-box;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
@@ -294,7 +273,7 @@
       align-items:center;
       justify-content:center;
 
-      font-weight: 1000;
+      font-weight: 900;
       color: #111;
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
@@ -317,9 +296,7 @@
     .slot .num > span .d{ display:inline-block; line-height: 1; }
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
     .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
-
-    /* 12: wieder „normal“ – NICHT zu eng */
-    .slot .num > span.num12 .d + .d{ margin-left: -0.14em; }
+    .slot .num > span.num12 .d + .d{ margin-left: -3px; }
 
     .slot .num > span.dot::after{
       content:"";
@@ -344,233 +321,170 @@
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== HUD ===== */
-    .hud{
-      width: 100%;
-      margin-top: 12px;
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-      color: var(--ui-text);
-    }
-
-    /* Regler: exakt B..G => width = --BG, zentriert */
-    .speedRow{
-      width: 100%;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-
-    .speedWrap{
-      width: var(--BG);          /* >>> exakt B..G <<< */
-      max-width: 100%;
-      display:grid;
-      grid-template-columns: 40px 1fr 40px;
-      align-items:center;
-      gap: 10px;
-    }
-
-    .speedIcon{
-      width: 40px;
-      height: 40px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 900;
-      color: rgba(0,0,0,0.70);
-      user-select:none;
-    }
-
-    .speedTrack{
-      position: relative;
-      width: 100%;
-      height: 16px;
-      border-radius: 999px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.18)),
-        var(--ui-brown);
-      box-shadow:
-        inset 0 2px 6px rgba(0,0,0,0.35),
-        0 10px 20px rgba(0,0,0,0.22);
-    }
-
-    .speedInput{
+    /* KIP Gruppe (unverändert) */
+    .kipGroup{
       position:absolute;
       inset:0;
-      width:100%;
-      height:100%;
-      opacity:0;
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
+      z-index: 4;
+      pointer-events:none;
+      display:none;
+
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        rotate(var(--rot))
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+      will-change: transform;
     }
 
-    .speedKnob{
+    .kipScale{
       position:absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      inset:0;
+
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        scaleX(0.5)
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .kipShadow{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      background: transparent;
+      z-index: 1;
+      box-shadow:
+        0 22px 26px rgba(0,0,0,0.32),
+        0 10px 16px rgba(0,0,0,0.18);
+    }
+
+    .kipEdgeCore{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+      width: 6px;
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      transform: translateX(-50%);
+      background:
+        linear-gradient(90deg,
+          rgba(0,0,0,0.00),
+          rgba(0,0,0,0.28),
+          rgba(0,0,0,0.00)
+        );
+      z-index: 1;
+      filter: blur(0.2px);
+      opacity: 0.95;
+    }
+
+    .kipFaceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .kipFaceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+
+    .k-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
+    .k-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
+    .k-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .k-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+
+    .k-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
+    .k-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* ✅ Regler in der neuen 9. Rasterzeile */
+    .speedRow{
+      position:absolute;
+      left: 0;
+      right: 0;
+      top: calc(8 * var(--step)); /* Row 9 beginnt bei 8*step */
+      height: var(--cell);
+      z-index: 6;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events: auto;
+    }
+
+    /* Slot von halbem B bis halbem G */
+    .speedWrap{
+      position:relative;
+      height: calc(var(--cell) * 0.55);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      left: 0;
+      width: calc(5 * var(--cell) + 4 * var(--cell-gap)); /* (B½ → G½) */
+      margin-left: calc(1 * var(--step) + 0.5 * var(--cell));
+      margin-right: auto;
+    }
+
+    .speedRange{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;                 /* dünner Slot */
+      background: var(--rail-dark); /* dunkelbraun */
+      border-radius: 999px;
+      border: 1px solid var(--rail-border2);
+      box-shadow:
+        0 0 0 1px var(--rail-border) inset,
+        0 8px 14px rgba(0,0,0,0.28);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .speedRange::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
       width: 28px;
       height: 28px;
-      border-radius: 6px;
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.20), rgba(0,0,0,0.10)),
-        var(--cube-wood-base);
+      border-radius: 9px;
+      background: var(--thumb);      /* beige Knopf */
+      border: 2px solid var(--thumb-border);
       box-shadow:
-        0 10px 18px rgba(0,0,0,0.28),
-        0 0 0 2px rgba(0,0,0,0.30);
-      pointer-events:none;
+        0 10px 14px rgba(0,0,0,0.30),
+        0 0 0 1px rgba(255,255,255,0.22) inset;
+      margin-top: -10px; /* zentrieren über 10px Track */
     }
 
-    /* Info: weiter rein = 1 Spalte links/rechts */
-    .infoRow{
-      width:100%;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      align-items:start;
-      padding-left: var(--padIn);   /* >>> rein <<< */
-      padding-right: var(--padIn);  /* >>> rein <<< */
-      box-sizing: border-box;
-    }
-
-    .kippBlock{
-      display:flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .kippTop{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-    }
-
-    .kippLabel{
-      font-weight: 1000;
-      letter-spacing: 0.01em;
-      font-size: clamp(24px, 6.2vmin, 38px); /* kräftiger */
-      color: rgba(0,0,0,0.82);
-      text-transform: uppercase;
-    }
-
-    .targetSquare{
-      width: 72px;
-      height: 72px;
-      border-radius: 0;
-      background: var(--blau);
-      box-shadow: 0 12px 22px rgba(0,0,0,0.22);
-      border: 4px solid #000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .targetSquare span{
-      font-weight: 1000;
-      font-size: 40px;
-      color: #111;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.28);
-      line-height: 1;
-    }
-
-    .zielText{
-      font-weight: 900;
-      font-size: clamp(16px, 4.2vmin, 20px);
-      color: rgba(0,0,0,0.74);
-    }
-
-    .scoreBlock{
-      justify-self:end;
-      text-align:right;
-      display:flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .scoreBig{
-      font-weight: 1000;
-      font-size: clamp(44px, 12vmin, 72px); /* >>> deutlich größer <<< */
-      color: rgba(0,0,0,0.80);
-      line-height: 1;
-    }
-
-    .highscore{
-      font-weight: 900;
-      font-size: clamp(16px, 4.2vmin, 20px);
-      color: rgba(0,0,0,0.72);
-    }
-
-    .startRow{
-      width: 100%;
-      padding-left: var(--padIn);
-      padding-right: var(--padIn);
-      box-sizing: border-box;
-      margin-top: 4px;
-    }
-
-    .btnBig{
-      width:100%;
-      border: 1px solid var(--btn-border);
-      background: rgba(234,215,190,0.88);
-      color: var(--btn-text);
-      font-weight: 1000;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 16px 16px;
-      border-radius: 18px;
-      cursor: pointer;
+    .speedRange::-moz-range-thumb{
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: var(--thumb);
+      border: 2px solid var(--thumb-border);
       box-shadow:
-        0 14px 26px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btnBig:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
+        0 10px 14px rgba(0,0,0,0.30),
+        0 0 0 1px rgba(255,255,255,0.22) inset;
     }
 
-    /* Debug Buttons */
-    .controls{
-      width: 100%;
-      display:flex;
-      justify-content:center;
-      gap: 12px;
-      padding: 0 6px;
-      margin-top: 10px;
-      flex-wrap: wrap;
+    .speedRange::-moz-range-track{
+      height: 10px;
+      background: var(--rail-dark);
+      border-radius: 999px;
+      border: 1px solid var(--rail-border2);
     }
-    .btn{
-      border: 1px solid var(--btn-border);
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 12px 16px;
-      border-radius: 14px;
-      cursor: pointer;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
+
+    /* Buttons-Container bleibt zwar im Code möglich,
+       aber wir zeigen ihn NICHT (du wolltest die 3 Buttons weg). */
+    .controls{ display:none; }
   </style>
 </head>
 
 <body>
-  <div class="stage" id="stage">
-    <div class="title">DIGIKIPP</div>
-
+  <div class="stage">
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
-      <div id="grid" class="grid" aria-label="8×8 Raster"></div>
+      <div id="grid" class="grid" aria-label="8×9 Raster"></div>
 
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
         <div class="cubeShadow" aria-hidden="true"></div>
@@ -582,66 +496,64 @@
         <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
       </div>
 
+      <div id="kipGroup" class="kipGroup" aria-label="KIP Gruppe">
+        <div class="kipScale">
+          <div class="kipShadow" aria-hidden="true"></div>
+          <div class="kipEdgeCore" aria-hidden="true"></div>
+
+          <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
+          <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
+
+          <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
+          <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
+          <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
+          <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
+
+          <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
+          <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
+          <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+          <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+        </div>
+      </div>
+
       <div class="ball" aria-label="Kugel"></div>
-    </div>
 
-    <div class="hud">
-      <div class="speedRow">
+      <!-- ✅ Regler sitzt jetzt IN der neuen schwarzen 9. Rasterzeile -->
+      <div class="speedRow" aria-label="Kippspeed Regler">
         <div class="speedWrap">
-          <div class="speedIcon">🐢</div>
-          <div class="speedTrack" id="speedTrack">
-            <div class="speedKnob" id="speedKnob"></div>
-            <input id="speedSlider" class="speedInput" type="range" min="0" max="10" value="5" />
-          </div>
-          <div class="speedIcon">🐇</div>
+          <input id="speed" class="speedRange" type="range" min="0" max="9" value="5" />
         </div>
-      </div>
-
-      <div class="infoRow">
-        <div class="kippBlock">
-          <div class="kippTop">
-            <div class="kippLabel">KIPPZIEL</div>
-            <div class="targetSquare"><span id="targetNum">7</span></div>
-          </div>
-          <div class="zielText">Ziel: 0 / 11</div>
-        </div>
-
-        <div class="scoreBlock">
-          <div class="scoreBig" id="scoreBig">0</div>
-          <div class="highscore">Highscore: 66</div>
-        </div>
-      </div>
-
-      <div class="startRow">
-        <button class="btnBig">START</button>
       </div>
     </div>
 
+    <!-- (Buttons sind bewusst ausgeblendet, siehe CSS .controls{display:none}) -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
+      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
       <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
       <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
     </div>
   </div>
 
   <script>
-    const stageEl = document.getElementById("stage");
-    const boardEl = document.getElementById("board");
-    const grid    = document.getElementById("grid");
+    const boardEl   = document.getElementById("board");
+    const grid      = document.getElementById("grid");
 
-    const btnMix  = document.getElementById("btnMix");
-    const btnCW   = document.getElementById("btnCW");
-    const btnCCW  = document.getElementById("btnCCW");
+    const wFace     = document.getElementById("wFaceGroup");
+    const kipGroup  = document.getElementById("kipGroup");
 
-    const speedSlider = document.getElementById("speedSlider");
-    const speedKnob   = document.getElementById("speedKnob");
+    const btnMix    = document.getElementById("btnMix");
+    const btnKip50  = document.getElementById("btnKip50");
+    const btnCW     = document.getElementById("btnCW");
+    const btnCCW    = document.getElementById("btnCCW");
+
+    const speedEl   = document.getElementById("speed");
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
-      boardEl.style.height = w + "px";
-
-      // >>> NEU: echtes Maß an CSS geben
-      document.documentElement.style.setProperty("--boardW", w + "px");
+      // Höhe ergibt sich aus aspect-ratio (8/9), wir setzen sie NICHT fix
+      // aber manche Browser mögen dennoch ein Pixel-Update:
+      boardEl.style.height = "auto";
     }
 
     // ===== Raster farbig =====
@@ -668,12 +580,14 @@
       [key(1,"E"), "c-violett"],
       [key(1,"D"), "c-blau"],
       [key(1,"C"), "c-violett"],
+      // Row 9 bleibt bewusst schwarz (kein Eintrag)
     ]);
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
 
-      for(let r=1; r<=8; r++){
+      // ✅ jetzt 9 Zeilen
+      for(let r=1; r<=9; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
@@ -689,18 +603,229 @@
       grid.dataset.built = "1";
     }
 
-    // ===== Slider knob =====
-    function updateKnob(){
-      const v = Number(speedSlider.value);
-      const t = v / 10;
-      speedKnob.style.left = (t * 100) + "%";
+    // ===== Zahlenrendering =====
+    function setDot(span, number){
+      if(!span) return;
+      span.classList.remove("dot");
+      if (number === 6 || number === 9) span.classList.add("dot");
     }
-    speedSlider.addEventListener("input", updateKnob);
 
-    // ===== Dummy Buttons (nur damit nichts kaputt ist) =====
-    btnMix.addEventListener("click", () => {});
-    btnCW.addEventListener("click", () => {});
-    btnCCW.addEventListener("click", () => {});
+    function clearSpan(span){
+      if(!span) return;
+      span.classList.remove("dot","num10","num11","num12");
+      span.innerHTML = "";
+      span.textContent = "";
+      span.removeAttribute("data-val");
+    }
+
+    function renderNumber(span, n){
+      if(n === null || n === undefined){
+        clearSpan(span);
+        return;
+      }
+
+      span.classList.remove("num10","num11","num12");
+      span.innerHTML = "";
+      span.dataset.val = String(n);
+
+      if (n === 10){
+        span.classList.add("num10");
+        span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
+        return;
+      }
+      if (n === 11){
+        span.classList.add("num11");
+        span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
+        return;
+      }
+      if (n === 12){
+        span.classList.add("num12");
+        span.innerHTML = `<span class="d">1</span><span class="d">2</span>`;
+        return;
+      }
+
+      span.textContent = String(n);
+    }
+
+    function getUniqueRandomNumbers(count, min, max){
+      const pool = [];
+      for(let i=min; i<=max; i++) pool.push(i);
+      for(let i=pool.length-1; i>0; i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, count);
+    }
+
+    // =========================================================
+    // LOGIK (Bestückung nur in 100%):
+    // =========================================================
+    let planned = [
+      [null,null,null,null],
+      [null,null,null,null],
+      [null,null,null,null],
+    ];
+
+    let sets = [
+      [null,null,null,null],
+      [null,null,null,null],
+      [null,null,null,null],
+    ];
+
+    let assigned = [false, false, false];
+
+    let rotIndex  = 0;
+    let faceIndex = 0;
+    const rotDeg = [0, 90, 180, 270];
+
+    // geplante Richtung für Preview
+    let plannedDir = +1; // +1 CW, -1 CCW
+
+    const slotTargetsW = [
+      wFace.querySelector('[data-slot="S1"] .num > span'),
+      wFace.querySelector('[data-slot="S2"] .num > span'),
+      wFace.querySelector('[data-slot="S3"] .num > span'),
+      wFace.querySelector('[data-slot="S4"] .num > span'),
+    ];
+
+    const slotTargetsKipRight = [
+      kipGroup.querySelector('[data-slot="W1_1"] .num > span'),
+      kipGroup.querySelector('[data-slot="W1_2"] .num > span'),
+      kipGroup.querySelector('[data-slot="W1_3"] .num > span'),
+      kipGroup.querySelector('[data-slot="W1_4"] .num > span'),
+    ];
+
+    const slotTargetsKipLeft = [
+      kipGroup.querySelector('[data-slot="W2_A"] .num > span'),
+      kipGroup.querySelector('[data-slot="W2_B"] .num > span'),
+      kipGroup.querySelector('[data-slot="W2_C"] .num > span'),
+      kipGroup.querySelector('[data-slot="W2_D"] .num > span'),
+    ];
+
+    function ensureAssigned(idx){
+      if(assigned[idx]) return;
+      sets[idx] = planned[idx].slice();
+      assigned[idx] = true;
+    }
+
+    function mapHiddenToVisible_CW(face){
+      const [f1,f2,f3,f4] = face;
+      return [f4, f3, f2, f1];
+    }
+
+    function applyRotationAndNumbers(){
+      const deg = rotDeg[rotIndex];
+      wFace.style.setProperty("--rot", deg + "deg");
+      kipGroup.style.setProperty("--rot", deg + "deg");
+
+      const curr = sets[faceIndex];
+
+      // 100%
+      for(let i=0;i<4;i++){
+        renderNumber(slotTargetsW[i], curr[i]);
+        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
+        else slotTargetsW[i].classList.remove("dot");
+      }
+
+      const nextFaceIndex = (plannedDir === +1)
+        ? (faceIndex + 1) % 3
+        : (faceIndex + 2) % 3;
+
+      const next = sets[nextFaceIndex];
+
+      // rechts: aktuelle Fläche 1:1 (nur skaliert)
+      for(let i=0;i<4;i++){
+        renderNumber(slotTargetsKipRight[i], curr[i]);
+        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
+        else slotTargetsKipRight[i].classList.remove("dot");
+      }
+
+      // links: erst auftauchende Fläche (nur bei CW gemappt)
+      const nextForPreview = (plannedDir === +1) ? mapHiddenToVisible_CW(next) : next;
+
+      for(let i=0;i<4;i++){
+        renderNumber(slotTargetsKipLeft[i], nextForPreview[i]);
+        if(nextForPreview[i] !== null && nextForPreview[i] !== undefined) setDot(slotTargetsKipLeft[i], nextForPreview[i]);
+        else slotTargetsKipLeft[i].classList.remove("dot");
+      }
+    }
+
+    function reroll12(){
+      const twelve = getUniqueRandomNumbers(12, 1, 12);
+
+      planned[0] = twelve.slice(0,4);
+      planned[1] = twelve.slice(4,8);
+      planned[2] = twelve.slice(8,12);
+
+      sets = [
+        [null,null,null,null],
+        [null,null,null,null],
+        [null,null,null,null],
+      ];
+      assigned = [false,false,false];
+
+      rotIndex  = 0;
+      faceIndex = 0;
+      plannedDir = +1;
+
+      ensureAssigned(0); // W1 bestücken
+      applyRotationAndNumbers();
+    }
+
+    let kipOn = false;
+
+    function stepCW(){
+      plannedDir = +1;
+
+      rotIndex  = (rotIndex + 1) % 4;
+      faceIndex = (faceIndex + 1) % 3;
+
+      if(!kipOn){
+        ensureAssigned(faceIndex);
+      }
+
+      applyRotationAndNumbers();
+    }
+
+    function stepCCW(){
+      plannedDir = -1;
+
+      rotIndex  = (rotIndex + 3) % 4;
+      faceIndex = (faceIndex + 2) % 3;
+
+      if(!kipOn){
+        ensureAssigned(faceIndex);
+      }
+
+      applyRotationAndNumbers();
+    }
+
+    function setKipMode(on){
+      kipOn = !!on;
+
+      if(kipOn){
+        wFace.style.display = "none";
+        kipGroup.style.display = "block";
+      }else{
+        kipGroup.style.display = "none";
+        wFace.style.display = "block";
+      }
+
+      applyRotationAndNumbers();
+    }
+
+    // Buttons sind ausgeblendet, aber Logik bleibt erreichbar:
+    // (Falls du später wieder Buttons willst, sind Events schon da.)
+    btnMix.addEventListener("click", reroll12);
+    btnKip50.addEventListener("click", () => setKipMode(!kipOn));
+    btnCW.addEventListener("click", stepCW);
+    btnCCW.addEventListener("click", stepCCW);
+
+    // Regler hat derzeit nur UI – die Kipp-Zeit koppeln wir später dran.
+    speedEl.addEventListener("input", () => {
+      // Placeholder: hier später Map 0..9 -> 5.0s .. 0.5s (oder was du willst)
+      // console.log("speed:", speedEl.value);
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -708,7 +833,8 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-      updateKnob();
+      reroll12();
+      setKipMode(false);
     });
 
     window.addEventListener("resize", () => {
