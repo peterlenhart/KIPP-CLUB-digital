@@ -36,8 +36,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      --ui-panel-bg: rgba(234, 215, 190, 0.90);
+      /* UI-Tablett: Box-Innenbraun @ 10% */
+      --ui-panel-bg: rgba(122, 74, 52, 0.10);
       --ui-panel-border: rgba(0,0,0,0.35);
+
+      --ui-text: #ead7be; /* hellbeige */
 
       --rotSign: 1;
       --rot: 0deg;
@@ -341,9 +344,9 @@
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
     /* =========================
-       KIP Gruppe (FIX: keine Verzerrung mehr)
+       KIP Gruppe
        Außen: nur ROTATION
-       Innen: scaleX(0.7)   <-- HIER geändert (von 0.5 auf 0.7)
+       Innen: scaleX(0.6666667)  <-- 0,6 periodisch
        ========================= */
     .kipGroup{
       position:absolute;
@@ -372,7 +375,7 @@
 
       transform:
         translate(var(--pivot-x), var(--pivot-y))
-        scaleX(0.7)
+        scaleX(0.6666667)
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
       will-change: transform;
@@ -433,7 +436,7 @@
       backdrop-filter: blur(6px);
       box-shadow:
         0 12px 22px rgba(0,0,0,0.22),
-        0 0 0 1px rgba(255,255,255,0.16) inset;
+        0 0 0 1px rgba(255,255,255,0.10) inset;
       display:flex;
       flex-direction: column;
       gap: 10px;
@@ -449,22 +452,17 @@
     .uiLabel{
       font-weight: 900;
       letter-spacing: 0.04em;
-      color: rgba(0,0,0,0.85);
+      color: var(--ui-text);
       user-select:none;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
     }
 
     .mini{
       font-size: 12px;
       font-weight: 800;
-      opacity: 0.9;
-    }
-
-    .targetWrap{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      justify-content: space-between;
-      width: 100%;
+      opacity: 0.92;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
     }
 
     .targetCard{
@@ -506,7 +504,8 @@
       font-size: 22px;
       font-weight: 1000;
       letter-spacing: 0.04em;
-      color: rgba(0,0,0,0.88);
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
     }
 
     .scoreRight{
@@ -515,6 +514,7 @@
       flex-direction: column;
       gap: 2px;
       align-items:flex-end;
+      color: var(--ui-text);
     }
 
     /* ========= Slider ========= */
@@ -535,10 +535,11 @@
       width:100%;
       height:100%;
       fill: none;
-      stroke: rgba(0,0,0,0.92);
+      stroke: var(--ui-text); /* Linien hellbeige */
       stroke-width: 2.2;
       stroke-linecap: round;
       stroke-linejoin: round;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
     }
 
     input[type="range"]{
@@ -547,7 +548,7 @@
       width: 100%;
       height: 10px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.18);
+      background: rgba(0,0,0,0.18); /* Slot bleibt wie gehabt */
       outline: none;
       border: 1px solid rgba(0,0,0,0.25);
       box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
@@ -557,20 +558,20 @@
       appearance: none;
       width: 22px;
       height: 22px;
-      border-radius: 6px; /* quadratisch-ish */
-      background: #0b0b0b;
-      border: 2px solid rgba(255,255,255,0.22);
+      border-radius: 6px;
+      background: var(--btn-bg); /* Knopf beige */
+      border: 2px solid rgba(0,0,0,0.35);
       box-shadow:
-        0 8px 14px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(0,0,0,0.35);
+        0 8px 14px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
       cursor: pointer;
     }
     input[type="range"]::-moz-range-thumb{
       width: 22px;
       height: 22px;
       border-radius: 6px;
-      background: #0b0b0b;
-      border: 2px solid rgba(255,255,255,0.22);
+      background: var(--btn-bg); /* Knopf beige */
+      border: 2px solid rgba(0,0,0,0.35);
       cursor: pointer;
     }
 
@@ -682,7 +683,6 @@
       <!-- Slider: Turtle / Hare Piktogramme -->
       <div class="sliderRow" aria-label="Kippspeed">
         <div class="icon" aria-hidden="true" title="langsam">
-          <!-- Turtle (Outline) -->
           <svg viewBox="0 0 24 24">
             <path d="M4 14c0 2 2 3 4 3h5c4 0 7-2 7-5 0-3-3-5-7-5H9"/>
             <path d="M9 12h5"/>
@@ -697,7 +697,6 @@
         <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
 
         <div class="icon" aria-hidden="true" title="schnell">
-          <!-- Hare (Outline) -->
           <svg viewBox="0 0 24 24">
             <path d="M6 14c0 3 3 5 7 5 4 0 7-2 7-5 0-2-2-4-5-4H9c-2 0-3 2-3 4Z"/>
             <path d="M9 10V6c0-2 2-3 3-3"/>
