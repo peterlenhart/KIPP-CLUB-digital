@@ -338,6 +338,17 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
+    /* Fly-In + Mini-Wackler (nur Optik, Logik bleibt unangetastet) */
+    @keyframes flyInWobble{
+      0%   { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) translateY(-14px) scale(0.82) rotate(-6deg); opacity: 0; filter: blur(0.35px); }
+      55%  { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) translateY(2px)  scale(1.08) rotate(3deg); opacity: 1; filter: blur(0px); }
+      78%  { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) translateY(-1px) scale(0.99) rotate(-2deg); }
+      100% { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) translateY(0px)  scale(1)    rotate(0deg); }
+    }
+    .slot .num > span.fly{
+      animation: flyInWobble 420ms cubic-bezier(.18,.92,.18,1) both;
+    }
+
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
@@ -432,7 +443,6 @@
       border: 1px solid var(--ui-panel-border);
       background: var(--ui-panel-bg);
       backdrop-filter: blur(6px);
-      /* ✅ NUR HIER: schwarzer Innenrahmen 4px ergänzt */
       box-shadow:
         inset 0 0 0 4px #000,
         0 12px 22px rgba(0,0,0,0.22),
@@ -560,7 +570,6 @@
       filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
     }
 
-    /* ✅ NUR HIER: Schlitz/Track schwarz */
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
@@ -615,38 +624,10 @@
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
     }
-
-    /* ========= DEV Controls ========= */
-    .controls{
-      width: 100%;
-      display:flex;
-      justify-content:center;
-      gap: 12px;
-      padding: 0 6px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-      opacity: 0.95;
-    }
-
-    .btn{
-      border: 1px solid var(--btn-border);
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 12px 16px;
-      border-radius: 14px;
-      cursor: pointer;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.25),
-        0 0 0 1px rgba(255,255,255,0.15) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
+    .startBtn[disabled]{
+      opacity: 0.72;
+      cursor: default;
+      filter: grayscale(0.15);
     }
   </style>
 </head>
@@ -742,13 +723,6 @@
       <button id="btnStart" class="startBtn">START</button>
     </div>
 
-    <div class="controls">
-      <button id="btnMix" class="btn">Würfel mischen (12)</button>
-      <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
-      <button id="btnCW" class="btn">KIPP ⟳ (CW)</button>
-      <button id="btnCCW" class="btn">KIPP ⟲ (CCW)</button>
-    </div>
-
   </div>
 
   <script>
@@ -758,20 +732,9 @@
     const wFace     = document.getElementById("wFaceGroup");
     const kipGroup  = document.getElementById("kipGroup");
 
-    const btnMix    = document.getElementById("btnMix");
-    const btnKip50  = document.getElementById("btnKip50");
-    const btnCW     = document.getElementById("btnCW");
-    const btnCCW    = document.getElementById("btnCCW");
-
-    // ===== UI (Dummy, nicht verkabelt) =====
+    // ===== UI =====
     const btnStart = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
-
-    let startedOnce = false;
-    btnStart.addEventListener("click", () => {
-      startedOnce = true;
-      btnStart.textContent = "ZAHLEN NEU SETZEN";
-    });
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
@@ -830,10 +793,18 @@
 
     function clearSpan(span){
       if(!span) return;
-      span.classList.remove("dot","num10","num11","num12");
+      span.classList.remove("dot","num10","num11","num12","fly");
       span.innerHTML = "";
       span.textContent = "";
       span.removeAttribute("data-val");
+    }
+
+    function triggerFly(span){
+      if(!span) return;
+      span.classList.remove("fly");
+      // reflow, damit Animation immer neu startet
+      void span.offsetWidth;
+      span.classList.add("fly");
     }
 
     function renderNumber(span, n){
@@ -842,6 +813,8 @@
         return;
       }
 
+      const prev = span.dataset.val ? Number(span.dataset.val) : null;
+
       span.classList.remove("num10","num11","num12");
       span.innerHTML = "";
       span.dataset.val = String(n);
@@ -849,20 +822,20 @@
       if (n === 10){
         span.classList.add("num10");
         span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
-        return;
-      }
-      if (n === 11){
+      }else if (n === 11){
         span.classList.add("num11");
         span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
-        return;
-      }
-      if (n === 12){
+      }else if (n === 12){
         span.classList.add("num12");
         span.innerHTML = `<span class="d">1</span><span class="d">2</span>`;
-        return;
+      }else{
+        span.textContent = String(n);
       }
 
-      span.textContent = String(n);
+      // Fly-In nur wenn wirklich "neu" / geändert
+      if(prev !== n){
+        triggerFly(span);
+      }
     }
 
     function getUniqueRandomNumbers(count, min, max){
@@ -1025,10 +998,76 @@
       applyRotationAndNumbers();
     }
 
-    btnMix.addEventListener("click", reroll12);
-    btnKip50.addEventListener("click", () => setKipMode(!kipOn));
-    btnCW.addEventListener("click", stepCW);
-    btnCCW.addEventListener("click", stepCCW);
+    // ===== START übernimmt den Ping-Pong Ablauf =====
+    function getStepDelayMs(){
+      // Slider 0..9: 0 = langsam, 9 = schnell
+      const v = Math.max(0, Math.min(9, Number(speedSlider.value)));
+      // 0 -> 720ms, 9 -> 220ms
+      return Math.round(720 - v * 55);
+    }
+
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    let running = false;
+    let startedOnce = false;
+
+    async function runPingPong(){
+      if(running) return;
+      running = true;
+
+      btnStart.disabled = true;
+
+      const d = getStepDelayMs();
+
+      // 1) neues Set (12) – W1 sofort bestückt
+      reroll12();
+      setKipMode(false);
+      await sleep(d);
+
+      // 2) KIP 50% EIN (Zwischenschritt sichtbar)
+      setKipMode(true);
+      await sleep(d);
+
+      // 3) KIP 50% AUS
+      setKipMode(false);
+      await sleep(d);
+
+      // 4) 90° drehen -> W2 kommt "oben" / wird zugewiesen
+      stepCW();
+      await sleep(d);
+
+      // 5) KIP 50% EIN (Zwischenschritt: vorne bestückt, hinten leer)
+      setKipMode(true);
+      await sleep(d);
+
+      // 6) KIP 50% AUS
+      setKipMode(false);
+      await sleep(d);
+
+      // 7) 90° drehen -> W3 wird zugewiesen
+      stepCW();
+      await sleep(d);
+
+      // 8) KIP 50% EIN (Zwischenschritt: beide bestückt sichtbar)
+      setKipMode(true);
+      await sleep(d);
+
+      // 9) KIP 50% AUS
+      setKipMode(false);
+      await sleep(d);
+
+      // 10) 90° drehen -> zurück zu W1 oben
+      stepCW();
+      await sleep(Math.max(120, Math.round(d * 0.6)));
+
+      // Button-Text nach erstem Run
+      startedOnce = true;
+      btnStart.textContent = "ZAHLEN NEU SETZEN";
+      btnStart.disabled = false;
+      running = false;
+    }
+
+    btnStart.addEventListener("click", runPingPong);
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1036,6 +1075,8 @@
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
+
+      // Initialzustand wie bisher: W1 ist sichtbar und sofort bestückt
       reroll12();
       setKipMode(false);
     });
