@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiKipp – 7 Bilder Demo + Kippspeed</title>
+  <title>DigiKipp – 7 Bilder Demo (mit Kippspeed)</title>
 
   <style>
     :root{
@@ -188,7 +188,7 @@
       pointer-events: none;
     }
 
-    /* Gruppen: Rotation SNAP */
+    /* Gruppen: Rotation ist SNAP, aber ohne Transition */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -206,7 +206,7 @@
       transform-origin: 0 0;
     }
 
-    /* hartes Umschalten */
+    /* ✅ KNALLHART (kein opacity) -> kein Blinken möglich */
     .hidden{ display:none !important; }
 
     .cubeShadow{
@@ -287,10 +287,12 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
+
       font-weight: 900;
       color: #111;
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
       position: relative;
@@ -389,45 +391,46 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* Kippspeed Block (zwischen Board und Panel) */
+    /* ===== Kippspeed-Block (zwischen Box und Panel) ===== */
     .speedBlock{
       width: 100%;
       box-sizing: border-box;
-      padding: 10px 12px 6px;
+      padding: 12px 12px 12px;
       border-radius: 16px;
-      border: 1px solid rgba(0,0,0,0.25);
-      background: rgba(255,255,255,0.18);
-      backdrop-filter: blur(4px);
+      background: var(--ui-panel-bg);
       box-shadow:
-        0 10px 18px rgba(0,0,0,0.16),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
+        inset 0 0 0 4px #000,            /* ✅ 4px schwarzer Innenrahmen */
+        0 12px 22px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.10) inset;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .speedTitle{
-      font-weight: 1000;
+      font-weight: 900;
       letter-spacing: 0.04em;
-      color: rgba(0,0,0,0.90);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      font-size: 18px;
-      margin: 0 0 8px 0;
-      text-align: left;
+      color: var(--ui-text);
       user-select:none;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      font-size: 22px;
+      line-height: 1.05;
+      text-align: left;
     }
 
-    .sliderRow{
+    .speedRow{
       display:flex;
       align-items:center;
-      gap: 10px;
+      gap: 14px;
       user-select:none;
     }
 
-    .pico{
-      width: 46px;
-      height: 46px;
+    .speedIcon{
+      width: 40px;   /* ✅ groß (fast Slot-Zahl) */
+      height: 40px;
       flex: 0 0 auto;
-      display:block;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.35)) drop-shadow(0 2px 6px rgba(0,0,0,0.22));
       opacity: 0.95;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
     }
 
     input[type="range"]{
@@ -436,10 +439,10 @@
       width: 100%;
       height: 10px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.92);
+      background: #000;
       outline: none;
-      border: 1px solid rgba(0,0,0,0.65);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.20) inset;
+      border: 1px solid #000;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
     }
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance: none;
@@ -463,7 +466,7 @@
       cursor: pointer;
     }
 
-    /* UI Panel */
+    /* UI */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -644,13 +647,13 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <!-- Kippspeed: Überschrift links, Slider mit Schnecke/Hase -->
+    <!-- ===== Kippspeed zwischen Box und Panel ===== -->
     <div class="speedBlock" aria-label="Kippspeed Block">
       <div class="speedTitle">Kippspeed</div>
-      <div class="sliderRow">
-        <img class="pico" src="kippspeed_snail.png" alt="langsam (Schnecke)">
-        <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Kippspeed Regler">
-        <img class="pico" src="kippspeed_hase.png" alt="schnell (Hase)">
+      <div class="speedRow">
+        <img class="speedIcon" src="kippspeed_snail.png" alt="langsam" />
+        <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Kippspeed Slider" />
+        <img class="speedIcon" src="kippspeed_hase.png" alt="schnell" />
       </div>
     </div>
 
@@ -676,11 +679,11 @@
   </div>
 
   <script>
-    const boardEl    = document.getElementById("board");
-    const grid       = document.getElementById("grid");
-    const wFace      = document.getElementById("wFaceGroup");
-    const kipGroup   = document.getElementById("kipGroup");
-    const btnStart   = document.getElementById("btnStart");
+    const boardEl  = document.getElementById("board");
+    const grid     = document.getElementById("grid");
+    const wFace    = document.getElementById("wFaceGroup");
+    const kipGroup = document.getElementById("kipGroup");
+    const btnStart = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
@@ -688,16 +691,6 @@
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
-    }
-
-    // Kippspeed -> Zeiten
-    // v=0 langsam ... v=9 schnell
-    function getTiming(){
-      const v = Number(speedSlider.value || 3);
-      const fullMs = Math.round(3600 - v * 250); // 3600 .. 1350
-      const kipMs  = Math.round(3000 - v * 200); // 3000 .. 1200
-      const fullHalf = Math.max(200, Math.round(fullMs / 2));
-      return { fullMs, kipMs, fullHalf };
     }
 
     const cols = ["A","B","C","D","E","F","G","H"];
@@ -803,7 +796,18 @@
       return pool.slice(0, count);
     }
 
-    // ====== GOLDENE LOGIK (3 Flächen) ======
+    // ===== Kippspeed Timing =====
+    // Basis war 3000ms. Schnellste Stufe soll 2× so schnell sein => 1500ms.
+    // Langsamste Stufe etwas gemütlicher.
+    function getStepMs(){
+      const v = Number(speedSlider.value || 3); // 0..9
+      const t = v / 9;
+      const slow = 4200;  // langsam
+      const fast = 1500;  // ✅ 2× so schnell wie 3000
+      return Math.round(slow + (fast - slow) * t);
+    }
+
+    // ====== GOLDENE LOGIK ======
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -847,7 +851,6 @@
       assigned[idx] = true;
     }
 
-    // wie bisher: “hidden->visible” Mapping CW
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
@@ -859,6 +862,7 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
+    // ✅ Nur W rendern (wenn W sichtbar ist)
     function renderW(animate=false){
       setRotationSnap();
       const curr = sets[faceIndex];
@@ -869,20 +873,21 @@
       }
     }
 
+    // ✅ Nur KIP rendern (wenn KIP sichtbar ist)
     function renderKip(){
       setRotationSnap();
       const curr = sets[faceIndex];
       const nextFaceIndex = (faceIndex + 1) % 3;
       const next = sets[nextFaceIndex];
 
-      // rechts: aktuelle
+      // rechts: aktuelle (die “wegkippt”)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], curr[i], false);
         if(curr[i] != null) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links: nächste
+      // links: nächste (die “auftaucht”)
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipLeft[i], nextPreview[i], false);
@@ -921,28 +926,14 @@
       setRotationSnap();
     }
 
-    function advanceFullCW(){
+    function advanceFullCW_andAssign(){
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
+      ensureAssigned(faceIndex);
     }
 
-    // ====== DIE SHOW: 7 Bilder, mit Halb/Halb Bestückung ======
+    // ====== DIE SHOW: 7 Bilder (Timing über Kippspeed) ======
     let running = false;
-
-    async function showFaceHalfHalf(faceIdx){
-      // faceIndex muss schon korrekt sein
-      showW();
-
-      // 1) leer
-      renderW(false);
-      const { fullHalf } = getTiming();
-      await sleep(fullHalf);
-
-      // 2) bestücken + Fly-In
-      ensureAssigned(faceIdx);
-      renderW(true);
-      await sleep(fullHalf);
-    }
 
     async function runShow7(){
       if(running) return;
@@ -951,36 +942,65 @@
 
       reroll12_keepEmpty();
 
-      // W1: 1/2 leer, 1/2 bestückt
-      await showFaceHalfHalf(0);
+      // Pro Stufe: Hälfte leer, Hälfte mit Zahlen
+      const STEP_MS = getStepMs();
+      const HALF = Math.round(STEP_MS / 2);
 
-      // KIP W1->W2: W2 soll hier leer auftauchen (also noch NICHT assignen)
-      showKip();
-      renderKip();
-      await sleep(getTiming().kipMs);
-
-      // W2: zuerst leer, dann bestücken
-      advanceFullCW(); // jetzt faceIndex=1
-      await showFaceHalfHalf(1);
-
-      // KIP W2->W3 (W3 leer)
-      showKip();
-      renderKip();
-      await sleep(getTiming().kipMs);
-
-      // W3: zuerst leer, dann bestücken
-      advanceFullCW(); // faceIndex=2
-      await showFaceHalfHalf(2);
-
-      // KIP W3->W1 (W1 ist schon bestückt -> beide Seiten bestückt, wie gewünscht)
-      showKip();
-      renderKip();
-      await sleep(getTiming().kipMs);
-
-      // Ende: W1 oben (nur anzeigen, keine Wartepflicht)
-      advanceFullCW(); // faceIndex=0
+      // 1) W1 leer (HALF)
       showW();
       renderW(false);
+      await sleep(HALF);
+
+      // 2) W1 bestückt (HALF)
+      ensureAssigned(0);
+      renderW(true);
+      await sleep(HALF);
+
+      // 3) KIP W1->W2 (volle STEP_MS)
+      ensureAssigned(1);
+      showKip();
+      renderKip();
+      await sleep(STEP_MS);
+
+      // 4) W2: leer HALF, dann bestückt HALF
+      advanceFullCW_andAssign(); // faceIndex=1
+      showW();
+      // leer:
+      sets[faceIndex] = [null,null,null,null];
+      assigned[faceIndex] = true;
+      renderW(false);
+      await sleep(HALF);
+      // bestückt:
+      sets[faceIndex] = planned[faceIndex].slice();
+      renderW(true);
+      await sleep(HALF);
+
+      // 5) KIP W2->W3
+      ensureAssigned(2);
+      showKip();
+      renderKip();
+      await sleep(STEP_MS);
+
+      // 6) W3: leer HALF, dann bestückt HALF
+      advanceFullCW_andAssign(); // faceIndex=2
+      showW();
+      sets[faceIndex] = [null,null,null,null];
+      assigned[faceIndex] = true;
+      renderW(false);
+      await sleep(HALF);
+      sets[faceIndex] = planned[faceIndex].slice();
+      renderW(true);
+      await sleep(HALF);
+
+      // 7) KIP W3->W1 (W1 existiert schon)
+      showKip();
+      renderKip();
+      await sleep(STEP_MS);
+
+      // Ende: W1 wieder oben (mit Zahlen)
+      advanceFullCW_andAssign(); // faceIndex=0
+      showW();
+      renderW(true);
 
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
