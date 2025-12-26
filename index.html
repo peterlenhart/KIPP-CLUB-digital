@@ -352,7 +352,7 @@
     /* =========================
        KIP Gruppe
        Außen: nur ROTATION
-       Innen: scaleX(0.6666667)  <-- 0,6 periodisch
+       Innen: scaleX(0.6666667)
        ========================= */
     .kipGroup{
       position:absolute;
@@ -451,7 +451,7 @@
     .uiRow{
       display:flex;
       align-items:center;
-      justify-content: flex-start;  /* statt space-between */
+      justify-content: flex-start;
       gap: 10px;
     }
 
@@ -478,28 +478,25 @@
       display:flex;
       align-items:center;
       gap: 10px;
-      margin-left: 0; /* NICHT mehr nach rechts schieben */
+      margin-left: 0;
     }
 
-    /* blaues Quadrat näher zu "Kippziel", scharfe Ecken + beiger Innenrahmen */
+    /* blaues Quadrat: Außenrahmen weg (kein farbiger Rahmen), nur beiger Innenrahmen */
     .targetSquare{
       width: 44px;
       height: 44px;
-      border-radius: 0px; /* scharf */
+      border-radius: 0px;
       background: var(--blau);
-      border: 2px solid rgba(0,0,0,0.55);
+      border: 0; /* <-- Außenrahmen weg */
 
-      /* beiger Innenrahmen 2px */
       box-shadow:
         inset 0 0 0 2px var(--btn-bg),
-        0 6px 12px rgba(0,0,0,0.18),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
+        0 6px 12px rgba(0,0,0,0.18);
 
       display:flex;
       align-items:center;
       justify-content:center;
 
-      /* Zahl exakt wie Slotzahlen */
       font-weight: var(--slot-num-weight);
       font-size: var(--slot-num-size);
       color: var(--slot-num-color);
@@ -509,16 +506,16 @@
       line-height: 1;
     }
 
-    /* rechtsbündige Anzeige "0P" (fixe Breite, nix springt bei 66) */
+    /* rechtsbündige Anzeige "0P" */
     .kippP{
-      margin-left: auto;              /* ganz nach rechts */
+      margin-left: auto;
       text-align: right;
       color: var(--ui-text);
       font-weight: var(--slot-num-weight);
       font-size: var(--slot-num-size);
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       font-variant-numeric: tabular-nums;
-      min-width: 4ch;                 /* Platz für "66P" */
+      min-width: 4ch;
       line-height: 1;
       user-select:none;
     }
@@ -540,7 +537,7 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
     }
 
-    /* Punkte-Zahl wie Slotzahlen */
+    /* Punkte-Zahl wie Slotzahlen (Beige) */
     #scoreVal{
       font-weight: var(--slot-num-weight);
       font-size: var(--slot-num-size);
@@ -557,6 +554,11 @@
       gap: 2px;
       align-items:flex-end;
       color: var(--ui-text);
+    }
+
+    /* ======= NEU: Ziel-Zeile ausblenden ======= */
+    .scoreRight .mini:first-child{
+      display:none; /* "Ziel: 0 / 11" weg */
     }
 
     /* ========= Slider ========= */
@@ -677,12 +679,10 @@
 <body>
   <div class="stage">
 
-    <!-- ===== UI TOP: Titel ===== -->
     <div class="title" aria-label="Titel">
       <h1>DigiKipp</h1>
     </div>
 
-    <!-- ===== Board ===== -->
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
@@ -720,9 +720,7 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <!-- ===== UI PANEL (Attrappen / Dummy) ===== -->
     <div class="uiPanel" aria-label="UI Panel (noch ohne Logik)">
-      <!-- Slider: Turtle / Hare Piktogramme -->
       <div class="sliderRow" aria-label="Kippspeed">
         <div class="icon" aria-hidden="true" title="langsam">
           <svg viewBox="0 0 24 24">
@@ -750,18 +748,14 @@
         </div>
       </div>
 
-      <!-- Kippziel (Label groß, Quadrat nah dran, rechts 0P) -->
       <div class="uiRow">
         <div class="uiLabel">Kippziel</div>
-
         <div class="targetCard">
           <div id="targetSquare" class="targetSquare" aria-label="Ziel (Dummy)">7</div>
         </div>
-
         <div id="kippP" class="kippP" aria-label="Kippziel P (Dummy)">0P</div>
       </div>
 
-      <!-- Punkte / Progress / Highscore -->
       <div class="scoreBox" aria-label="Punkteblock">
         <div class="scoreBig">Punkte: <span id="scoreVal">0</span></div>
         <div class="scoreRight">
@@ -770,11 +764,9 @@
         </div>
       </div>
 
-      <!-- Start / Neu setzen -->
       <button id="btnStart" class="startBtn">START</button>
     </div>
 
-    <!-- ===== DEV Controls ===== -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
       <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
@@ -933,7 +925,6 @@
     let faceIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
-    // geplante Richtung für Preview
     let plannedDir = +1; // +1 CW, -1 CCW
 
     const slotTargetsW = [
@@ -963,10 +954,6 @@
       assigned[idx] = true;
     }
 
-    // =========================================================
-    // DEIN FELD-ID KERN (CW):
-    // Face ist [F1,F2,F3,F4] in 100%-Logik.
-    // =========================================================
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
@@ -979,7 +966,6 @@
 
       const curr = sets[faceIndex];
 
-      // 100%
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
@@ -992,14 +978,12 @@
 
       const next = sets[nextFaceIndex];
 
-      // rechts: aktuelle Fläche 1:1 (nur skaliert)
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], curr[i]);
         if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links: erst auftauchende Fläche (nur bei CW gemappt)
       const nextForPreview = (plannedDir === +1) ? mapHiddenToVisible_CW(next) : next;
 
       for(let i=0;i<4;i++){
@@ -1027,7 +1011,7 @@
       faceIndex = 0;
       plannedDir = +1;
 
-      ensureAssigned(0); // W1 bestücken
+      ensureAssigned(0);
       applyRotationAndNumbers();
     }
 
