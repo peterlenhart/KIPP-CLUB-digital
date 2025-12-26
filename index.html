@@ -44,9 +44,8 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* Animation */
-      --rot-ms: 420ms;  /* wird per Slider im JS gesetzt */
-      --fade-ms: 140ms; /* Umschalten W <-> KIP */
+      /* ✅ KEINE sichtbare Dreh-Animation */
+      --fade-ms: 120ms; /* nur fürs Umschalten W <-> KIP */
     }
 
     html, body { height: 100%; }
@@ -198,6 +197,7 @@
       pointer-events: none;
     }
 
+    /* ====== Rotation-Gruppen: Rotation ist "Snap" (ohne Transition) ====== */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -215,13 +215,14 @@
       transform-origin: 0 0;
       will-change: transform;
 
-      transition:
-        transform var(--rot-ms) cubic-bezier(.2,.85,.2,1),
-        opacity var(--fade-ms) ease;
+      /* ✅ KEIN transform-transition */
+      transition: opacity var(--fade-ms) ease;
       opacity: 1;
     }
 
-    .isHidden{ opacity: 0; }
+    .isHidden{
+      opacity: 0;
+    }
 
     .cubeShadow{
       position:absolute;
@@ -314,20 +315,14 @@
       line-height: 1;
     }
 
+    /* Fly-In (nur Zahl selbst) */
     @keyframes flyIn {
-      0%   { transform: translateY(-26px) scale(0.80) rotate(var(--num-rot,0deg)); opacity: 0; filter: blur(0.4px); }
-      70%  { transform: translateY(  2px) scale(1.03) rotate(var(--num-rot,0deg)); opacity: 1; filter: blur(0px); }
+      0%   { transform: translateY(-18px) scale(0.86) rotate(var(--num-rot,0deg)); opacity: 0; filter: blur(0.3px); }
+      70%  { transform: translateY(  1px) scale(1.03) rotate(var(--num-rot,0deg)); opacity: 1; filter: blur(0px); }
       100% { transform: translateY(  0px) scale(1.00) rotate(var(--num-rot,0deg)); opacity: 1; }
     }
-    @keyframes settleWobble {
-      0%   { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) rotate(0deg); }
-      30%  { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) rotate(2.0deg); }
-      60%  { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) rotate(-1.4deg); }
-      100% { transform: rotate(var(--num-rot,0deg)) translate(var(--opt-x,0px), var(--opt-y,0px)) rotate(0deg); }
-    }
     .fly{
-      animation: flyIn 320ms cubic-bezier(.15,.9,.25,1) both,
-                 settleWobble 420ms ease 320ms both;
+      animation: flyIn 260ms cubic-bezier(.15,.9,.25,1) both;
     }
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
@@ -365,7 +360,6 @@
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
     /* KIP Gruppe (50%) */
-    .kipGroup{ z-index: 4; }
     .kipScale{
       position:absolute;
       inset:0;
@@ -715,7 +709,6 @@
   <script>
     const boardEl   = document.getElementById("board");
     const grid      = document.getElementById("grid");
-
     const wFace     = document.getElementById("wFaceGroup");
     const kipGroup  = document.getElementById("kipGroup");
 
@@ -729,20 +722,12 @@
       boardEl.style.height = w + "px";
     }
 
-    // Speed -> Timing
+    // Speed -> nur "Anzeigedauer" (keine Rotations-Animation!)
     function getTiming(){
       const v = Number(speedSlider.value || 3); // 0..9
-      const rotMs = Math.round(620 - v * 46);      // ~620 .. ~206
-      const holdMsFull = Math.round(260 - v * 14); // ~260 .. ~134
-      const holdMsKip  = Math.round(240 - v * 12); // ~240 .. ~132
-      const fadeMs = 140;
-      return { rotMs, holdMsFull, holdMsKip, fadeMs };
-    }
-
-    function applyTimingToCSS(){
-      const { rotMs, fadeMs } = getTiming();
-      document.documentElement.style.setProperty("--rot-ms", rotMs + "ms");
-      document.documentElement.style.setProperty("--fade-ms", fadeMs + "ms");
+      const holdMsFull = Math.round(520 - v * 36); // ~520 .. ~196
+      const holdMsKip  = Math.round(420 - v * 30); // ~420 .. ~150
+      return { holdMsFull, holdMsKip };
     }
 
     const cols = ["A","B","C","D","E","F","G","H"];
@@ -807,7 +792,6 @@
 
     function renderNumber(span, n, animate=false){
       if(!span) return;
-
       const prev = lastVal.has(span) ? lastVal.get(span) : null;
 
       if(n === null || n === undefined){
@@ -905,6 +889,8 @@
 
     function applyRotationAndNumbers(animate=false){
       const deg = rotDeg[rotIndex];
+
+      // ✅ Snap: sofortige Endlage (kein Übergang)
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
 
@@ -937,7 +923,7 @@
       }
     }
 
-    // ===== Anzeige Umschalten =====
+    // ===== Anzeige Umschalten (statische Zustände) =====
     let kipOn = false;
     function setKipMode(on){
       kipOn = !!on;
@@ -972,7 +958,7 @@
       [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => clearSpan(s));
     }
 
-    // ===== Vollschritt CW (90°) =====
+    // ===== Ein "Vollschritt CW" (nur Endlage setzen) =====
     function advanceFullCW(){
       plannedDir = +1;
       rotIndex  = (rotIndex + 1) % 4;
@@ -981,81 +967,69 @@
       applyRotationAndNumbers(true);
     }
 
-    // ====== AUTOMATIK (FIX): Rotation NUR in TOTAL ======
+    // ====== DEMO: genau 7 statische Zustände ======
     let running = false;
 
-    async function runAutoCycle(){
+    async function runDemo7States(){
       if(running) return;
       running = true;
       btnStart.disabled = true;
 
-      applyTimingToCSS();
-      const { holdMsFull, holdMsKip, rotMs, fadeMs } = getTiming();
+      const { holdMsFull, holdMsKip } = getTiming();
 
+      // Neu mischen, leer starten
       reroll12_keepEmpty();
 
-      // Startzustand: TOTAL sichtbar
+      // Zustand 1: W1 Voll (leer)
       setKipMode(false);
       applyRotationAndNumbers(false);
 
-      // W1 bestücken (Fly-In)
+      // Zustand 2: W1 wird bestückt (Fly-In)
       ensureAssigned(0);
       applyRotationAndNumbers(true);
       await sleep(holdMsFull);
 
-      // === Schritt 1: TOTAL -> ZWISCHEN -> TOTAL -> ROTATE(TOTAL) ===
-      // ZWISCHEN
+      // Zustand 3: KIP (zwischen W1 -> W2)
       setKipMode(true);
       await sleep(holdMsKip);
 
-      // TOTAL (gleiches Bild, kein Rückschritt – das ist exakt dein "50% aus")
-      setKipMode(false);
-      await sleep(Math.max(40, fadeMs)); // nur fürs saubere Umschalten
-
-      // ROTATE in TOTAL (hier darf/ soll man es sehen)
+      // Zustand 4: W2 Voll (Endlage sofort)
       advanceFullCW();
-      await sleep(rotMs);
+      setKipMode(false);
       await sleep(holdMsFull);
 
-      // === Schritt 2 ===
+      // Zustand 5: KIP (zwischen W2 -> W3)
       setKipMode(true);
       await sleep(holdMsKip);
 
-      setKipMode(false);
-      await sleep(Math.max(40, fadeMs));
-
+      // Zustand 6: W3 Voll
       advanceFullCW();
-      await sleep(rotMs);
+      setKipMode(false);
       await sleep(holdMsFull);
 
-      // === Schritt 3 ===
+      // Zustand 7: KIP (zwischen W3 -> W1)
       setKipMode(true);
       await sleep(holdMsKip);
 
-      setKipMode(false);
-      await sleep(Math.max(40, fadeMs));
-
+      // Zustand 8 (Ende des Demo-Zyklus): W1 Voll (wieder oben)
       advanceFullCW();
-      await sleep(rotMs);
+      setKipMode(false);
       await sleep(holdMsFull);
 
-      // fertig
+      // Stop: Spieler übernimmt später
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
       running = false;
     }
 
-    btnStart.addEventListener("click", () => runAutoCycle());
+    btnStart.addEventListener("click", () => runDemo7States());
 
-    // Layout + Init
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
 
       buildGridOnce();
-
-      applyTimingToCSS();
 
       reroll12_keepEmpty();
       setKipMode(false);
@@ -1066,8 +1040,6 @@
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
     });
-
-    speedSlider.addEventListener("input", applyTimingToCSS);
   </script>
 </body>
 </html>
