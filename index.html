@@ -44,7 +44,7 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* ✅ KEINE sichtbare Dreh-Animation */
+      /* ✅ keine sichtbare Dreh-Animation */
       --fade-ms: 120ms; /* nur fürs Umschalten W <-> KIP */
     }
 
@@ -197,7 +197,7 @@
       pointer-events: none;
     }
 
-    /* ====== Rotation-Gruppen: Rotation ist "Snap" (ohne Transition) ====== */
+    /* ====== Gruppen: Rotation ist SNAP (keine Transition) ====== */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -215,13 +215,20 @@
       transform-origin: 0 0;
       will-change: transform;
 
-      /* ✅ KEIN transform-transition */
       transition: opacity var(--fade-ms) ease;
       opacity: 1;
+      visibility: visible;
     }
 
+    /* weich ausblenden */
     .isHidden{
       opacity: 0;
+    }
+
+    /* ✅ hart unsichtbar (gegen Blinken) */
+    .isGone{
+      opacity: 0 !important;
+      visibility: hidden !important;
     }
 
     .cubeShadow{
@@ -712,17 +719,18 @@
     const wFace     = document.getElementById("wFaceGroup");
     const kipGroup  = document.getElementById("kipGroup");
 
-    const btnStart   = document.getElementById("btnStart");
+    const btnStart    = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+    function raf(){ return new Promise(res => requestAnimationFrame(() => res())); }
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
     }
 
-    // Speed -> nur "Anzeigedauer" (keine Rotations-Animation!)
+    // Speed -> nur "Anzeigedauer"
     function getTiming(){
       const v = Number(speedSlider.value || 3); // 0..9
       const holdMsFull = Math.round(520 - v * 36); // ~520 .. ~196
@@ -890,7 +898,7 @@
     function applyRotationAndNumbers(animate=false){
       const deg = rotDeg[rotIndex];
 
-      // ✅ Snap: sofortige Endlage (kein Übergang)
+      // Snap: sofortige Endlage (kein Übergang)
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
 
@@ -923,17 +931,35 @@
       }
     }
 
-    // ===== Anzeige Umschalten (statische Zustände) =====
-    let kipOn = false;
-    function setKipMode(on){
-      kipOn = !!on;
-      if(kipOn){
-        wFace.classList.add("isHidden");
-        kipGroup.classList.remove("isHidden");
-      }else{
+    // ===== Sichtbarkeit: soft & hard (gegen Blinken) =====
+    function softShow(mode){
+      // mode: "W" oder "K"
+      if(mode === "W"){
         kipGroup.classList.add("isHidden");
         wFace.classList.remove("isHidden");
+      }else{
+        wFace.classList.add("isHidden");
+        kipGroup.classList.remove("isHidden");
       }
+    }
+
+    async function hardSwap(mode, doUpdateFn){
+      // 1) hart weg (beide)
+      wFace.classList.add("isGone");
+      kipGroup.classList.add("isGone");
+      await raf();
+
+      // 2) im Unsichtbaren updaten
+      if(typeof doUpdateFn === "function") doUpdateFn();
+
+      await raf();
+
+      // 3) gewünschte Gruppe sichtbar machen (soft)
+      wFace.classList.remove("isGone");
+      kipGroup.classList.remove("isGone");
+      await raf();
+
+      softShow(mode);
     }
 
     // ===== Reset / Neu mischen =====
@@ -958,7 +984,7 @@
       [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => clearSpan(s));
     }
 
-    // ===== Ein "Vollschritt CW" (nur Endlage setzen) =====
+    // ===== Ein Vollschritt CW (nur Endlage setzen) =====
     function advanceFullCW(){
       plannedDir = +1;
       rotIndex  = (rotIndex + 1) % 4;
@@ -967,7 +993,7 @@
       applyRotationAndNumbers(true);
     }
 
-    // ====== DEMO: genau 7 statische Zustände ======
+    // ====== DEMO: genau 7 Zustände W1,KIP,W2,KIP,W3,KIP,W1 ======
     let running = false;
 
     async function runDemo7States(){
@@ -980,43 +1006,54 @@
       // Neu mischen, leer starten
       reroll12_keepEmpty();
 
-      // Zustand 1: W1 Voll (leer)
-      setKipMode(false);
-      applyRotationAndNumbers(false);
+      // Zustand 1: W1 (leer) – ohne Blinken
+      await hardSwap("W", () => {
+        applyRotationAndNumbers(false);
+      });
 
-      // Zustand 2: W1 wird bestückt (Fly-In)
+      // Zustand 1b: W1 wird bestückt (Fly-In)
       ensureAssigned(0);
-      applyRotationAndNumbers(true);
+      await hardSwap("W", () => {
+        applyRotationAndNumbers(true);
+      });
       await sleep(holdMsFull);
 
-      // Zustand 3: KIP (zwischen W1 -> W2)
-      setKipMode(true);
+      // Zustand 2: KIP zwischen W1 -> W2
+      await hardSwap("K", () => {
+        // nur Anzeige wechseln, keine neue Logik
+        applyRotationAndNumbers(false);
+      });
       await sleep(holdMsKip);
 
-      // Zustand 4: W2 Voll (Endlage sofort)
-      advanceFullCW();
-      setKipMode(false);
+      // Zustand 3: W2 Voll
+      await hardSwap("W", () => {
+        advanceFullCW();
+      });
       await sleep(holdMsFull);
 
-      // Zustand 5: KIP (zwischen W2 -> W3)
-      setKipMode(true);
+      // Zustand 4: KIP zwischen W2 -> W3
+      await hardSwap("K", () => {
+        applyRotationAndNumbers(false);
+      });
       await sleep(holdMsKip);
 
-      // Zustand 6: W3 Voll
-      advanceFullCW();
-      setKipMode(false);
+      // Zustand 5: W3 Voll
+      await hardSwap("W", () => {
+        advanceFullCW();
+      });
       await sleep(holdMsFull);
 
-      // Zustand 7: KIP (zwischen W3 -> W1)
-      setKipMode(true);
+      // Zustand 6: KIP zwischen W3 -> W1
+      await hardSwap("K", () => {
+        applyRotationAndNumbers(false);
+      });
       await sleep(holdMsKip);
 
-      // Zustand 8 (Ende des Demo-Zyklus): W1 Voll (wieder oben)
-      advanceFullCW();
-      setKipMode(false);
-      await sleep(holdMsFull);
+      // Zustand 7: W1 Voll (Zyklus Ende)
+      await hardSwap("W", () => {
+        advanceFullCW();
+      });
 
-      // Stop: Spieler übernimmt später
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
       running = false;
@@ -1024,7 +1061,7 @@
 
     btnStart.addEventListener("click", () => runDemo7States());
 
-    window.addEventListener("load", () => {
+    window.addEventListener("load", async () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
       setTimeout(setBoardSquare, 80);
@@ -1032,8 +1069,9 @@
       buildGridOnce();
 
       reroll12_keepEmpty();
-      setKipMode(false);
-      applyRotationAndNumbers(false);
+
+      // sauberer Start ohne irgendein Blink
+      await hardSwap("W", () => applyRotationAndNumbers(false));
     });
 
     window.addEventListener("resize", () => {
