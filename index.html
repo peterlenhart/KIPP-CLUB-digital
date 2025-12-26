@@ -36,17 +36,11 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* UI-Tablett: dunkelbraun @ 6% */
-      --ui-panel-bg: rgba(122, 74, 52, 0.06);
+      /* ✅ UI-Tablett: SCHWARZ/DUNKEL @ 6% */
+      --ui-panel-bg: rgba(0,0,0,0.06);
       --ui-panel-border: rgba(0,0,0,0.35);
 
       --ui-text: #ead7be; /* hellbeige */
-
-      /* Slot-Zahlen (als Variable, damit wir exakt denselben Stil woanders nutzen) */
-      --slot-num-size: clamp(18px, 8vmin, 36px);
-      --slot-num-weight: 900;
-      --slot-num-color: #111;
-      --slot-num-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
       --rotSign: 1;
       --rot: 0deg;
@@ -294,15 +288,16 @@
       z-index: 9;
     }
 
+    /* ===== Slot Typo (Referenz) ===== */
     .slot .num > span{
       display:inline-flex;
       align-items:center;
       justify-content:center;
 
-      font-weight: var(--slot-num-weight);
-      color: var(--slot-num-color);
-      font-size: var(--slot-num-size);
-      text-shadow: var(--slot-num-shadow);
+      font-weight: 900;
+      color: #111;
+      font-size: clamp(18px, 8vmin, 36px);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
@@ -323,7 +318,6 @@
     .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
     .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
 
-    /* ===== 12 enger (ca. -3px) ===== */
     .slot .num > span.num12 .d + .d{ margin-left: -3px; }
 
     .slot .num > span.dot::after{
@@ -351,8 +345,6 @@
 
     /* =========================
        KIP Gruppe
-       Außen: nur ROTATION
-       Innen: scaleX(0.6666667)
        ========================= */
     .kipGroup{
       position:absolute;
@@ -431,7 +423,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ========= UI PANEL (unter der Box) ========= */
+    /* ========= UI PANEL ========= */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -450,115 +442,99 @@
 
     .uiRow{
       display:flex;
-      align-items:center;
-      justify-content: flex-start;
+      align-items:flex-end;
+      justify-content: space-between;
       gap: 10px;
     }
 
-    /* Kippziel doppelt so groß */
     .uiLabel{
       font-weight: 900;
       letter-spacing: 0.04em;
       color: var(--ui-text);
       user-select:none;
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
-      font-size: clamp(22px, 5.2vmin, 36px);
-      line-height: 1;
-    }
-
-    .mini{
-      font-size: 12px;
-      font-weight: 800;
-      opacity: 0.92;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      font-size: 22px;
+      line-height: 1.05;
     }
 
     .targetCard{
       display:flex;
-      align-items:center;
+      align-items:flex-end;
       gap: 10px;
       margin-left: 0;
     }
 
-    /* blaues Quadrat: Außenrahmen weg (kein farbiger Rahmen), nur beiger Innenrahmen */
+    /* ✅ Ziel-Text: exakt "(00/11)" */
+    .progressText{
+      color: var(--ui-text);
+      font-weight: 900;
+      font-size: 18px;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      user-select:none;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      min-width: 64px; /* stabil, nichts springt */
+      text-align:left;
+    }
+
+    /* ✅ Blaues Quadrat: scharfe Ecken + beiger Innenrahmen (2px), KEIN Außenrahmen */
     .targetSquare{
       width: 44px;
       height: 44px;
       border-radius: 0px;
       background: var(--blau);
-      border: 0; /* <-- Außenrahmen weg */
-
+      border: 0;
       box-shadow:
         inset 0 0 0 2px var(--btn-bg),
-        0 6px 12px rgba(0,0,0,0.18);
-
+        0 6px 12px rgba(0,0,0,0.18),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
       display:flex;
       align-items:center;
       justify-content:center;
-
-      font-weight: var(--slot-num-weight);
-      font-size: var(--slot-num-size);
-      color: var(--slot-num-color);
-      text-shadow: var(--slot-num-shadow);
-
-      user-select:none;
-      line-height: 1;
-    }
-
-    /* rechtsbündige Anzeige "0P" */
-    .kippP{
-      margin-left: auto;
-      text-align: right;
-      color: var(--ui-text);
-      font-weight: var(--slot-num-weight);
-      font-size: var(--slot-num-size);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
-      font-variant-numeric: tabular-nums;
-      min-width: 4ch;
-      line-height: 1;
       user-select:none;
     }
 
-    .scoreBox{
-      display:flex;
-      align-items:baseline;
-      gap: 10px;
-      width: 100%;
-      justify-content: space-between;
-      user-select:none;
-    }
-
-    .scoreBig{
-      font-size: 22px;
-      font-weight: 1000;
-      letter-spacing: 0.04em;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
-    }
-
-    /* Punkte-Zahl wie Slotzahlen (Beige) */
-    #scoreVal{
-      font-weight: var(--slot-num-weight);
-      font-size: var(--slot-num-size);
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
-      font-variant-numeric: tabular-nums;
+    /* ✅ Zahl im Quadrat: exakt Slot-Typo (Gewicht/Größe) */
+    .targetSquare span{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      color: #111;
+      font-size: clamp(18px, 8vmin, 36px);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
+      transform: translateY(0px);
     }
 
-    .scoreRight{
-      text-align:right;
+    /* ✅ Rechts: 0p + Highscore darunter, kleiner Abstand */
+    .pointsBlock{
       display:flex;
       flex-direction: column;
-      gap: 2px;
       align-items:flex-end;
-      color: var(--ui-text);
+      gap: 4px;
+      user-select:none;
     }
 
-    /* ======= NEU: Ziel-Zeile ausblenden ======= */
-    .scoreRight .mini:first-child{
-      display:none; /* "Ziel: 0 / 11" weg */
+    .pointsNow{
+      font-weight: 1000;
+      letter-spacing: 0.02em;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      font-size: 44px;
+      line-height: 0.95;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hiLine{
+      color: var(--ui-text);
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1.05;
+      opacity: 0.92;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+      margin-top: 2px;
     }
 
     /* ========= Slider ========= */
@@ -679,10 +655,12 @@
 <body>
   <div class="stage">
 
+    <!-- ===== UI TOP: Titel ===== -->
     <div class="title" aria-label="Titel">
       <h1>DigiKipp</h1>
     </div>
 
+    <!-- ===== Board ===== -->
     <div class="board" id="board">
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
@@ -720,7 +698,10 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
+    <!-- ===== UI PANEL ===== -->
     <div class="uiPanel" aria-label="UI Panel (noch ohne Logik)">
+
+      <!-- Slider -->
       <div class="sliderRow" aria-label="Kippspeed">
         <div class="icon" aria-hidden="true" title="langsam">
           <svg viewBox="0 0 24 24">
@@ -748,25 +729,27 @@
         </div>
       </div>
 
+      <!-- ✅ Kippziel + Quadrat + (00/11)  |  ✅ rechts 0p + Highscore -->
       <div class="uiRow">
-        <div class="uiLabel">Kippziel</div>
-        <div class="targetCard">
-          <div id="targetSquare" class="targetSquare" aria-label="Ziel (Dummy)">7</div>
+        <div style="display:flex; align-items:flex-end; gap: 12px;">
+          <div class="uiLabel">Kippziel</div>
+          <div class="targetCard">
+            <div id="targetSquare" class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
+            <div id="progressText" class="progressText" aria-label="Progress (Dummy)">(00/11)</div>
+          </div>
         </div>
-        <div id="kippP" class="kippP" aria-label="Kippziel P (Dummy)">0P</div>
+
+        <div class="pointsBlock" aria-label="Punkteblock rechts (Dummy)">
+          <div id="pointsNow" class="pointsNow">0p</div>
+          <div class="hiLine">Highscore: <span id="hiVal">66</span></div>
+        </div>
       </div>
 
-      <div class="scoreBox" aria-label="Punkteblock">
-        <div class="scoreBig">Punkte: <span id="scoreVal">0</span></div>
-        <div class="scoreRight">
-          <div class="mini">Ziel: <span id="progressVal">0</span> / 11</div>
-          <div class="mini">Highscore: <span id="hiVal">66</span></div>
-        </div>
-      </div>
-
+      <!-- Start / Neu setzen -->
       <button id="btnStart" class="startBtn">START</button>
     </div>
 
+    <!-- ===== DEV Controls ===== -->
     <div class="controls">
       <button id="btnMix" class="btn">Würfel mischen (12)</button>
       <button id="btnKip50" class="btn">KIP 50% AN/AUS</button>
@@ -925,6 +908,7 @@
     let faceIndex = 0;
     const rotDeg = [0, 90, 180, 270];
 
+    // geplante Richtung für Preview
     let plannedDir = +1; // +1 CW, -1 CCW
 
     const slotTargetsW = [
