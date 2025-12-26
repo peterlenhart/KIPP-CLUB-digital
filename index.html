@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiKipp – 7 Bilder Demo</title>
+  <title>DigiKipp – Prototype UI + Golden Logic</title>
 
   <style>
     :root{
@@ -36,12 +36,18 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
+      /* UI-Panel */
       --ui-panel-bg: #4b2e22;
       --ui-panel-border: rgba(0,0,0,0.35);
       --ui-text: #ead7be;
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* ✅ KEINE sichtbare Dreh-Animation */
+      --fade-ms: 220ms;        /* Übergangsdauer (Crossfade) */
+      --slide-mag: 14px;       /* "Fake-Kipp" Slide-Intensität */
+      --slide-ease: cubic-bezier(.18,.85,.22,1);
     }
 
     html, body { height: 100%; }
@@ -68,6 +74,7 @@
           rgba(255,255,255,0.03) 16px
         ),
         linear-gradient(180deg, #e0b47c, #c89259);
+
       background-attachment: fixed;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
@@ -95,6 +102,7 @@
       padding: 0;
       font-weight: 1000;
       letter-spacing: 0.06em;
+      text-transform: none;
       font-size: clamp(18px, 4.6vmin, 34px);
       color: rgba(0,0,0,0.92);
       text-shadow:
@@ -108,9 +116,12 @@
       height: 0;
       aspect-ratio: 1 / 1;
       box-sizing: border-box;
+
       background: #0b0b0b;
+
       border: var(--board-border) solid var(--board-border-color);
       border-radius: var(--board-radius);
+
       overflow: visible;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
@@ -188,7 +199,7 @@
       pointer-events: none;
     }
 
-    /* Gruppen: Rotation ist SNAP, aber ohne Transition */
+    /* ====== Gruppen: Rotation ist "Snap", Übergänge nur über opacity + slide ====== */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -199,15 +210,44 @@
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
 
+      /* Grundrotation (SNAP) */
       transform:
         translate(var(--pivot-x), var(--pivot-y))
         rotate(var(--rot))
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
+      will-change: transform, opacity, filter;
+
+      /* ✅ keine transform-transition */
+      transition: opacity var(--fade-ms) var(--slide-ease), filter var(--fade-ms) var(--slide-ease);
+      opacity: 1;
     }
 
-    /* ✅ KNALLHART (kein opacity) -> kein Blinken möglich */
-    .hidden{ display:none !important; }
+    /* "Fake-Physik": wir schieben die Gruppen minimal während Crossfade.
+       (W verschwindet leicht nach links/unten, KIP kommt leicht von rechts/oben)
+    */
+    .wLeaving{
+      filter: blur(0.15px);
+    }
+    .kEntering{
+      filter: blur(0.05px);
+    }
+
+    .isHidden{
+      opacity: 0;
+    }
+
+    /* Extra Slide-Layer (ohne Rotation) */
+    .slideLayer{
+      position:absolute;
+      inset:0;
+      will-change: transform;
+      transition: transform var(--fade-ms) var(--slide-ease);
+    }
+    .wSlideOut{ transform: translate(calc(-1 * var(--slide-mag)), var(--slide-mag)); }
+    .wSlideIn { transform: translate(0px, 0px); }
+    .kSlideIn { transform: translate(0px, 0px); }
+    .kSlideOut{ transform: translate(var(--slide-mag), calc(-1 * var(--slide-mag))); }
 
     .cubeShadow{
       position:absolute;
@@ -295,6 +335,7 @@
 
       transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
       transform-origin: 50% 50%;
+
       position: relative;
       line-height: 1;
     }
@@ -304,7 +345,9 @@
       70%  { transform: translateY(  1px) scale(1.03) rotate(var(--num-rot,0deg)); opacity: 1; filter: blur(0px); }
       100% { transform: translateY(  0px) scale(1.00) rotate(var(--num-rot,0deg)); opacity: 1; }
     }
-    .fly{ animation: flyIn 260ms cubic-bezier(.15,.9,.25,1) both; }
+    .fly{
+      animation: flyIn 260ms cubic-bezier(.15,.9,.25,1) both;
+    }
 
     .slot .num > span[data-val="7"]{ --opt-x: 2px; }
     .slot .num > span.num10{ --opt-x: -2px; }
@@ -334,13 +377,13 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* W Vollansicht Slots */
+    /* W1 Vollansicht Slots */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* KIP Darstellung */
+    /* KIP Gruppe (50%) */
     .kipScale{
       position:absolute;
       inset:0;
@@ -351,6 +394,7 @@
         scaleX(0.6666667)
         translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
       transform-origin: 0 0;
+      will-change: transform;
     }
 
     .kipShadow{
@@ -373,8 +417,14 @@
       width: 6px;
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       transform: translateX(-50%);
-      background: linear-gradient(90deg, rgba(0,0,0,0.00), rgba(0,0,0,0.28), rgba(0,0,0,0.00));
+      background:
+        linear-gradient(90deg,
+          rgba(0,0,0,0.00),
+          rgba(0,0,0,0.28),
+          rgba(0,0,0,0.00)
+        );
       z-index: 1;
+      filter: blur(0.2px);
       opacity: 0.95;
     }
 
@@ -391,7 +441,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* UI */
+    /* UI PANEL */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -399,6 +449,7 @@
       border-radius: 16px;
       border: 1px solid var(--ui-panel-border);
       background: var(--ui-panel-bg);
+      backdrop-filter: blur(6px);
       box-shadow:
         inset 0 0 0 4px #000,
         0 12px 22px rgba(0,0,0,0.22),
@@ -470,6 +521,7 @@
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
+      transform: translateY(0px);
     }
 
     .pointsBlock{
@@ -498,6 +550,63 @@
       opacity: 0.92;
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       margin-top: 2px;
+    }
+
+    .sliderRow{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      user-select:none;
+    }
+
+    .icon{
+      width: 26px;
+      height: 26px;
+      flex: 0 0 auto;
+      opacity: 0.92;
+    }
+    .icon svg{
+      width:100%;
+      height:100%;
+      fill: none;
+      stroke: var(--ui-text);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
+    }
+
+    input[type="range"]{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #000;
+      outline: none;
+      border: 1px solid #000;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--btn-bg);
+      border: 2px solid rgba(0,0,0,0.35);
+      box-shadow:
+        0 8px 14px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--btn-bg);
+      border: 2px solid rgba(0,0,0,0.35);
+      cursor: pointer;
     }
 
     .startBtn{
@@ -539,33 +648,39 @@
       <div class="floor" aria-hidden="true"></div>
       <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
+      <!-- W (Vollansicht) -->
       <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
-        <div class="cubeShadow" aria-hidden="true"></div>
-        <div class="cubeFace" aria-label="Würfelfläche"></div>
+        <div class="slideLayer wSlideIn" id="wSlide">
+          <div class="cubeShadow" aria-hidden="true"></div>
+          <div class="cubeFace" aria-label="Würfelfläche"></div>
 
-        <div class="slot s-3b read-west"  data-slot="S1"><div class="num"><span></span></div></div>
-        <div class="slot s-4b read-west"  data-slot="S2"><div class="num"><span></span></div></div>
-        <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
-        <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
+          <div class="slot s-3b read-west"  data-slot="S1"><div class="num"><span></span></div></div>
+          <div class="slot s-4b read-west"  data-slot="S2"><div class="num"><span></span></div></div>
+          <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
+          <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
+        </div>
       </div>
 
-      <div id="kipGroup" class="kipGroup hidden" aria-label="KIP Gruppe">
-        <div class="kipScale">
-          <div class="kipShadow" aria-hidden="true"></div>
-          <div class="kipEdgeCore" aria-hidden="true"></div>
+      <!-- KIP (Zwischendarstellung) -->
+      <div id="kipGroup" class="kipGroup isHidden" aria-label="KIP Gruppe">
+        <div class="slideLayer kSlideOut" id="kSlide">
+          <div class="kipScale">
+            <div class="kipShadow" aria-hidden="true"></div>
+            <div class="kipEdgeCore" aria-hidden="true"></div>
 
-          <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
-          <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
+            <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
+            <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
 
-          <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
-          <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
-          <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
-          <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
+            <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
+            <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
+            <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
+            <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
 
-          <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
-          <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
-          <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
-          <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+            <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
+            <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
+            <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+            <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
+          </div>
         </div>
       </div>
 
@@ -573,18 +688,46 @@
     </div>
 
     <div class="uiPanel" aria-label="UI Panel">
+
+      <div class="sliderRow" aria-label="Kippspeed">
+        <div class="icon" aria-hidden="true" title="langsam">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 14c0 2 2 3 4 3h5c4 0 7-2 7-5 0-3-3-5-7-5H9"/>
+            <path d="M9 12h5"/>
+            <path d="M6 17v2"/>
+            <path d="M10 17v2"/>
+            <path d="M16 16v2"/>
+            <path d="M20 12h2"/>
+            <path d="M6 11l-2-1"/>
+          </svg>
+        </div>
+
+        <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
+
+        <div class="icon" aria-hidden="true" title="schnell">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 14c0 3 3 5 7 5 4 0 7-2 7-5 0-2-2-4-5-4H9c-2 0-3 2-3 4Z"/>
+            <path d="M9 10V6c0-2 2-3 3-3"/>
+            <path d="M12 10l2-6"/>
+            <path d="M7 16l-2 2"/>
+            <path d="M17 16l2 2"/>
+            <path d="M14 13h1"/>
+          </svg>
+        </div>
+      </div>
+
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
           <div class="uiLabel">Kippziel</div>
           <div class="targetCard">
-            <div class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
-            <div class="progressText" aria-label="Progress (Dummy)">(00/11)</div>
+            <div id="targetSquare" class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
+            <div id="progressText" class="progressText" aria-label="Progress (Dummy)">(00/11)</div>
           </div>
         </div>
 
         <div class="pointsBlock" aria-label="Punkteblock rechts (Dummy)">
-          <div class="pointsNow">0p</div>
-          <div class="hiLine">Highscore: <span>66</span></div>
+          <div id="pointsNow" class="pointsNow">0p</div>
+          <div class="hiLine">Highscore: <span id="hiVal">66</span></div>
         </div>
       </div>
 
@@ -594,17 +737,32 @@
   </div>
 
   <script>
-    const boardEl  = document.getElementById("board");
-    const grid     = document.getElementById("grid");
-    const wFace    = document.getElementById("wFaceGroup");
-    const kipGroup = document.getElementById("kipGroup");
-    const btnStart = document.getElementById("btnStart");
+    const boardEl   = document.getElementById("board");
+    const grid      = document.getElementById("grid");
+    const wFace     = document.getElementById("wFaceGroup");
+    const kipGroup  = document.getElementById("kipGroup");
+    const wSlide    = document.getElementById("wSlide");
+    const kSlide    = document.getElementById("kSlide");
+
+    const btnStart   = document.getElementById("btnStart");
+    const speedSlider = document.getElementById("speedSlider");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+    function nextFrame(){ return new Promise(res => requestAnimationFrame(() => res())); }
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
+    }
+
+    // Speed -> nur "Anzeigedauer"
+    function getTiming(){
+      const v = Number(speedSlider.value || 3); // 0..9
+      const holdMsFull = Math.round(520 - v * 36); // ~520 .. ~196
+      const holdMsKip  = Math.round(420 - v * 30); // ~420 .. ~150
+      // Fade bleibt konstant (CSS var), aber wir nehmen ihn hier zum Warten:
+      const fadeMs = 220;
+      return { holdMsFull, holdMsKip, fadeMs };
     }
 
     const cols = ["A","B","C","D","E","F","G","H"];
@@ -634,11 +792,13 @@
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
+
       for(let r=1; r<=8; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
+
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
             cell.classList.add("colorCell");
@@ -716,16 +876,19 @@
       [null,null,null,null],
       [null,null,null,null],
     ];
+
     let sets = [
       [null,null,null,null],
       [null,null,null,null],
       [null,null,null,null],
     ];
-    let assigned = [false,false,false];
+
+    let assigned = [false, false, false];
 
     let rotIndex  = 0;
     let faceIndex = 0;
     const rotDeg = [0, 90, 180, 270];
+    let plannedDir = +1;
 
     const slotTargetsW = [
       wFace.querySelector('[data-slot="S1"] .num > span'),
@@ -759,58 +922,96 @@
       return [f4, f3, f2, f1];
     }
 
-    function setRotationSnap(){
+    function applyRotationAndNumbers(animate=false){
       const deg = rotDeg[rotIndex];
+
+      // ✅ Snap Endlage
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
-    }
 
-    // ✅ Nur W rendern (wenn W sichtbar ist)
-    function renderW(animate=false){
-      setRotationSnap();
       const curr = sets[faceIndex];
+
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsW[i], curr[i], animate);
-        if(curr[i] != null) setDot(slotTargetsW[i], curr[i]);
+        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsW[i], curr[i]);
         else slotTargetsW[i].classList.remove("dot");
       }
-    }
 
-    // ✅ Nur KIP rendern (wenn KIP sichtbar ist)
-    function renderKip(){
-      setRotationSnap();
-      const curr = sets[faceIndex];
-      const nextFaceIndex = (faceIndex + 1) % 3;
+      const nextFaceIndex = (plannedDir === +1)
+        ? (faceIndex + 1) % 3
+        : (faceIndex + 2) % 3;
+
       const next = sets[nextFaceIndex];
 
-      // rechts: aktuelle (die “wegkippt”)
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], curr[i], false);
-        if(curr[i] != null) setDot(slotTargetsKipRight[i], curr[i]);
+        renderNumber(slotTargetsKipRight[i], curr[i], animate);
+        if(curr[i] !== null && curr[i] !== undefined) setDot(slotTargetsKipRight[i], curr[i]);
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links: nächste (die “auftaucht”)
-      const nextPreview = mapHiddenToVisible_CW(next);
+      const nextForPreview = (plannedDir === +1) ? mapHiddenToVisible_CW(next) : next;
+
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], nextPreview[i], false);
-        if(nextPreview[i] != null) setDot(slotTargetsKipLeft[i], nextPreview[i]);
+        renderNumber(slotTargetsKipLeft[i], nextForPreview[i], animate);
+        if(nextForPreview[i] !== null && nextForPreview[i] !== undefined) setDot(slotTargetsKipLeft[i], nextForPreview[i]);
         else slotTargetsKipLeft[i].classList.remove("dot");
       }
     }
 
-    function showW(){
-      kipGroup.classList.add("hidden");
-      wFace.classList.remove("hidden");
+    // ===== Anzeige Umschalten mit "Fake-Physik" (Crossfade + Slide) =====
+    let kipOn = false;
+
+    async function toKip(){
+      if(kipOn) return;
+      kipOn = true;
+
+      // KIP vorbereiten: sichtbar machen (op=0 -> 1), W ausblenden (1 -> 0)
+      // Slide-Richtung setzen
+      wSlide.classList.remove("wSlideIn");
+      wSlide.classList.add("wSlideOut");
+      kSlide.classList.remove("kSlideOut");
+      kSlide.classList.add("kSlideIn");
+
+      wFace.classList.add("wLeaving");
+      kipGroup.classList.add("kEntering");
+
+      kipGroup.classList.remove("isHidden");
+      wFace.classList.add("isHidden");
+
+      const { fadeMs } = getTiming();
+      await sleep(fadeMs + 20);
+
+      wFace.classList.remove("wLeaving");
+      kipGroup.classList.remove("kEntering");
     }
 
-    function showKip(){
-      wFace.classList.add("hidden");
-      kipGroup.classList.remove("hidden");
+    async function toFull(){
+      if(!kipOn) return;
+      kipOn = false;
+
+      // Slide zurück
+      wSlide.classList.remove("wSlideOut");
+      wSlide.classList.add("wSlideIn");
+      kSlide.classList.remove("kSlideIn");
+      kSlide.classList.add("kSlideOut");
+
+      kipGroup.classList.add("kEntering");
+      wFace.classList.add("wLeaving");
+
+      wFace.classList.remove("isHidden");
+      kipGroup.classList.add("isHidden");
+
+      const { fadeMs } = getTiming();
+      await sleep(fadeMs + 20);
+
+      kipGroup.classList.remove("kEntering");
+      wFace.classList.remove("wLeaving");
     }
 
+    // ===== Reset / Neu mischen =====
     function reroll12_keepEmpty(){
       const twelve = getUniqueRandomNumbers(12, 1, 12);
+
       planned[0] = twelve.slice(0,4);
       planned[1] = twelve.slice(4,8);
       planned[2] = twelve.slice(8,12);
@@ -824,79 +1025,82 @@
 
       rotIndex  = 0;
       faceIndex = 0;
+      plannedDir = +1;
 
-      [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(clearSpan);
-      setRotationSnap();
+      [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => clearSpan(s));
     }
 
-    function advanceFullCW_andAssign(){
+    // ===== Ein "Vollschritt CW" (nur Endlage setzen) =====
+    function advanceFullCW(){
+      plannedDir = +1;
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
       ensureAssigned(faceIndex);
+      applyRotationAndNumbers(true);
     }
 
-    // ====== DIE SHOW: 7 Bilder (fix 3 Sekunden) ======
+    // ====== DEMO: genau 7 Zustände, aber Übergänge "kippig" ======
     let running = false;
-    const STEP_MS = 3000;
 
-    async function runShow7(){
+    async function runDemo7States(){
       if(running) return;
       running = true;
       btnStart.disabled = true;
 
+      const { holdMsFull, holdMsKip } = getTiming();
+
+      // Neu mischen, leer starten
       reroll12_keepEmpty();
 
-      // 1) W1 leer (kurz, damit man es sieht)
-      showW();
-      renderW(false);
-      await sleep(STEP_MS);
+      // Zustand 1: W1 Voll (leer)
+      await toFull();               // stellt sicher, dass wir wirklich in Vollansicht sind
+      applyRotationAndNumbers(false);
 
-      // 2) W1 bestückt
+      // Zustand 2: W1 wird bestückt (Fly-In)
       ensureAssigned(0);
-      renderW(true);
-      await sleep(STEP_MS);
+      applyRotationAndNumbers(true);
+      await sleep(holdMsFull);
 
-      // 3) KIP W1->W2 (W2 muss fürs Bild existieren!)
-      ensureAssigned(1);
-      showKip();
-      renderKip();
-      await sleep(STEP_MS);
+      // Zustand 3: KIP (zwischen W1 -> W2)
+      await toKip();
+      await sleep(holdMsKip);
 
-      // 4) W2 bestückt
-      advanceFullCW_andAssign(); // jetzt ist faceIndex=1
-      showW();
-      renderW(true);
-      await sleep(STEP_MS);
+      // Zustand 4: W2 Voll
+      // WICHTIG gegen Blinken: erst Rotation/Numbers setzen, während W noch unsichtbar ist
+      // => Wir sind gerade in KIP, W ist hidden. Jetzt vorbereiten:
+      advanceFullCW();
+      await nextFrame();
+      await toFull();
+      await sleep(holdMsFull);
 
-      // 5) KIP W2->W3
-      ensureAssigned(2);
-      showKip();
-      renderKip();
-      await sleep(STEP_MS);
+      // Zustand 5: KIP (zwischen W2 -> W3)
+      await toKip();
+      await sleep(holdMsKip);
 
-      // 6) W3 bestückt
-      advanceFullCW_andAssign(); // faceIndex=2
-      showW();
-      renderW(true);
-      await sleep(STEP_MS);
+      // Zustand 6: W3 Voll
+      advanceFullCW();
+      await nextFrame();
+      await toFull();
+      await sleep(holdMsFull);
 
-      // 7) KIP W3->W1 (W1 existiert schon)
-      showKip();
-      renderKip();
-      await sleep(STEP_MS);
+      // Zustand 7: KIP (zwischen W3 -> W1)
+      await toKip();
+      await sleep(holdMsKip);
 
-      // Ende: W1 wieder oben
-      advanceFullCW_andAssign(); // faceIndex=0
-      showW();
-      renderW(true);
+      // Ende: W1 Voll
+      advanceFullCW();
+      await nextFrame();
+      await toFull();
+      await sleep(holdMsFull);
 
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
       running = false;
     }
 
-    btnStart.addEventListener("click", runShow7);
+    btnStart.addEventListener("click", () => runDemo7States());
 
+    // Layout + Init
     window.addEventListener("load", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
@@ -905,8 +1109,11 @@
       buildGridOnce();
 
       reroll12_keepEmpty();
-      showW();
-      renderW(false);
+      // Start: Vollansicht leer
+      kipOn = false;
+      kipGroup.classList.add("isHidden");
+      wFace.classList.remove("isHidden");
+      applyRotationAndNumbers(false);
     });
 
     window.addEventListener("resize", () => {
