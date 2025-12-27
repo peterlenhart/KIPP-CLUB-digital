@@ -384,8 +384,8 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Pfeil als SVG (schwarz konturiert, 75% Füllung, 1.5x größer) ===== */
-    .kippArrowSvg{
+    /* ===== Pfeil: PNG (Pfeil.png) ===== */
+    .kippArrowPng{
       position:absolute;
       left: 0;
       top: 0;
@@ -393,15 +393,18 @@
       pointer-events:none;
       user-select:none;
 
-      /* vorher: 2.25 Raster → jetzt *1.5 = 3.375 Raster */
-      width: calc(var(--step) * 3.375);
+      /* Pfeil.png ist "würfelflächen-groß" => 3 Rasterzellen */
+      width: calc(var(--step) * 3);
       height: auto;
 
-      /* Anchor: unten-links der SVG-Box */
+      /* Anchor: unten-links */
       transform-origin: 0 100%;
-      transform: translate(var(--arrow-x, 0px), var(--arrow-y, 0px)) rotate(var(--arrow-rot, 0deg));
 
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+      /* y ist untenkante von 4B => wir ziehen die Bildhöhe hoch */
+      transform:
+        translate(var(--arrow-x, 0px), var(--arrow-y, 0px))
+        translateY(-100%)
+        rotate(var(--arrow-rot, 0deg));
     }
 
     .kippspeedBlock{
@@ -655,45 +658,8 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- Pfeil: gebogen, schwarze Kontur, 75% weißes Innen -->
-        <svg id="kippArrowSvg" class="kippArrowSvg" viewBox="0 0 240 180" aria-label="Kipp Pfeil" role="img">
-          <!-- Füllform (geschlossen) -->
-          <path id="arrowShape"
-            d="M0 175
-               Q18 172 34 160
-               Q70 132 110 124
-               Q128 120 150 120
-               L150 150
-               L238 90
-               L150 30
-               L150 70
-               Q122 70 92 78
-               Q44 91 12 130
-               Q2 142 0 150
-               Z"
-            fill="rgba(255,255,255,0.75)"
-          />
-          <!-- Schwarze Kontur (4px) -->
-          <path
-            d="M0 175
-               Q18 172 34 160
-               Q70 132 110 124
-               Q128 120 150 120
-               L150 150
-               L238 90
-               L150 30
-               L150 70
-               Q122 70 92 78
-               Q44 91 12 130
-               Q2 142 0 150
-               Z"
-            fill="none"
-            stroke="#000"
-            stroke-width="4"
-            stroke-linejoin="round"
-            stroke-linecap="round"
-          />
-        </svg>
+        <!-- Pfeil: PNG aus Repo -->
+        <img id="kippArrowPng" class="kippArrowPng" src="Pfeil.png" alt="Kipprichtung Pfeil" />
 
       </div>
 
@@ -735,7 +701,7 @@
     const kipGroup  = document.getElementById("kipGroup");
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
-    const arrowSvg  = document.getElementById("kippArrowSvg");
+    const arrowPng  = document.getElementById("kippArrowPng");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -948,18 +914,19 @@
       return boardEl.getBoundingClientRect().width / 8;
     }
 
+    // Pfeil: Linke untere Ecke von 4B
     function placeArrow(){
       const step = getStepPx();
 
-      const x = step * 1;   // B
-      const y = step * 3;   // untere Kante von Zeile 3
+      const x = step * 1; // Spalte B => 1*step
+      const y = step * 4; // untere Kante Zeile 4
 
       const deg = rotDeg[rotIndex];
 
-      arrowSvg.style.setProperty("--arrow-x", x + "px");
-      arrowSvg.style.setProperty("--arrow-y", y + "px");
-      arrowSvg.style.setProperty("--arrow-rot", deg + "deg");
-      arrowSvg.style.display = "block";
+      arrowPng.style.setProperty("--arrow-x", x + "px");
+      arrowPng.style.setProperty("--arrow-y", y + "px");
+      arrowPng.style.setProperty("--arrow-rot", deg + "deg");
+      arrowPng.style.display = "block";
     }
 
     let running = false;
