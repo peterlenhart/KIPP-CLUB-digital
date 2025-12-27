@@ -384,18 +384,18 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== PFEIL (GENAU FIXIERT): SW-ECKE PNG == SW-ECKE 4B =====
-       Wichtig: Der Pfeil hängt IM wFaceGroup -> rotiert/mitwandert exakt mit der Würfelfläche.
-       KEIN JS. KEINE eigenen Rotationen. */
+    /* ===== PFEIL: SW-ECKE PNG == SW-ECKE 4B, UND ABSOLUT OBERSTE EBENE ===== */
     .kippArrowPng{
       position:absolute;
       left: calc(1 * var(--step)); /* Spalte B */
       top:  calc(4 * var(--step)); /* Unterkante Zeile 4 */
       width: calc(3 * var(--step)); /* würfelflächen-groß */
       height: auto;
+
       transform-origin: 0 100%;
-      transform: translateY(-100%); /* top=Unterkante, wir ziehen Bildhöhe hoch */
-      z-index: 6; /* unter Slots (7), über Holzfläche */
+      transform: translateY(-100%);
+
+      z-index: 9999; /* höher als Slots/Zahlen */
       pointer-events:none;
       user-select:none;
     }
@@ -628,7 +628,7 @@
           <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
           <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
 
-          <!-- PFEIL: exakt SW-Ecke Pfeil.png == SW-Ecke 4B -->
+          <!-- PFEIL: exakt SW-Ecke Pfeil.png == SW-Ecke 4B + oberste Ebene -->
           <img class="kippArrowPng" src="Pfeil.png" alt="Kipprichtung Pfeil" />
         </div>
 
