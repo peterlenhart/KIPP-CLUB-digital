@@ -47,6 +47,9 @@
       /* Corner-Tag */
       --corner-tag-color: rgba(234, 215, 190, 0.70);
 
+      /* NEU: Abstand der Corner-Texte weg von der Innenecke (in Rasterzellen) */
+      --corner-inset: 1.60;
+
       --rotSign: 1;
       --rot: 0deg;
     }
@@ -174,7 +177,7 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== Corner Tags: NUR oben links & oben rechts, exakt auf der Diagonalen zentriert ===== */
+    /* ===== Corner Tags: NUR oben links & oben rechts, weiter weg von der Innenecke ===== */
     .cornerTag{
       position:absolute;
       z-index: 6;
@@ -190,18 +193,19 @@
     .cornerTag .kipp{ text-transform: uppercase; }
     .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
 
-    /* Trick: Wir setzen den Text auf den Mittelpunkt der Ecke (1 Zelle von außen),
-       und drehen dann – dadurch sitzt er optisch mittig auf der Diagonale. */
+    /* FIX:
+       - beide mit translate(-50%, -50%) -> bleiben IM Board sichtbar
+       - inset über --corner-inset -> weiter weg von der Innenecke */
     .cornerTag.tl{
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
+      left: calc(var(--corner-inset) * var(--step));
+      top:  calc(var(--corner-inset) * var(--step));
       transform: translate(-50%, -50%) rotate(-45deg);
       transform-origin: 50% 50%;
     }
     .cornerTag.tr{
-      left: calc(7 * var(--step));
-      top:  calc(1 * var(--step));
-      transform: translate(50%, -50%) rotate(45deg);
+      left: calc((8 - var(--corner-inset)) * var(--step));
+      top:  calc(var(--corner-inset) * var(--step));
+      transform: translate(-50%, -50%) rotate(45deg);
       transform-origin: 50% 50%;
     }
 
