@@ -47,8 +47,8 @@
       /* Corner-Tag */
       --corner-tag-color: rgba(234, 215, 190, 0.70);
 
-      /* NEU: Abstand der Corner-Texte weg von der Innenecke (in Rasterzellen) */
-      --corner-inset: 1.60;
+      /* Corner Abstand innerhalb der schwarzen Eckfelder (in Rasteranteilen) */
+      --corner-pad: 0.70; /* typografisch vernünftig: weiter weg von der Innenecke */
 
       --rotSign: 1;
       --rot: 0deg;
@@ -177,7 +177,7 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== Corner Tags: NUR oben links & oben rechts, weiter weg von der Innenecke ===== */
+    /* ===== Corner Tags: oben links & oben rechts im schwarzen Rahmeneck ===== */
     .cornerTag{
       position:absolute;
       z-index: 6;
@@ -193,15 +193,16 @@
     .cornerTag .kipp{ text-transform: uppercase; }
     .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
 
+    /* FIX: Position in den Eck-Zellen (1A und 1H), nicht „irgendwo“ im Feld */
     .cornerTag.tl{
-      left: calc(var(--corner-inset) * var(--step));
-      top:  calc(var(--corner-inset) * var(--step));
+      left: calc(var(--corner-pad) * var(--step));
+      top:  calc(var(--corner-pad) * var(--step));
       transform: translate(-50%, -50%) rotate(-45deg);
       transform-origin: 50% 50%;
     }
     .cornerTag.tr{
-      left: calc((8 - var(--corner-inset)) * var(--step));
-      top:  calc(var(--corner-inset) * var(--step));
+      left: calc((8 - var(--corner-pad)) * var(--step));
+      top:  calc(var(--corner-pad) * var(--step));
       transform: translate(-50%, -50%) rotate(45deg);
       transform-origin: 50% 50%;
     }
@@ -445,7 +446,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== NEU: KIPP-PFEIL (oberste Ebene) ===== */
+    /* ===== KIPP-PFEIL (oberste Ebene) ===== */
     .kippArrow{
       position:absolute;
       left: 0;
@@ -455,6 +456,11 @@
       user-select: none;
       opacity: 0;
       will-change: transform, opacity;
+
+      /* WICHTIG: Pfeilgröße relativ zum Raster (≈ 2.2 Rasterkanten breit) */
+      width: calc(var(--step) * 2.20);
+      height: auto;
+
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
     }
 
@@ -726,9 +732,8 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- ===== NEU: Pfeil (oberste Ebene, wird per JS positioniert/animiert) ===== -->
-        <!-- Wenn dein Dateiname anders ist: NUR hier ändern -->
-        <img id="kippArrow" class="kippArrow hidden" src="kipp_arrow_pictogram_cropped_tight.png" alt="">
+        <!-- ===== Pfeil (oberste Ebene, wird per JS positioniert/animiert) ===== -->
+        <img id="kippArrow" class="kippArrow hidden" src="kipp_arrow_pictogram_22x18mm_3px.png" alt="">
       </div>
 
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
@@ -770,7 +775,7 @@
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
 
-    // ===== NEU: Arrow Element + Animation Handle =====
+    // ===== Arrow Element + Animation Handle =====
     const kippArrow = document.getElementById("kippArrow");
     let arrowAnim = null;
 
@@ -1000,6 +1005,101 @@
       kipGroup.classList.remove("hidden");
     }
 
+    // =================== ARROW ENGINE ===================
+
+    function getStepPx(){
+      const w = boardEl.getBoundingClientRect().width;
+      return w / 8;
+    }
+
+    function getArrowAnchorForRot(rotIdx){
+      // Raster-Zielkanten:
+      // Q0: SW Ecke von 3B
+      // Q1: NW Ecke von 2F
+      // Q2: NE Ecke von 6G
+      // Q3: SW Ecke von 7C
+
+      const SW = { tx: 0,   ty: -1 };
+      const NW = { tx: 0,   ty:  0 };
+      const NE = { tx: -1,  ty:  0 };
+
+      const step = getStepPx();
+
+      function cellCorner(row, colIndex, corner){
+        const x0 = colIndex * step;
+        const y0 = (row - 1) * step;
+
+        if(corner === "NW") return { x: x0,       y: y0 };
+        if(corner === "NE") return { x: x0+step,  y: y0 };
+        if(corner === "SW") return { x: x0,       y: y0+step };
+        return { x: x0+step, y: y0+step };
+      }
+
+      if(rotIdx === 0){
+        const p = cellCorner(3, 1, "SW"); // 3B (B=1)
+        return { x:p.x, y:p.y, deg:0,   anchor:SW };
+      }
+      if(rotIdx === 1){
+        const p = cellCorner(2, 5, "NW"); // 2F (F=5)
+        return { x:p.x, y:p.y, deg:90,  anchor:NW };
+      }
+      if(rotIdx === 2){
+        const p = cellCorner(6, 6, "NE"); // 6G (G=6)
+        return { x:p.x, y:p.y, deg:180, anchor:NE };
+      }
+      const p = cellCorner(7, 2, "SW");   // 7C (C=2)
+      return { x:p.x, y:p.y, deg:270, anchor:SW };
+    }
+
+    function stopArrowHard(){
+      if(arrowAnim){
+        try{ arrowAnim.cancel(); }catch(e){}
+        arrowAnim = null;
+      }
+      kippArrow.classList.add("hidden");
+      kippArrow.style.opacity = "0";
+      kippArrow.style.transform = "none";
+    }
+
+    function startArrowForThisRot(totalMs){
+      stopArrowHard();
+
+      const step = getStepPx();
+      const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
+
+      // Drift: ca. 2 Raster nach innen in Kipprichtung (basis: nach rechts + minimal hoch)
+      const baseDx = step * 1.95;
+      const baseDy = step * -0.20;
+
+      let dx = baseDx, dy = baseDy;
+      if(deg === 90){  dx = -baseDy; dy = baseDx; }
+      if(deg === 180){ dx = -baseDx; dy = -baseDy; }
+      if(deg === 270){ dx = baseDy;  dy = -baseDx; }
+
+      const ax = anchor.tx * 100;
+      const ay = anchor.ty * 100;
+
+      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
+
+      kippArrow.classList.remove("hidden");
+
+      arrowAnim = kippArrow.animate(
+        [
+          { transform: `${baseTransform} translate(0px, 0px)`, opacity: 1 },
+          { transform: `${baseTransform} translate(${dx}px, ${dy}px)`, opacity: 0 }
+        ],
+        {
+          duration: Math.max(200, totalMs),
+          easing: "linear",
+          fill: "forwards"
+        }
+      );
+
+      arrowAnim.onfinish = () => stopArrowHard();
+    }
+
+    // =================== Ablauf ===================
+
     function reroll12_keepEmpty(){
       const twelve = getUniqueRandomNumbers(12, 1, 12);
       planned[0] = twelve.slice(0,4);
@@ -1019,7 +1119,6 @@
       [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(clearSpan);
       setRotationSnap();
 
-      // NEU: Pfeil sicher resetten
       stopArrowHard();
     }
 
@@ -1028,122 +1127,6 @@
       faceIndex = (faceIndex + 1) % 3;
     }
 
-    // ==========================================================
-    // ===============  NEU: ARROW-ENGINE  =======================
-    // ==========================================================
-
-    function getStepPx(){
-      const w = boardEl.getBoundingClientRect().width;
-      return w / 8;
-    }
-
-    // Positionen nach deinem Anker-Regelwerk (Dateiecke auf Raster-Ecke)
-    // rotIndex: 0=Q0, 1=Q1, 2=Q2, 3=Q3 (rotDeg: 0,90,180,270)
-    function getArrowAnchorForRot(rotIdx){
-      // Raster-Koordinaten:
-      // 3B = row 3, col B (colIndex=1)
-      // 2F = row 2, col F (colIndex=5)
-      // 6G = row 6, col G (colIndex=6)
-      // 7C = row 7, col C (colIndex=2)
-
-      // Corner translation for anchoring the image corner to (x,y)
-      // SW: translate(0,-100%), NW: translate(0,0), NE: translate(-100%,0)
-      const SW = { tx: 0,   ty: -1 };
-      const NW = { tx: 0,   ty:  0 };
-      const NE = { tx: -1,  ty:  0 };
-
-      // Convert (row, colIndex, corner) into pixel anchor coordinate
-      const step = getStepPx();
-
-      function cellCorner(row, colIndex, corner){
-        const x0 = colIndex * step;
-        const y0 = (row - 1) * step;
-
-        // corners: NW (x0,y0), NE (x0+step,y0), SW (x0,y0+step), SE (x0+step,y0+step)
-        if(corner === "NW") return { x: x0,       y: y0 };
-        if(corner === "NE") return { x: x0+step,  y: y0 };
-        if(corner === "SW") return { x: x0,       y: y0+step };
-        return { x: x0+step, y: y0+step }; // SE fallback
-      }
-
-      if(rotIdx === 0){
-        // Q0: Pfeil 0°, Dateisüdwest an SW von 3B
-        const p = cellCorner(3, 1, "SW");
-        return { x:p.x, y:p.y, deg:0,  anchor:SW };
-      }
-      if(rotIdx === 1){
-        // Q1: Pfeil 90° im Uhrzeigersinn, Dateinordwest an NW von 2F
-        const p = cellCorner(2, 5, "NW");
-        return { x:p.x, y:p.y, deg:90, anchor:NW };
-      }
-      if(rotIdx === 2){
-        // Q2: Pfeil 180°, Dateinordost an NE von 6G
-        const p = cellCorner(6, 6, "NE");
-        return { x:p.x, y:p.y, deg:180, anchor:NE };
-      }
-      // Q3: Pfeil 270° im Uhrzeigersinn, Dateisüdwest an SW von 7C
-      const p = cellCorner(7, 2, "SW");
-      return { x:p.x, y:p.y, deg:270, anchor:SW };
-    }
-
-    function stopArrowHard(){
-      if(arrowAnim){
-        try{ arrowAnim.cancel(); }catch(e){}
-        arrowAnim = null;
-      }
-      kippArrow.classList.add("hidden");
-      kippArrow.style.opacity = "0";
-      kippArrow.style.transform = "none";
-    }
-
-    // Startet Pfeil:
-    // - sofort sichtbar (opacity 1)
-    // - sofort Fade (opacity 1 -> 0)
-    // - wandert in Kipprichtung über die Gesamtzeit
-    // Gesamtzeit = (Restzeit Vollansicht) + (Dauer Zwischenkipp)
-    function startArrowForThisRot(totalMs){
-      stopArrowHard();
-
-      const step = getStepPx();
-      const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
-
-      // Drift: ca. ~2 Raster nach innen in Kipprichtung (rotationsbasiert)
-      // Basisdrift für deg=0 (nach rechts/leicht nach oben), dann rotieren wir um 90° Schritte.
-      const baseDx = step * 1.95;
-      const baseDy = step * -0.20;
-
-      let dx = baseDx, dy = baseDy;
-      if(deg === 90){  dx = -baseDy; dy = baseDx; }
-      if(deg === 180){ dx = -baseDx; dy = -baseDy; }
-      if(deg === 270){ dx = baseDy;  dy = -baseDx; }
-
-      // Anchor translate in percent
-      const ax = anchor.tx * 100; // 0 oder -100
-      const ay = anchor.ty * 100; // 0 oder -100
-
-      // Base transform: position + anchor + rotation
-      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
-
-      kippArrow.classList.remove("hidden");
-
-      // Web Animations: linear movement + linear fade (1 -> 0)
-      arrowAnim = kippArrow.animate(
-        [
-          { transform: `${baseTransform} translate(0px, 0px)`, opacity: 1 },
-          { transform: `${baseTransform} translate(${dx}px, ${dy}px)`, opacity: 0 }
-        ],
-        {
-          duration: Math.max(200, totalMs),
-          easing: "linear",
-          fill: "forwards"
-        }
-      );
-
-      // Sicherheit: nach Ende wirklich verstecken (damit nichts „hängen bleibt“)
-      arrowAnim.onfinish = () => stopArrowHard();
-    }
-
-    // ===== SHOW: 7 Bilder, W-Flächen halb leer / halb bestückt + PFEIL-LOGIK =====
     let running = false;
 
     async function runShow7(){
@@ -1156,61 +1139,60 @@
 
       reroll12_keepEmpty();
 
-      // 1) W1 leer (halbe Zeit)
+      // W1 leer
       showW();
       renderWEmpty();
       await sleep(halfFull);
 
-      // 2) W1 bestückt (halbe Zeit) + Pfeil startet sofort und läuft bis Ende der Zwischenkipp-Phase
+      // W1 bestückt + Pfeil läuft bis Ende Zwischenkipp
       ensureAssigned(0);
       renderW(true);
       startArrowForThisRot(halfFull + holdMsKip);
       await sleep(halfFull);
 
-      // 3) KIP W1 -> W2 (Zwischenkipp)
+      // Zwischenkipp
       showKip();
       renderKip();
       await sleep(holdMsKip);
-      // Pfeil wird automatisch fertig/hidden durch Animation, zur Sicherheit:
       stopArrowHard();
 
-      // 4) W2 leer (halbe Zeit)
+      // W2 leer
       advanceFullCW();
       showW();
       renderWEmpty();
       await sleep(halfFull);
 
-      // 5) W2 bestückt (halbe Zeit) + Pfeil
+      // W2 bestückt + Pfeil
       ensureAssigned(1);
       renderW(true);
       startArrowForThisRot(halfFull + holdMsKip);
       await sleep(halfFull);
 
-      // 6) KIP W2 -> W3
+      // Zwischenkipp
       showKip();
       renderKip();
       await sleep(holdMsKip);
       stopArrowHard();
 
-      // 7) W3 leer (halbe Zeit)
+      // W3 leer
       advanceFullCW();
       showW();
       renderWEmpty();
       await sleep(halfFull);
 
-      // 8) W3 bestückt (halbe Zeit) + Pfeil
+      // W3 bestückt + Pfeil
       ensureAssigned(2);
       renderW(true);
       startArrowForThisRot(halfFull + holdMsKip);
       await sleep(halfFull);
 
-      // 9) KIP W3 -> W1
+      // Zwischenkipp
       showKip();
       renderKip();
       await sleep(holdMsKip);
       stopArrowHard();
 
-      // Ende: W1 wieder oben (bestückt)
+      // Ende: zurück zu W1 bestückt
       advanceFullCW();
       showW();
       renderW(false);
@@ -1245,7 +1227,6 @@
       setKippspeedStripHeight();
       requestAnimationFrame(setKippspeedStripHeight);
 
-      // Pfeil beim Resize sicher entfernen (damit nichts verspringt)
       stopArrowHard();
     });
   </script>
