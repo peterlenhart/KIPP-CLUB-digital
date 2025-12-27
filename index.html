@@ -84,7 +84,6 @@
       align-items:center;
     }
 
-    /* ===== Title row: links/rechts "KIPP color" neben DigiKIPP ===== */
     .titleRow{
       width: 100%;
       display:flex;
@@ -330,13 +329,11 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    /* W Vollansicht Slots */
     .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
     .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
     .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
     .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* KIP Darstellung */
     .kipScale{
       position:absolute;
       inset:0;
@@ -387,7 +384,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Pfeil als SVG (keine PNG-Probleme, keine grünen Kanten) ===== */
+    /* ===== Pfeil als SVG (schwarz konturiert, 75% Füllung, 1.5x größer) ===== */
     .kippArrowSvg{
       position:absolute;
       left: 0;
@@ -396,19 +393,17 @@
       pointer-events:none;
       user-select:none;
 
-      /* Breite ≈ 27mm relativ zum Raster: 27mm / 12mm = 2.25 Raster */
-      width: calc(var(--step) * 2.25);
+      /* vorher: 2.25 Raster → jetzt *1.5 = 3.375 Raster */
+      width: calc(var(--step) * 3.375);
       height: auto;
 
-      /* EXAKT andocken: untere linke Ecke der SVG-Box = Pixelposition */
+      /* Anchor: unten-links der SVG-Box */
       transform-origin: 0 100%;
       transform: translate(var(--arrow-x, 0px), var(--arrow-y, 0px)) rotate(var(--arrow-rot, 0deg));
 
-      /* leichte Schattenoptik ok */
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
     }
 
-    /* Kippspeed Panel */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -616,7 +611,6 @@
 <body>
   <div class="stage">
 
-    <!-- Titel mit KIPP color links/rechts -->
     <div class="titleRow" aria-label="Titelzeile">
       <div class="sideTitle left">KIPP color</div>
       <div class="titleMain"><h1>DigiKIPP</h1></div>
@@ -661,14 +655,44 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- Pfeil: Inline SVG, unten-links = Anker (transform-origin: 0 100%) -->
-        <svg id="kippArrowSvg" class="kippArrowSvg" viewBox="0 0 270 180" aria-label="Kipp Pfeil" role="img">
-          <!-- weißes Innen (75% Deckkraft) -->
-          <path d="M10 90 L190 90 L190 45 L260 90 L190 135 L190 90 L10 90 Z"
-                fill="rgba(255,255,255,0.75)"/>
-          <!-- schwarze Kontur 3px -->
-          <path d="M10 90 L190 90 L190 45 L260 90 L190 135 L190 90 L10 90 Z"
-                fill="none" stroke="#000" stroke-width="3" stroke-linejoin="miter" stroke-linecap="butt"/>
+        <!-- Pfeil: gebogen, schwarze Kontur, 75% weißes Innen -->
+        <svg id="kippArrowSvg" class="kippArrowSvg" viewBox="0 0 240 180" aria-label="Kipp Pfeil" role="img">
+          <!-- Füllform (geschlossen) -->
+          <path id="arrowShape"
+            d="M0 175
+               Q18 172 34 160
+               Q70 132 110 124
+               Q128 120 150 120
+               L150 150
+               L238 90
+               L150 30
+               L150 70
+               Q122 70 92 78
+               Q44 91 12 130
+               Q2 142 0 150
+               Z"
+            fill="rgba(255,255,255,0.75)"
+          />
+          <!-- Schwarze Kontur (4px) -->
+          <path
+            d="M0 175
+               Q18 172 34 160
+               Q70 132 110 124
+               Q128 120 150 120
+               L150 150
+               L238 90
+               L150 30
+               L150 70
+               Q122 70 92 78
+               Q44 91 12 130
+               Q2 142 0 150
+               Z"
+            fill="none"
+            stroke="#000"
+            stroke-width="4"
+            stroke-linejoin="round"
+            stroke-linecap="round"
+          />
         </svg>
 
       </div>
@@ -774,14 +798,6 @@
         }
       }
       grid.dataset.built = "1";
-    }
-
-    function clearSpan(span){
-      if(!span) return;
-      span.innerHTML = "";
-      span.textContent = "";
-      span.removeAttribute("data-val");
-      span.className = "";
     }
 
     const lastVal = new WeakMap();
@@ -919,7 +935,7 @@
 
       [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => { if(s) s.textContent=""; });
       setRotationSnap();
-      placeArrow(); // Pfeil neu setzen
+      placeArrow();
     }
 
     function advanceFullCW(){
@@ -928,14 +944,6 @@
       placeArrow();
     }
 
-    /* ========= PFEIL: exakt andocken an 3B (unten-links) + Rotation =========
-       Raster: Zeile 3, Spalte B.
-       Spalte B = Index 1 (A=0, B=1)
-       Zeile 3 -> y = (3)*step  (untere Kante), weil (row-1)*step ist obere Kante.
-       Untere linke Ecke der Zelle 3B:
-         x = 1*step
-         y = 3*step
-    */
     function getStepPx(){
       return boardEl.getBoundingClientRect().width / 8;
     }
@@ -946,10 +954,8 @@
       const x = step * 1;   // B
       const y = step * 3;   // untere Kante von Zeile 3
 
-      // Rotation um Board-Mitte
       const deg = rotDeg[rotIndex];
 
-      // Wir setzen CSS-Variablen am SVG selbst
       arrowSvg.style.setProperty("--arrow-x", x + "px");
       arrowSvg.style.setProperty("--arrow-y", y + "px");
       arrowSvg.style.setProperty("--arrow-rot", deg + "deg");
