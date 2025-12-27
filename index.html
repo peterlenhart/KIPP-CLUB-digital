@@ -38,11 +38,14 @@
       --btn-border: rgba(0,0,0,0.35);
 
       /* ===== UI (Variante A: Rostton) ===== */
-      --ui-panel-bg: #7a3f2b; /* Rost-Orange-Rot Variante A */
+      --ui-panel-bg: #7a3f2b;
       --ui-text: #ead7be;
 
       /* Kippspeed-Streifen Höhe: dynamisch = 3 Rasterzeilen */
       --kippstrip-h: auto;
+
+      /* Corner-Tag */
+      --corner-tag-color: rgba(234, 215, 190, 0.70); /* Slot-Beige @ 0.7 */
 
       --rotSign: 1;
       --rot: 0deg;
@@ -78,10 +81,11 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 8vh;
+      margin-top: 4vh;          /* <<< alles rauf (war 8vh) */
+      padding-bottom: 2vh;      /* kleines Luftpolster unten */
       display:flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       justify-content:flex-start;
       align-items:center;
     }
@@ -99,14 +103,15 @@
       padding: 0;
       font-weight: 1000;
       letter-spacing: 0.06em;
-      font-size: clamp(18px, 4.6vmin, 34px);
+      /* <<< deutlich größer & harmonischer */
+      font-size: clamp(26px, 6.4vmin, 46px);
       color: rgba(0,0,0,0.92);
       text-shadow:
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.25);
     }
 
-    /* ===== NEU: gemeinsame BoxShell (Board + Sliderpanel) ===== */
+    /* ===== gemeinsame BoxShell (Board + Sliderpanel) ===== */
     .boxShell{
       width: 100%;
       box-sizing: border-box;
@@ -115,15 +120,14 @@
       border: var(--box-border) solid var(--box-black);
       border-radius: var(--box-radius);
 
-      /* gleiche Schattenwirkung wie vorher am Board */
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
 
-      overflow: hidden; /* damit nix “übersteht” */
+      overflow: hidden;
       display:flex;
       flex-direction: column;
-      gap: 0; /* WICHTIG: kein Zwischenraum */
+      gap: 0;
     }
 
     /* ===== Board innen (ohne eigenen Border/Radius) ===== */
@@ -154,13 +158,10 @@
       z-index: 1;
     }
 
-    /* ===== Einheitliches Schwarz in den Zellen ===== */
     .cell{
       background: var(--box-black);
       border-radius: var(--cell-radius);
       box-sizing: border-box;
-
-      /* weg mit dem “grauen” Inset, damit alles wirklich 1:1 schwarz ist */
       box-shadow: none;
     }
 
@@ -174,6 +175,31 @@
         inset 0 0 0 2px #000,
         0 0 0 1px rgba(0,0,0,0.25);
     }
+
+    /* ===== Corner Tags: "KIPP color" ===== */
+    .cornerTag{
+      position:absolute;
+      z-index: 6;
+      pointer-events:none;
+      user-select:none;
+      color: var(--corner-tag-color);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      text-transform: none;
+      font-size: clamp(14px, 2.5vmin, 20px);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      white-space: nowrap;
+    }
+    .cornerTag .kipp{ text-transform: uppercase; }
+    .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
+
+    /* Positionen: im schwarzen Eckbereich */
+    .cornerTag.tl{ left: calc(0.70 * var(--step)); top: calc(0.70 * var(--step)); transform: rotate(-45deg); transform-origin: left top; }
+    .cornerTag.tr{ right: calc(0.70 * var(--step)); top: calc(0.70 * var(--step)); transform: rotate(45deg);  transform-origin: right top; }
+
+    /* unten: Kopf stehen (180° zusätzlich) */
+    .cornerTag.bl{ left: calc(0.70 * var(--step)); bottom: calc(0.70 * var(--step)); transform: rotate(225deg); transform-origin: left bottom; }
+    .cornerTag.br{ right: calc(0.70 * var(--step)); bottom: calc(0.70 * var(--step)); transform: rotate(135deg); transform-origin: right bottom; }
 
     .floor{
       position:absolute;
@@ -418,7 +444,7 @@
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
-      background: var(--box-black); /* exakt gleiches Schwarz */
+      background: var(--box-black);
       user-select:none;
 
       display:flex;
@@ -426,7 +452,6 @@
       justify-content: center;
       gap: 6px;
 
-      /* kein extra “Panel-Look” mehr – es ist Box-Bauteil */
       box-shadow: none;
     }
 
@@ -497,7 +522,7 @@
       cursor: pointer;
     }
 
-    /* UI Panel bleibt wie gehabt */
+    /* UI Panel */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -640,12 +665,18 @@
   <div class="stage">
 
     <div class="title" aria-label="Titel">
-      <h1>DigiKipp</h1>
+      <h1>DigiKIPP</h1>
     </div>
 
-    <!-- ===== NEU: Board + Sliderpanel als EIN Bauteil (BoxShell) ===== -->
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
+
+        <!-- Corner subtitles -->
+        <div class="cornerTag tl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
+        <div class="cornerTag tr"><span class="kipp">KIPP</span> <span class="color">color</span></div>
+        <div class="cornerTag bl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
+        <div class="cornerTag br"><span class="kipp">KIPP</span> <span class="color">color</span></div>
+
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -682,7 +713,6 @@
         <div class="ball" aria-label="Kugel"></div>
       </div>
 
-      <!-- Kippspeed als “Verbreiterung” des Boxrahmens -->
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
         <div class="kippspeedLabel">KIPPSPEED</div>
         <div class="sliderRow">
@@ -737,16 +767,10 @@
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
-    /* Speed -> echte Dauersteuerung (Top-Speed deutlich schneller) */
     function getTiming(){
       const v = Number(speedSlider.value || 3); // 0..9
-
-      // volle Phase (W): langsam ~3200ms ... schnell ~800ms
       const holdMsFull = Math.max(800, Math.round(3200 - v * 266));
-
-      // KIP Phase: langsam ~2200ms ... schnell ~520ms
       const holdMsKip  = Math.max(520, Math.round(2200 - v * 186));
-
       return { holdMsFull, holdMsKip };
     }
 
@@ -853,7 +877,6 @@
       return pool.slice(0, count);
     }
 
-    // ===== GOLDENE LOGIK =====
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
