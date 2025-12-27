@@ -48,10 +48,16 @@
       --corner-tag-color: rgba(234, 215, 190, 0.70);
 
       /* Corner Abstand innerhalb der schwarzen Eckfelder (in Rasteranteilen) */
-      --corner-pad: 0.70; /* typografisch vernünftig: weiter weg von der Innenecke */
+      --corner-pad: 0.70;
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* ===== NEU: Start-Overlay Raster-Offsets (feinjustierbar) ===== */
+      /* Bezug: Mittelpunkt (Ball) = (4*step, 4*step) */
+      --start-ox: 0.00;   /* in Rasterzellen */
+      --start-oy: 1.35;   /* in Rasterzellen nach unten */
+      --start-gap: 0.14;  /* Button-Gap in Rasterzellen */
     }
 
     html, body { height: 100%; }
@@ -193,7 +199,6 @@
     .cornerTag .kipp{ text-transform: uppercase; }
     .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
 
-    /* FIX: Position in den Eck-Zellen (1A und 1H), nicht „irgendwo“ im Feld */
     .cornerTag.tl{
       left: calc(var(--corner-pad) * var(--step));
       top:  calc(var(--corner-pad) * var(--step));
@@ -451,18 +456,68 @@
       position:absolute;
       left: 0;
       top: 0;
-      z-index: 999;          /* wirklich über allem */
+      z-index: 999;
       pointer-events: none;
       user-select: none;
       opacity: 0;
       will-change: transform, opacity;
 
-      /* WICHTIG: Pfeilgröße relativ zum Raster (≈ 2.2 Rasterkanten breit) */
       width: calc(var(--step) * 2.20);
       height: auto;
 
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
     }
+
+    /* ===== NEU: Start-Overlay (Q3) ===== */
+    .startOverlay{
+      position:absolute;
+      z-index: 998; /* unter Pfeil, über allem anderen */
+      left: calc(4 * var(--step) + (var(--start-ox) * var(--step)));
+      top:  calc(4 * var(--step) + (var(--start-oy) * var(--step)));
+      transform: translate(-50%, 0);
+      pointer-events: auto;
+      user-select:none;
+    }
+    .startOverlay.hidden{ display:none !important; }
+
+    .startPrompt{
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(234,215,190,0.95);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+      font-size: clamp(14px, 2.6vmin, 18px);
+      margin-bottom: calc(var(--step) * 0.18);
+      text-align:center;
+      white-space: nowrap;
+    }
+
+    .pickRow{
+      display:flex;
+      gap: calc(var(--start-gap) * var(--step));
+      justify-content:center;
+      align-items:center;
+    }
+
+    .pickBtn{
+      width:  calc(var(--step) * 0.75);
+      height: calc(var(--step) * 0.75);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(234,215,190,0.92);
+      border: 3px solid rgba(0,0,0,0.70);
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.30),
+        0 0 0 2px rgba(255,255,255,0.10) inset;
+      font-weight: 1000;
+      color: #111;
+      line-height: 1;
+      font-size: clamp(14px, 3.4vmin, 20px);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pickBtn:active{ transform: translateY(1px) scale(0.98); }
 
     /* ===== Kippspeed Panel ===== */
     .kippspeedBlock{
@@ -732,8 +787,21 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- ===== Pfeil (oberste Ebene, wird per JS positioniert/animiert) ===== -->
+        <!-- ===== Pfeil (oberste Ebene) ===== -->
         <img id="kippArrow" class="kippArrow hidden" src="kipp_arrow_pictogram_22x18mm_3px.png" alt="">
+
+        <!-- ===== NEU: Start-Overlay (Q3) ===== -->
+        <div id="startOverlay" class="startOverlay hidden" aria-label="Start Overlay">
+          <div class="startPrompt">KIPPZIEL?</div>
+          <div class="pickRow" aria-label="Auswahl 1 bis 6">
+            <div class="pickBtn" data-pick="1">1</div>
+            <div class="pickBtn" data-pick="2">2</div>
+            <div class="pickBtn" data-pick="3">3</div>
+            <div class="pickBtn" data-pick="4">4</div>
+            <div class="pickBtn" data-pick="5">5</div>
+            <div class="pickBtn" data-pick="6">6</div>
+          </div>
+        </div>
       </div>
 
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
@@ -778,6 +846,9 @@
     // ===== Arrow Element + Animation Handle =====
     const kippArrow = document.getElementById("kippArrow");
     let arrowAnim = null;
+
+    // ===== Start Overlay =====
+    const startOverlay = document.getElementById("startOverlay");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1005,6 +1076,14 @@
       kipGroup.classList.remove("hidden");
     }
 
+    // =================== START OVERLAY HELPERS ===================
+    function hideStartOverlay(){
+      startOverlay.classList.add("hidden");
+    }
+    function showStartOverlay(){
+      startOverlay.classList.remove("hidden");
+    }
+
     // =================== ARROW ENGINE ===================
 
     function getStepPx(){
@@ -1036,18 +1115,18 @@
       }
 
       if(rotIdx === 0){
-        const p = cellCorner(3, 1, "SW"); // 3B (B=1)
+        const p = cellCorner(3, 1, "SW");
         return { x:p.x, y:p.y, deg:0,   anchor:SW };
       }
       if(rotIdx === 1){
-        const p = cellCorner(2, 5, "NW"); // 2F (F=5)
+        const p = cellCorner(2, 5, "NW");
         return { x:p.x, y:p.y, deg:90,  anchor:NW };
       }
       if(rotIdx === 2){
-        const p = cellCorner(6, 6, "NE"); // 6G (G=6)
+        const p = cellCorner(6, 6, "NE");
         return { x:p.x, y:p.y, deg:180, anchor:NE };
       }
-      const p = cellCorner(7, 2, "SW");   // 7C (C=2)
+      const p = cellCorner(7, 2, "SW");
       return { x:p.x, y:p.y, deg:270, anchor:SW };
     }
 
@@ -1061,20 +1140,35 @@
       kippArrow.style.transform = "none";
     }
 
+    // NEU: statischer Pfeil (Q3)
+    function showArrowStaticForThisRot(){
+      stopArrowHard();
+      const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
+
+      const ax = anchor.tx * 100;
+      const ay = anchor.ty * 100;
+      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
+
+      kippArrow.classList.remove("hidden");
+      kippArrow.style.opacity = "1";
+      kippArrow.style.transform = baseTransform;
+    }
+
+    // FIX: Wanderrichtung immer Richtung Pfeilspitze:
+    // Bild zeigt nach rechts => lokale +X Richtung.
+    // Nach rotate(deg): globaler Drift = dist*(cos, sin).
     function startArrowForThisRot(totalMs){
       stopArrowHard();
 
       const step = getStepPx();
       const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
 
-      // Drift: ca. 2 Raster nach innen in Kipprichtung (basis: nach rechts + minimal hoch)
-      const baseDx = step * 1.95;
-      const baseDy = step * -0.20;
+      // Distanz: ~2 Rasterzellen in Pfeilrichtung
+      const dist = step * 1.95;
 
-      let dx = baseDx, dy = baseDy;
-      if(deg === 90){  dx = -baseDy; dy = baseDx; }
-      if(deg === 180){ dx = -baseDx; dy = -baseDy; }
-      if(deg === 270){ dx = baseDy;  dy = -baseDx; }
+      const rad = (deg * Math.PI) / 180;
+      const dx = Math.cos(rad) * dist;
+      const dy = Math.sin(rad) * dist;
 
       const ax = anchor.tx * 100;
       const ay = anchor.ty * 100;
@@ -1101,6 +1195,8 @@
     // =================== Ablauf ===================
 
     function reroll12_keepEmpty(){
+      hideStartOverlay();
+
       const twelve = getUniqueRandomNumbers(12, 1, 12);
       planned[0] = twelve.slice(0,4);
       planned[1] = twelve.slice(4,8);
@@ -1133,6 +1229,7 @@
       if(running) return;
       running = true;
       btnStart.disabled = true;
+      hideStartOverlay();
 
       const { holdMsFull, holdMsKip } = getTiming();
       const halfFull = Math.round(holdMsFull / 2);
@@ -1192,10 +1289,14 @@
       await sleep(holdMsKip);
       stopArrowHard();
 
-      // Ende: zurück zu W1 bestückt
-      advanceFullCW();
+      // Ende: weiterdrehen auf Q3 (Spielstart)
+      advanceFullCW();          // <-- jetzt sind wir in rotIndex = 3 (Q3)
       showW();
       renderW(false);
+
+      // Q3: Pfeil bleibt statisch + Overlay erscheint
+      showArrowStaticForThisRot();
+      showStartOverlay();
 
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
@@ -1203,6 +1304,15 @@
     }
 
     btnStart.addEventListener("click", runShow7);
+
+    // Dummy: Klicks auf 1..6 (nur zum Testen)
+    startOverlay.addEventListener("click", (e) => {
+      const btn = e.target.closest(".pickBtn");
+      if(!btn) return;
+      const v = btn.dataset.pick;
+      console.log("Pick:", v);
+      // hier kommt später deine echte Logik rein
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1228,6 +1338,7 @@
       requestAnimationFrame(setKippspeedStripHeight);
 
       stopArrowHard();
+      hideStartOverlay();
     });
   </script>
 </body>
