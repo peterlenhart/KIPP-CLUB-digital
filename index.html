@@ -206,7 +206,6 @@
       transform-origin: 0 0;
     }
 
-    /* KNALLHART -> kein Blinken */
     .hidden{ display:none !important; }
 
     .cubeShadow{
@@ -396,14 +395,12 @@
       width: 100%;
       display:flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       user-select:none;
     }
 
-    /* ✅ KIPPSPEED zentriert */
+    /* ✅ WAAGRECHT ZENTRIERT */
     .kippspeedLabel{
-      width: 100%;
-      text-align: center;
       font-weight: 1000;
       letter-spacing: 0.10em;
       text-transform: uppercase;
@@ -411,23 +408,27 @@
       text-shadow: 0 1px 0 rgba(255,255,255,0.22);
       font-size: 16px;
       line-height: 1.05;
+      text-align: center;
+      width: 100%;
     }
 
+    /* ✅ Icons groß, Slider bleibt breit (Grid statt Flex) */
     .sliderRow{
-      display:flex;
+      width: 100%;
+      display:grid;
+      grid-template-columns: auto 1fr auto;
       align-items:center;
-      gap: 14px;
+      column-gap: 10px;
     }
 
-    /* ✅ Icons wirklich groß (nicht mehr durch clamp gedeckelt) */
+    /* ✅ groß wie Slot-Zahl-Feeling, ohne Slider zu verdrängen */
     .speedIcon{
-      width: 64px;
-      height: 64px;
+      width: clamp(46px, 11.5vmin, 74px);
+      height: clamp(46px, 11.5vmin, 74px);
+      opacity: 0.95;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.22));
       object-fit: contain;
-      opacity: 0.98;
-      flex: 0 0 auto;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.18))
-              drop-shadow(0 3px 6px rgba(0,0,0,0.28));
+      display:block;
     }
 
     input[type="range"]{
@@ -440,6 +441,7 @@
       outline: none;
       border: 1px solid #000;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
+      min-width: 0; /* wichtig für grid */
     }
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance: none;
@@ -651,9 +653,10 @@
     <div class="kippspeedBlock" aria-label="Kippspeed">
       <div class="kippspeedLabel">KIPPSPEED</div>
       <div class="sliderRow">
-        <img class="speedIcon" src="kippspeed_snail.png" alt="langsam">
+        <!-- Wenn du die Dateien im Repo anders benannt hast: hier den Dateinamen anpassen -->
+        <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
         <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
-        <img class="speedIcon" src="kippspeed_hase.png" alt="schnell">
+        <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
       </div>
     </div>
 
@@ -895,7 +898,7 @@
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links: nächste (taucht auf)
+      // links: nächste (taucht auf) -> ggf. leer, bis sie bestückt wird
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipLeft[i], nextPreview[i], false);
@@ -963,7 +966,7 @@
       renderW(true);
       await sleep(halfFull);
 
-      // 3) KIP W1 -> W2
+      // 3) KIP W1 -> W2 (W2 bleibt leer!)
       showKip();
       renderKip();
       await sleep(holdMsKip);
@@ -979,7 +982,7 @@
       renderW(true);
       await sleep(halfFull);
 
-      // 6) KIP W2 -> W3
+      // 6) KIP W2 -> W3 (W3 bleibt leer!)
       showKip();
       renderKip();
       await sleep(holdMsKip);
@@ -995,7 +998,7 @@
       renderW(true);
       await sleep(halfFull);
 
-      // 9) KIP W3 -> W1
+      // 9) KIP W3 -> W1 (W1 ist schon bestückt, darf links sichtbar sein)
       showKip();
       renderKip();
       await sleep(holdMsKip);
