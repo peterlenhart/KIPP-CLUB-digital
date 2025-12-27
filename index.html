@@ -41,10 +41,6 @@
 
       --kippstrip-h: auto;
 
-      /* Corner-Tag */
-      --corner-tag-color: rgba(234, 215, 190, 0.70);
-      --corner-pad: 0.70;
-
       --rotSign: 1;
       --rot: 0deg;
     }
@@ -88,15 +84,38 @@
       align-items:center;
     }
 
-    .title{
+    /* ===== Title row: links/rechts "KIPP color" neben DigiKIPP ===== */
+    .titleRow{
       width: 100%;
       display:flex;
-      justify-content:center;
-      align-items:center;
-      margin-bottom: 2px;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
       user-select:none;
+      margin-bottom: 2px;
     }
-    .title h1{
+
+    .sideTitle{
+      flex: 1 1 0;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      font-size: clamp(14px, 2.5vmin, 20px);
+      color: rgba(0,0,0,0.92);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.35),
+        0 10px 18px rgba(0,0,0,0.10);
+      white-space: nowrap;
+    }
+    .sideTitle.left{ text-align: left; padding-left: 6px; }
+    .sideTitle.right{ text-align: right; padding-right: 6px; }
+
+    .titleMain{
+      flex: 0 0 auto;
+      display:flex;
+      justify-content:center;
+      align-items: baseline;
+    }
+    .titleMain h1{
       margin: 0;
       padding: 0;
       font-weight: 1000;
@@ -106,6 +125,7 @@
       text-shadow:
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.25);
+      line-height: 1;
     }
 
     .boxShell{
@@ -114,11 +134,9 @@
       background: var(--box-black);
       border: var(--box-border) solid var(--box-black);
       border-radius: var(--box-radius);
-
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
         3px 6px 16px rgba(0,0,0,0.35);
-
       overflow: hidden;
       display:flex;
       flex-direction: column;
@@ -131,7 +149,6 @@
       height: 0;
       aspect-ratio: 1 / 1;
       box-sizing: border-box;
-
       background: var(--box-black);
       border: 0;
       border-radius: 0;
@@ -168,34 +185,6 @@
       box-shadow:
         inset 0 0 0 2px #000,
         0 0 0 1px rgba(0,0,0,0.25);
-    }
-
-    .cornerTag{
-      position:absolute;
-      z-index: 6;
-      pointer-events:none;
-      user-select:none;
-      color: var(--corner-tag-color);
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      font-size: clamp(14px, 2.5vmin, 20px);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      white-space: nowrap;
-    }
-    .cornerTag .kipp{ text-transform: uppercase; }
-    .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
-
-    .cornerTag.tl{
-      left: calc(var(--corner-pad) * var(--step));
-      top:  calc(var(--corner-pad) * var(--step));
-      transform: translate(-50%, -50%) rotate(-45deg);
-      transform-origin: 50% 50%;
-    }
-    .cornerTag.tr{
-      left: calc((8 - var(--corner-pad)) * var(--step));
-      top:  calc(var(--corner-pad) * var(--step));
-      transform: translate(-50%, -50%) rotate(45deg);
-      transform-origin: 50% 50%;
     }
 
     .floor{
@@ -237,8 +226,7 @@
     }
 
     .wFaceGroup,
-    .kipGroup,
-    .arrowGroup{
+    .kipGroup{
       position:absolute;
       inset:0;
       z-index: 4;
@@ -275,7 +263,6 @@
       height: calc(3 * var(--cell) + 2 * var(--cell-gap));
       box-sizing: border-box;
       border-radius: 0;
-
       background:
         radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
         radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
@@ -288,11 +275,9 @@
         ),
         linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
         linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
-
       box-shadow:
         inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
-
       z-index: 2;
       left: calc(1 * var(--step));
       top:  calc(1 * var(--step));
@@ -303,16 +288,12 @@
       width: var(--cell);
       height: var(--cell);
       box-sizing: border-box;
-
       background:
         linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
         var(--slot-fill);
-
       border: var(--slot-border-w) solid var(--slot-border);
       border-radius: var(--cell-radius);
-
       z-index: 7;
-
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
         -1px -1px 0 rgba(0,0,0,0.08) inset,
@@ -334,46 +315,14 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-
       font-weight: 900;
       color: #111;
       font-size: clamp(18px, 8vmin, 36px);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-
-      transform: rotate(var(--num-rot, 0deg)) translate(var(--opt-x, 0px), var(--opt-y, 0px));
+      transform: rotate(var(--num-rot, 0deg));
       transform-origin: 50% 50%;
       position: relative;
       line-height: 1;
-    }
-
-    @keyframes flyIn {
-      0%   { transform: translateY(-18px) scale(0.86) rotate(var(--num-rot,0deg)); opacity: 0; filter: blur(0.3px); }
-      70%  { transform: translateY(  1px) scale(1.03) rotate(var(--num-rot,0deg)); opacity: 1; filter: blur(0px); }
-      100% { transform: translateY(  0px) scale(1.00) rotate(var(--num-rot,0deg)); opacity: 1; }
-    }
-    .fly{ animation: flyIn 260ms cubic-bezier(.15,.9,.25,1) both; }
-
-    .slot .num > span[data-val="7"]{ --opt-x: 2px; }
-    .slot .num > span.num10{ --opt-x: -2px; }
-    .slot .num > span[data-val="6"],
-    .slot .num > span[data-val="9"]{ --opt-x: -2px; }
-
-    .slot .num > span .d{ display:inline-block; line-height: 1; }
-    .slot .num > span.num11 .d + .d{ margin-left: -0.18em; }
-    .slot .num > span.num10 .d + .d{ margin-left: -0.10em; }
-    .slot .num > span.num12 .d + .d{ margin-left: -3px; }
-
-    .slot .num > span.dot::after{
-      content:"";
-      position:absolute;
-      width: 0.20em;
-      height: 0.20em;
-      border-radius: 50%;
-      background: #111;
-      left: 100%;
-      top: 72%;
-      transform: translate(18%, -50%);
-      box-shadow: 0 1px 0 rgba(255,255,255,0.22);
     }
 
     .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
@@ -438,33 +387,33 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== PFEIL – STATISCH, exakt an Raster-Ecke ===== */
-    .kippArrow{
+    /* ===== Pfeil als SVG (keine PNG-Probleme, keine grünen Kanten) ===== */
+    .kippArrowSvg{
       position:absolute;
       left: 0;
       top: 0;
       z-index: 999;
-      pointer-events: none;
-      user-select: none;
+      pointer-events:none;
+      user-select:none;
 
-      /* Pfeilgröße relativ zum Raster (du kannst hier später feinjustieren) */
-      width: calc(var(--step) * 2.20);
+      /* Breite ≈ 27mm relativ zum Raster: 27mm / 12mm = 2.25 Raster */
+      width: calc(var(--step) * 2.25);
       height: auto;
 
-      opacity: 1;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+      /* EXAKT andocken: untere linke Ecke der SVG-Box = Pixelposition */
+      transform-origin: 0 100%;
+      transform: translate(var(--arrow-x, 0px), var(--arrow-y, 0px)) rotate(var(--arrow-rot, 0deg));
 
-      /* entscheidend: Rotation soll um die SÜDWEST-Ecke (unten links) passieren */
-      transform-origin: 0% 100%;
+      /* leichte Schattenoptik ok */
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
     }
 
-    /* ===== Kippspeed Panel ===== */
+    /* Kippspeed Panel */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
       background: var(--box-black);
       user-select:none;
-
       display:flex;
       flex-direction: column;
       justify-content: center;
@@ -494,7 +443,6 @@
       height: clamp(44px, 10vmin, 62px);
       opacity: 0.98;
       flex: 0 0 auto;
-
       filter:
         brightness(0) saturate(100%)
         invert(90%) sepia(16%) saturate(330%)
@@ -529,28 +477,17 @@
         0 0 0 1px rgba(255,255,255,0.18) inset;
       cursor: pointer;
     }
-    input[type="range"]::-moz-range-thumb{
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      background: var(--btn-bg);
-      border: 2px solid rgba(0,0,0,0.35);
-      cursor: pointer;
-    }
 
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
       padding: 12px 12px 10px;
       border-radius: 16px;
-
       background: var(--ui-panel-bg);
-
       box-shadow:
         inset 0 0 0 4px #000,
         0 12px 22px rgba(0,0,0,0.22),
         0 0 0 1px rgba(255,255,255,0.10) inset;
-
       display:flex;
       flex-direction: column;
       gap: 10px;
@@ -679,16 +616,15 @@
 <body>
   <div class="stage">
 
-    <div class="title" aria-label="Titel">
-      <h1>DigiKIPP</h1>
+    <!-- Titel mit KIPP color links/rechts -->
+    <div class="titleRow" aria-label="Titelzeile">
+      <div class="sideTitle left">KIPP color</div>
+      <div class="titleMain"><h1>DigiKIPP</h1></div>
+      <div class="sideTitle right">KIPP color</div>
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
-
-        <!-- Corner subtitles: nur oben -->
-        <div class="cornerTag tl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
-        <div class="cornerTag tr"><span class="kipp">KIPP</span> <span class="color">color</span></div>
 
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
@@ -725,15 +661,15 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- ===== PFEIL-GRUPPE (rotiert mit Board), Pfeil selbst statisch ===== -->
-        <div id="arrowGroup" class="arrowGroup hidden" aria-label="ArrowGroup">
-          <img
-            id="kippArrow"
-            class="kippArrow"
-            src="kipp_arrow_pictogram_22x18mm_3px.png"
-            alt=""
-          >
-        </div>
+        <!-- Pfeil: Inline SVG, unten-links = Anker (transform-origin: 0 100%) -->
+        <svg id="kippArrowSvg" class="kippArrowSvg" viewBox="0 0 270 180" aria-label="Kipp Pfeil" role="img">
+          <!-- weißes Innen (75% Deckkraft) -->
+          <path d="M10 90 L190 90 L190 45 L260 90 L190 135 L190 90 L10 90 Z"
+                fill="rgba(255,255,255,0.75)"/>
+          <!-- schwarze Kontur 3px -->
+          <path d="M10 90 L190 90 L190 45 L260 90 L190 135 L190 90 L10 90 Z"
+                fill="none" stroke="#000" stroke-width="3" stroke-linejoin="miter" stroke-linecap="butt"/>
+        </svg>
 
       </div>
 
@@ -775,10 +711,7 @@
     const kipGroup  = document.getElementById("kipGroup");
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
-
-    // Pfeil-Gruppe + Pfeil
-    const arrowGroup = document.getElementById("arrowGroup");
-    const kippArrow  = document.getElementById("kippArrow");
+    const arrowSvg  = document.getElementById("kippArrowSvg");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -843,55 +776,24 @@
       grid.dataset.built = "1";
     }
 
-    function setDot(span, number){
-      if(!span) return;
-      span.classList.remove("dot");
-      if (number === 6 || number === 9) span.classList.add("dot");
-    }
-
     function clearSpan(span){
       if(!span) return;
-      span.classList.remove("dot","num10","num11","num12","fly");
       span.innerHTML = "";
       span.textContent = "";
       span.removeAttribute("data-val");
+      span.className = "";
     }
 
     const lastVal = new WeakMap();
-
-    function renderNumber(span, n, animate=false){
+    function renderNumber(span, n){
       if(!span) return;
-      const prev = lastVal.has(span) ? lastVal.get(span) : null;
-
       if(n === null || n === undefined){
         lastVal.set(span, null);
-        clearSpan(span);
+        span.textContent = "";
         return;
       }
-
-      span.classList.remove("num10","num11","num12","fly");
-      span.innerHTML = "";
-      span.dataset.val = String(n);
-
-      if (n === 10){
-        span.classList.add("num10");
-        span.innerHTML = `<span class="d">1</span><span class="d">0</span>`;
-      } else if (n === 11){
-        span.classList.add("num11");
-        span.innerHTML = `<span class="d">1</span><span class="d">1</span>`;
-      } else if (n === 12){
-        span.classList.add("num12");
-        span.innerHTML = `<span class="d">1</span><span class="d">2</span>`;
-      } else {
-        span.textContent = String(n);
-      }
-
+      span.textContent = String(n);
       lastVal.set(span, n);
-
-      if(animate && prev !== n){
-        void span.offsetWidth;
-        span.classList.add("fly");
-      }
     }
 
     function getUniqueRandomNumbers(count, min, max){
@@ -947,34 +849,30 @@
       assigned[idx] = true;
     }
 
-    function mapHiddenToVisible_CW(face){
-      const [f1,f2,f3,f4] = face;
-      return [f4, f3, f2, f1];
-    }
-
     function setRotationSnap(){
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
-      arrowGroup.style.setProperty("--rot", deg + "deg");
     }
 
-    function renderW(animate=false){
+    function renderW(){
       setRotationSnap();
       const curr = sets[faceIndex];
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], curr[i], animate);
-        if(curr[i] != null) setDot(slotTargetsW[i], curr[i]);
-        else slotTargetsW[i].classList.remove("dot");
+        renderNumber(slotTargetsW[i], curr[i]);
       }
     }
 
     function renderWEmpty(){
       setRotationSnap();
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], null, false);
-        slotTargetsW[i].classList.remove("dot");
+        renderNumber(slotTargetsW[i], null);
       }
+    }
+
+    function mapHiddenToVisible_CW(face){
+      const [f1,f2,f3,f4] = face;
+      return [f4, f3, f2, f1];
     }
 
     function renderKip(){
@@ -984,16 +882,12 @@
       const next = sets[nextFaceIndex];
 
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], curr[i], false);
-        if(curr[i] != null) setDot(slotTargetsKipRight[i], curr[i]);
-        else slotTargetsKipRight[i].classList.remove("dot");
+        renderNumber(slotTargetsKipRight[i], curr[i]);
       }
 
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], nextPreview[i], false);
-        if(nextPreview[i] != null) setDot(slotTargetsKipLeft[i], nextPreview[i]);
-        else slotTargetsKipLeft[i].classList.remove("dot");
+        renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
       }
     }
 
@@ -1007,41 +901,6 @@
       kipGroup.classList.remove("hidden");
     }
 
-    // =================== PFEIL STATISCH – EXAKT ANKER 3B SW ===================
-    function getStepPx(){
-      const w = boardEl.getBoundingClientRect().width;
-      return w / 8;
-    }
-
-    function placeArrowAt_3B_SW(){
-      // 3B: row=3, col=B => colIndex=1 (A=0, B=1)
-      // SW corner of that cell => x = colIndex*step, y = row*step
-      const step = getStepPx();
-      const colIndex = 1;
-      const row = 3;
-
-      const x = colIndex * step;
-      const y = row * step;
-
-      // Wir positionieren das IMG so, dass seine SÜDWEST-Ecke am Punkt (x,y) sitzt.
-      // Trick: top/left = (x,y), dann translateY(-100%) um die Bottom-Edge auf y zu bringen.
-      // Danach Rotation um SW Ecke (transform-origin: 0% 100%) – Rotation kommt NACH der Übersetzung.
-      kippArrow.style.left = x + "px";
-      kippArrow.style.top  = y + "px";
-      kippArrow.style.transform = "rotate(0deg) translateY(-100%)";
-    }
-
-    function showArrowStatic(){
-      setRotationSnap();
-      placeArrowAt_3B_SW();
-      arrowGroup.classList.remove("hidden");
-    }
-
-    function hideArrow(){
-      arrowGroup.classList.add("hidden");
-    }
-
-    // =================== Ablauf ===================
     function reroll12_keepEmpty(){
       const twelve = getUniqueRandomNumbers(12, 1, 12);
       planned[0] = twelve.slice(0,4);
@@ -1058,15 +917,43 @@
       rotIndex  = 0;
       faceIndex = 0;
 
-      [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(clearSpan);
+      [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => { if(s) s.textContent=""; });
       setRotationSnap();
-
-      hideArrow();
+      placeArrow(); // Pfeil neu setzen
     }
 
     function advanceFullCW(){
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
+      placeArrow();
+    }
+
+    /* ========= PFEIL: exakt andocken an 3B (unten-links) + Rotation =========
+       Raster: Zeile 3, Spalte B.
+       Spalte B = Index 1 (A=0, B=1)
+       Zeile 3 -> y = (3)*step  (untere Kante), weil (row-1)*step ist obere Kante.
+       Untere linke Ecke der Zelle 3B:
+         x = 1*step
+         y = 3*step
+    */
+    function getStepPx(){
+      return boardEl.getBoundingClientRect().width / 8;
+    }
+
+    function placeArrow(){
+      const step = getStepPx();
+
+      const x = step * 1;   // B
+      const y = step * 3;   // untere Kante von Zeile 3
+
+      // Rotation um Board-Mitte
+      const deg = rotDeg[rotIndex];
+
+      // Wir setzen CSS-Variablen am SVG selbst
+      arrowSvg.style.setProperty("--arrow-x", x + "px");
+      arrowSvg.style.setProperty("--arrow-y", y + "px");
+      arrowSvg.style.setProperty("--arrow-rot", deg + "deg");
+      arrowSvg.style.display = "block";
     }
 
     let running = false;
@@ -1081,67 +968,47 @@
 
       reroll12_keepEmpty();
 
-      // W1 leer
       showW();
       renderWEmpty();
-      hideArrow();
       await sleep(halfFull);
 
-      // W1 bestückt + PFEIL STATISCH
       ensureAssigned(0);
-      renderW(true);
-      showArrowStatic();
+      renderW();
       await sleep(halfFull);
 
-      // Zwischenkipp (Pfeil aus)
       showKip();
       renderKip();
-      hideArrow();
       await sleep(holdMsKip);
 
-      // W2 leer
       advanceFullCW();
       showW();
       renderWEmpty();
-      hideArrow();
       await sleep(halfFull);
 
-      // W2 bestückt + PFEIL STATISCH
       ensureAssigned(1);
-      renderW(true);
-      showArrowStatic();
+      renderW();
       await sleep(halfFull);
 
-      // Zwischenkipp (Pfeil aus)
       showKip();
       renderKip();
-      hideArrow();
       await sleep(holdMsKip);
 
-      // W3 leer
       advanceFullCW();
       showW();
       renderWEmpty();
-      hideArrow();
       await sleep(halfFull);
 
-      // W3 bestückt + PFEIL STATISCH
       ensureAssigned(2);
-      renderW(true);
-      showArrowStatic();
+      renderW();
       await sleep(halfFull);
 
-      // Zwischenkipp (Pfeil aus)
       showKip();
       renderKip();
-      hideArrow();
       await sleep(holdMsKip);
 
-      // Ende: zurück zu W1 bestückt
       advanceFullCW();
       showW();
-      renderW(false);
-      hideArrow();
+      renderW();
 
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
@@ -1164,7 +1031,6 @@
       reroll12_keepEmpty();
       showW();
       renderWEmpty();
-      hideArrow();
     });
 
     window.addEventListener("resize", () => {
@@ -1174,10 +1040,7 @@
       setKippspeedStripHeight();
       requestAnimationFrame(setKippspeedStripHeight);
 
-      // Pfeil neu setzen, wenn er sichtbar wäre
-      if(!arrowGroup.classList.contains("hidden")){
-        showArrowStatic();
-      }
+      placeArrow();
     });
   </script>
 </body>
