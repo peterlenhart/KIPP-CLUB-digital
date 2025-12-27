@@ -29,9 +29,9 @@
       --slot-fill: #ead7be;
 
       /* ===== Einheitliches Box-Schwarz ===== */
-      --box-black: #000;          /* EIN Schwarz für alles */
-      --box-border: 4px;          /* Umrahmung */
-      --box-radius: 0px;          /* KEIN Radius */
+      --box-black: #000;
+      --box-border: 4px;
+      --box-radius: 0px;
 
       --btn-bg: #ead7be;
       --btn-text: #2a160c;
@@ -45,7 +45,7 @@
       --kippstrip-h: auto;
 
       /* Corner-Tag */
-      --corner-tag-color: rgba(234, 215, 190, 0.70); /* Slot-Beige @ 0.7 */
+      --corner-tag-color: rgba(234, 215, 190, 0.70);
 
       --rotSign: 1;
       --rot: 0deg;
@@ -81,8 +81,8 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 4vh;          /* <<< alles rauf (war 8vh) */
-      padding-bottom: 2vh;      /* kleines Luftpolster unten */
+      margin-top: 4vh;
+      padding-bottom: 2vh;
       display:flex;
       flex-direction: column;
       gap: 12px;
@@ -103,7 +103,6 @@
       padding: 0;
       font-weight: 1000;
       letter-spacing: 0.06em;
-      /* <<< deutlich größer & harmonischer */
       font-size: clamp(26px, 6.4vmin, 46px);
       color: rgba(0,0,0,0.92);
       text-shadow:
@@ -130,7 +129,6 @@
       gap: 0;
     }
 
-    /* ===== Board innen (ohne eigenen Border/Radius) ===== */
     .board{
       position:relative;
       width: 100%;
@@ -176,7 +174,7 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== Corner Tags: "KIPP color" ===== */
+    /* ===== Corner Tags: NUR oben links & oben rechts, exakt auf der Diagonalen zentriert ===== */
     .cornerTag{
       position:absolute;
       z-index: 6;
@@ -185,7 +183,6 @@
       color: var(--corner-tag-color);
       font-weight: 900;
       letter-spacing: 0.03em;
-      text-transform: none;
       font-size: clamp(14px, 2.5vmin, 20px);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       white-space: nowrap;
@@ -193,13 +190,20 @@
     .cornerTag .kipp{ text-transform: uppercase; }
     .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
 
-    /* Positionen: im schwarzen Eckbereich */
-    .cornerTag.tl{ left: calc(0.70 * var(--step)); top: calc(0.70 * var(--step)); transform: rotate(-45deg); transform-origin: left top; }
-    .cornerTag.tr{ right: calc(0.70 * var(--step)); top: calc(0.70 * var(--step)); transform: rotate(45deg);  transform-origin: right top; }
-
-    /* unten: Kopf stehen (180° zusätzlich) */
-    .cornerTag.bl{ left: calc(0.70 * var(--step)); bottom: calc(0.70 * var(--step)); transform: rotate(225deg); transform-origin: left bottom; }
-    .cornerTag.br{ right: calc(0.70 * var(--step)); bottom: calc(0.70 * var(--step)); transform: rotate(135deg); transform-origin: right bottom; }
+    /* Trick: Wir setzen den Text auf den Mittelpunkt der Ecke (1 Zelle von außen),
+       und drehen dann – dadurch sitzt er optisch mittig auf der Diagonale. */
+    .cornerTag.tl{
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      transform: translate(-50%, -50%) rotate(-45deg);
+      transform-origin: 50% 50%;
+    }
+    .cornerTag.tr{
+      left: calc(7 * var(--step));
+      top:  calc(1 * var(--step));
+      transform: translate(50%, -50%) rotate(45deg);
+      transform-origin: 50% 50%;
+    }
 
     .floor{
       position:absolute;
@@ -440,7 +444,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Kippspeed Panel (Teil der BoxShell) ===== */
+    /* ===== Kippspeed Panel ===== */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -451,8 +455,6 @@
       flex-direction: column;
       justify-content: center;
       gap: 6px;
-
-      box-shadow: none;
     }
 
     .kippspeedLabel{
@@ -493,7 +495,7 @@
       width: 100%;
       height: 10px;
       border-radius: 999px;
-      background: var(--ui-panel-bg);   /* rostbraun */
+      background: var(--ui-panel-bg);
       outline: none;
       border: 1px solid #000;
       box-shadow:
@@ -671,11 +673,9 @@
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
 
-        <!-- Corner subtitles -->
+        <!-- Corner subtitles: nur oben -->
         <div class="cornerTag tl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
         <div class="cornerTag tr"><span class="kipp">KIPP</span> <span class="color">color</span></div>
-        <div class="cornerTag bl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
-        <div class="cornerTag br"><span class="kipp">KIPP</span> <span class="color">color</span></div>
 
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
@@ -759,7 +759,6 @@
       boardEl.style.height = w + "px";
     }
 
-    // exakt 3 Rasterzeilen hoch: (Boardbreite / 8) * 3
     function setKippspeedStripHeight(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       const cell = w / 8;
@@ -768,7 +767,7 @@
     }
 
     function getTiming(){
-      const v = Number(speedSlider.value || 3); // 0..9
+      const v = Number(speedSlider.value || 3);
       const holdMsFull = Math.max(800, Math.round(3200 - v * 266));
       const holdMsKip  = Math.max(520, Math.round(2200 - v * 186));
       return { holdMsFull, holdMsKip };
