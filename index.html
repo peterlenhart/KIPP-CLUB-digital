@@ -41,6 +41,10 @@
 
       --kippstrip-h: auto;
 
+      /* Corner-Tag */
+      --corner-tag-color: rgba(234, 215, 190, 0.70);
+      --corner-pad: 0.70;
+
       --rotSign: 1;
       --rot: 0deg;
     }
@@ -84,28 +88,14 @@
       align-items:center;
     }
 
-    /* ===== TITELZEILE: links + Mitte + rechts (alles schwarz, gleiche Grundlinie) ===== */
     .title{
       width: 100%;
-      display:grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: baseline;
-      gap: 12px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-bottom: 2px;
       user-select:none;
     }
-    .titleSide{
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      font-size: clamp(14px, 2.5vmin, 20px);
-      color: rgba(0,0,0,0.92);
-      text-shadow:
-        0 1px 0 rgba(255,255,255,0.35),
-        0 10px 18px rgba(0,0,0,0.15);
-      white-space: nowrap;
-    }
-    .titleSide.left{ justify-self: end; }
-    .titleSide.right{ justify-self: start; }
-
     .title h1{
       margin: 0;
       padding: 0;
@@ -116,21 +106,11 @@
       text-shadow:
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.25);
-      justify-self: center;
-      line-height: 1;
-    }
-    .ver{
-      font-size: 12px;
-      font-weight: 1000;
-      letter-spacing: 0.10em;
-      margin-left: 10px;
-      opacity: 0.92;
     }
 
     .boxShell{
       width: 100%;
       box-sizing: border-box;
-
       background: var(--box-black);
       border: var(--box-border) solid var(--box-black);
       border-radius: var(--box-radius);
@@ -190,6 +170,34 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
+    .cornerTag{
+      position:absolute;
+      z-index: 6;
+      pointer-events:none;
+      user-select:none;
+      color: var(--corner-tag-color);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      font-size: clamp(14px, 2.5vmin, 20px);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      white-space: nowrap;
+    }
+    .cornerTag .kipp{ text-transform: uppercase; }
+    .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
+
+    .cornerTag.tl{
+      left: calc(var(--corner-pad) * var(--step));
+      top:  calc(var(--corner-pad) * var(--step));
+      transform: translate(-50%, -50%) rotate(-45deg);
+      transform-origin: 50% 50%;
+    }
+    .cornerTag.tr{
+      left: calc((8 - var(--corner-pad)) * var(--step));
+      top:  calc(var(--corner-pad) * var(--step));
+      transform: translate(-50%, -50%) rotate(45deg);
+      transform-origin: 50% 50%;
+    }
+
     .floor{
       position:absolute;
       left: var(--step);
@@ -229,7 +237,8 @@
     }
 
     .wFaceGroup,
-    .kipGroup{
+    .kipGroup,
+    .arrowGroup{
       position:absolute;
       inset:0;
       z-index: 4;
@@ -429,7 +438,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== KIPP-PFEIL (oberste Ebene) ===== */
+    /* ===== PFEIL – STATISCH, exakt an Raster-Ecke ===== */
     .kippArrow{
       position:absolute;
       left: 0;
@@ -437,14 +446,16 @@
       z-index: 999;
       pointer-events: none;
       user-select: none;
-      opacity: 0;
-      will-change: transform, opacity;
 
-      /* Größe sichtbar stabil: */
-      width: calc(var(--step) * 2.65);
+      /* Pfeilgröße relativ zum Raster (du kannst hier später feinjustieren) */
+      width: calc(var(--step) * 2.20);
       height: auto;
 
+      opacity: 1;
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+
+      /* entscheidend: Rotation soll um die SÜDWEST-Ecke (unten links) passieren */
+      transform-origin: 0% 100%;
     }
 
     /* ===== Kippspeed Panel ===== */
@@ -669,13 +680,16 @@
   <div class="stage">
 
     <div class="title" aria-label="Titel">
-      <div class="titleSide left">KIPP <span style="font-weight:800;">color</span></div>
-      <h1>DigiKIPP <span class="ver">V-ARROW-Q3-01</span></h1>
-      <div class="titleSide right">KIPP <span style="font-weight:800;">color</span></div>
+      <h1>DigiKIPP</h1>
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
+
+        <!-- Corner subtitles: nur oben -->
+        <div class="cornerTag tl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
+        <div class="cornerTag tr"><span class="kipp">KIPP</span> <span class="color">color</span></div>
+
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -711,8 +725,16 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- Pfeil: Dateiname FIX -->
-        <img id="kippArrow" class="kippArrow hidden" src="kipp_arrow_pictogram_22x18mm_3px.png" alt="">
+        <!-- ===== PFEIL-GRUPPE (rotiert mit Board), Pfeil selbst statisch ===== -->
+        <div id="arrowGroup" class="arrowGroup hidden" aria-label="ArrowGroup">
+          <img
+            id="kippArrow"
+            class="kippArrow"
+            src="kipp_arrow_pictogram_22x18mm_3px.png"
+            alt=""
+          >
+        </div>
+
       </div>
 
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
@@ -754,8 +776,9 @@
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
 
-    const kippArrow = document.getElementById("kippArrow");
-    let arrowAnim = null;
+    // Pfeil-Gruppe + Pfeil
+    const arrowGroup = document.getElementById("arrowGroup");
+    const kippArrow  = document.getElementById("kippArrow");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -933,6 +956,7 @@
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
+      arrowGroup.style.setProperty("--rot", deg + "deg");
     }
 
     function renderW(animate=false){
@@ -983,112 +1007,41 @@
       kipGroup.classList.remove("hidden");
     }
 
-    // =================== ARROW ENGINE ===================
-
+    // =================== PFEIL STATISCH – EXAKT ANKER 3B SW ===================
     function getStepPx(){
       const w = boardEl.getBoundingClientRect().width;
       return w / 8;
     }
 
-    function getArrowAnchorForRot(rotIdx){
-      // Q0: SW Ecke von 3B
-      // Q1: NW Ecke von 2F
-      // Q2: NE Ecke von 6G
-      // Q3: SW Ecke von 7C
-
-      const SW = { tx: 0,   ty: -1 };
-      const NW = { tx: 0,   ty:  0 };
-      const NE = { tx: -1,  ty:  0 };
-
+    function placeArrowAt_3B_SW(){
+      // 3B: row=3, col=B => colIndex=1 (A=0, B=1)
+      // SW corner of that cell => x = colIndex*step, y = row*step
       const step = getStepPx();
+      const colIndex = 1;
+      const row = 3;
 
-      function cellCorner(row, colIndex, corner){
-        const x0 = colIndex * step;
-        const y0 = (row - 1) * step;
+      const x = colIndex * step;
+      const y = row * step;
 
-        if(corner === "NW") return { x: x0,       y: y0 };
-        if(corner === "NE") return { x: x0+step,  y: y0 };
-        if(corner === "SW") return { x: x0,       y: y0+step };
-        return { x: x0+step, y: y0+step };
-      }
-
-      if(rotIdx === 0){
-        const p = cellCorner(3, 1, "SW");
-        return { x:p.x, y:p.y, deg:0,   anchor:SW };
-      }
-      if(rotIdx === 1){
-        const p = cellCorner(2, 5, "NW");
-        return { x:p.x, y:p.y, deg:90,  anchor:NW };
-      }
-      if(rotIdx === 2){
-        const p = cellCorner(6, 6, "NE");
-        return { x:p.x, y:p.y, deg:180, anchor:NE };
-      }
-      const p = cellCorner(7, 2, "SW");
-      return { x:p.x, y:p.y, deg:270, anchor:SW };
+      // Wir positionieren das IMG so, dass seine SÜDWEST-Ecke am Punkt (x,y) sitzt.
+      // Trick: top/left = (x,y), dann translateY(-100%) um die Bottom-Edge auf y zu bringen.
+      // Danach Rotation um SW Ecke (transform-origin: 0% 100%) – Rotation kommt NACH der Übersetzung.
+      kippArrow.style.left = x + "px";
+      kippArrow.style.top  = y + "px";
+      kippArrow.style.transform = "rotate(0deg) translateY(-100%)";
     }
 
-    function stopArrowHard(){
-      if(arrowAnim){
-        try{ arrowAnim.cancel(); }catch(e){}
-        arrowAnim = null;
-      }
-      kippArrow.classList.add("hidden");
-      kippArrow.style.opacity = "0";
-      kippArrow.style.transform = "none";
+    function showArrowStatic(){
+      setRotationSnap();
+      placeArrowAt_3B_SW();
+      arrowGroup.classList.remove("hidden");
     }
 
-    // Bewegung IMMER Richtung Pfeilspitze (Pfeilbild zeigt lokal nach rechts)
-    function startArrowForThisRot(totalMs){
-      stopArrowHard();
-
-      const step = getStepPx();
-      const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
-
-      const dist = step * 1.95;
-      const rad = (deg * Math.PI) / 180;
-      const dx = Math.cos(rad) * dist;
-      const dy = Math.sin(rad) * dist;
-
-      const ax = anchor.tx * 100;
-      const ay = anchor.ty * 100;
-
-      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
-
-      kippArrow.classList.remove("hidden");
-
-      arrowAnim = kippArrow.animate(
-        [
-          { transform: `${baseTransform} translate(0px, 0px)`, opacity: 1 },
-          { transform: `${baseTransform} translate(${dx}px, ${dy}px)`, opacity: 0 }
-        ],
-        {
-          duration: Math.max(200, totalMs),
-          easing: "linear",
-          fill: "forwards"
-        }
-      );
-
-      arrowAnim.onfinish = () => stopArrowHard();
-    }
-
-    // Q3: Pfeil bleibt statisch sichtbar (Spielstart)
-    function showStaticArrowQ3(){
-      stopArrowHard();
-
-      const { x, y, deg, anchor } = getArrowAnchorForRot(3);
-      const ax = anchor.tx * 100;
-      const ay = anchor.ty * 100;
-
-      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
-
-      kippArrow.classList.remove("hidden");
-      kippArrow.style.transform = baseTransform;
-      kippArrow.style.opacity = "1";
+    function hideArrow(){
+      arrowGroup.classList.add("hidden");
     }
 
     // =================== Ablauf ===================
-
     function reroll12_keepEmpty(){
       const twelve = getUniqueRandomNumbers(12, 1, 12);
       planned[0] = twelve.slice(0,4);
@@ -1108,7 +1061,7 @@
       [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(clearSpan);
       setRotationSnap();
 
-      stopArrowHard();
+      hideArrow();
     }
 
     function advanceFullCW(){
@@ -1131,61 +1084,64 @@
       // W1 leer
       showW();
       renderWEmpty();
+      hideArrow();
       await sleep(halfFull);
 
-      // W1 bestückt + Pfeil läuft bis Ende Zwischenkipp
+      // W1 bestückt + PFEIL STATISCH
       ensureAssigned(0);
       renderW(true);
-      startArrowForThisRot(halfFull + holdMsKip);
+      showArrowStatic();
       await sleep(halfFull);
 
-      // Zwischenkipp
+      // Zwischenkipp (Pfeil aus)
       showKip();
       renderKip();
+      hideArrow();
       await sleep(holdMsKip);
-      stopArrowHard();
 
       // W2 leer
       advanceFullCW();
       showW();
       renderWEmpty();
+      hideArrow();
       await sleep(halfFull);
 
-      // W2 bestückt + Pfeil
+      // W2 bestückt + PFEIL STATISCH
       ensureAssigned(1);
       renderW(true);
-      startArrowForThisRot(halfFull + holdMsKip);
+      showArrowStatic();
       await sleep(halfFull);
 
-      // Zwischenkipp
+      // Zwischenkipp (Pfeil aus)
       showKip();
       renderKip();
+      hideArrow();
       await sleep(holdMsKip);
-      stopArrowHard();
 
       // W3 leer
       advanceFullCW();
       showW();
       renderWEmpty();
+      hideArrow();
       await sleep(halfFull);
 
-      // W3 bestückt + Pfeil
+      // W3 bestückt + PFEIL STATISCH
       ensureAssigned(2);
       renderW(true);
-      startArrowForThisRot(halfFull + holdMsKip);
+      showArrowStatic();
       await sleep(halfFull);
 
-      // Zwischenkipp
+      // Zwischenkipp (Pfeil aus)
       showKip();
       renderKip();
+      hideArrow();
       await sleep(holdMsKip);
-      stopArrowHard();
 
-      // Ende: Q3 / Spielstart (statischer Pfeil)
-      advanceFullCW();   // rotIndex wird 3
+      // Ende: zurück zu W1 bestückt
+      advanceFullCW();
       showW();
       renderW(false);
-      showStaticArrowQ3();
+      hideArrow();
 
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
@@ -1208,6 +1164,7 @@
       reroll12_keepEmpty();
       showW();
       renderWEmpty();
+      hideArrow();
     });
 
     window.addEventListener("resize", () => {
@@ -1217,7 +1174,10 @@
       setKippspeedStripHeight();
       requestAnimationFrame(setKippspeedStripHeight);
 
-      stopArrowHard();
+      // Pfeil neu setzen, wenn er sichtbar wäre
+      if(!arrowGroup.classList.contains("hidden")){
+        showArrowStatic();
+      }
     });
   </script>
 </body>
