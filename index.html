@@ -95,7 +95,7 @@
       padding: 0;
       font-weight: 1000;
       letter-spacing: 0.06em;
-      font-size: clamp(18px, 10vmin, 34px);
+      font-size: clamp(18px, 4.6vmin, 34px);
       color: rgba(0,0,0,0.92);
       text-shadow:
         0 1px 0 rgba(255,255,255,0.35),
@@ -400,7 +400,10 @@
       user-select:none;
     }
 
+    /* ✅ KIPPSPEED zentriert */
     .kippspeedLabel{
+      width: 100%;
+      text-align: center;
       font-weight: 1000;
       letter-spacing: 0.10em;
       text-transform: uppercase;
@@ -416,12 +419,15 @@
       gap: 14px;
     }
 
+    /* ✅ Icons wirklich groß (nicht mehr durch clamp gedeckelt) */
     .speedIcon{
-      width: clamp(32px, 8vmin, 44px);
-      height: clamp(32px, 8vmin, 44px);
-      opacity: 1;
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      opacity: 0.98;
       flex: 0 0 auto;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.22));
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.18))
+              drop-shadow(0 3px 6px rgba(0,0,0,0.28));
     }
 
     input[type="range"]{
@@ -889,7 +895,7 @@
         else slotTargetsKipRight[i].classList.remove("dot");
       }
 
-      // links: nächste (taucht auf) -> ggf. leer, bis sie bestückt wird
+      // links: nächste (taucht auf)
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipLeft[i], nextPreview[i], false);
@@ -957,7 +963,7 @@
       renderW(true);
       await sleep(halfFull);
 
-      // 3) KIP W1 -> W2 (W2 bleibt leer!)
+      // 3) KIP W1 -> W2
       showKip();
       renderKip();
       await sleep(holdMsKip);
@@ -973,7 +979,7 @@
       renderW(true);
       await sleep(halfFull);
 
-      // 6) KIP W2 -> W3 (W3 bleibt leer!)
+      // 6) KIP W2 -> W3
       showKip();
       renderKip();
       await sleep(holdMsKip);
@@ -989,7 +995,7 @@
       renderW(true);
       await sleep(halfFull);
 
-      // 9) KIP W3 -> W1 (W1 ist schon bestückt, darf links sichtbar sein)
+      // 9) KIP W3 -> W1
       showKip();
       renderKip();
       await sleep(holdMsKip);
