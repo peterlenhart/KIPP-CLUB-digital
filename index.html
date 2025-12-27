@@ -40,6 +40,12 @@
       --ui-panel-bg: #7a3f2b; /* Rost-Orange-Rot Variante A */
       --ui-text: #ead7be;
 
+      /* Kippspeed-Streifen (schwarz) */
+      --kippstrip-bg: #000;
+
+      /* Dynamisch per JS: 3 Rasterzeilen hoch */
+      --kippstrip-h: auto;
+
       --rotSign: 1;
       --rot: 0deg;
     }
@@ -206,6 +212,7 @@
       transform-origin: 0 0;
     }
 
+    /* KNALLHART -> kein Blinken */
     .hidden{ display:none !important; }
 
     .cubeShadow{
@@ -390,58 +397,72 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Kippspeed Block (zwischen Box und Panel) ===== */
+    /* ===== Kippspeed Block (schwarzer Streifen, 3 Rasterzeilen hoch) ===== */
     .kippspeedBlock{
       width: 100%;
+      height: var(--kippstrip-h);
+      background: var(--kippstrip-bg);
+      border-radius: 0;
+      user-select:none;
+
       display:flex;
       flex-direction: column;
-      gap: 8px;
-      user-select:none;
+      justify-content: center;
+      gap: 6px;
+
+      /* damit es wie ein sauberer Block wirkt */
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.22) inset,
+        0 -10px 18px rgba(0,0,0,0.18) inset;
     }
 
-    /* ✅ WAAGRECHT ZENTRIERT */
     .kippspeedLabel{
       font-weight: 1000;
       letter-spacing: 0.10em;
       text-transform: uppercase;
-      color: rgba(0,0,0,0.88);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.22);
+      color: var(--ui-text);        /* hellbeige */
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       font-size: 16px;
       line-height: 1.05;
-      text-align: center;
-      width: 100%;
+      text-align: center;           /* zentriert */
     }
 
-    /* ✅ Icons groß, Slider bleibt breit (Grid statt Flex) */
     .sliderRow{
-      width: 100%;
-      display:grid;
-      grid-template-columns: auto 1fr auto;
+      display:flex;
       align-items:center;
-      column-gap: 10px;
+      gap: 14px;
+      padding: 0 12px;
     }
 
-    /* ✅ groß wie Slot-Zahl-Feeling, ohne Slider zu verdrängen */
+    /* Icons hellbeige einfärben */
     .speedIcon{
-      width: clamp(46px, 11.5vmin, 74px);
-      height: clamp(46px, 11.5vmin, 74px);
-      opacity: 0.95;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.22));
-      object-fit: contain;
-      display:block;
+      width: clamp(44px, 10vmin, 62px);
+      height: clamp(44px, 10vmin, 62px);
+      opacity: 0.98;
+      flex: 0 0 auto;
+
+      /* macht schwarze Linien hellbeige (UI-Text) */
+      filter:
+        brightness(0) saturate(100%)
+        invert(90%) sepia(16%) saturate(330%)
+        hue-rotate(355deg) brightness(105%) contrast(95%)
+        drop-shadow(0 1px 0 rgba(0,0,0,0.35))
+        drop-shadow(0 2px 6px rgba(0,0,0,0.25));
     }
 
+    /* Track rostbraun, Thumb bleibt */
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
       height: 10px;
       border-radius: 999px;
-      background: #000;
+      background: var(--ui-panel-bg);   /* rostbraun */
       outline: none;
       border: 1px solid #000;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.18) inset;
-      min-width: 0; /* wichtig für grid */
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.10) inset,
+        0 1px 0 rgba(0,0,0,0.35) inset;
     }
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance: none;
@@ -449,7 +470,7 @@
       width: 22px;
       height: 22px;
       border-radius: 6px;
-      background: var(--btn-bg);
+      background: var(--btn-bg);    /* bleibt */
       border: 2px solid rgba(0,0,0,0.35);
       box-shadow:
         0 8px 14px rgba(0,0,0,0.22),
@@ -460,7 +481,7 @@
       width: 22px;
       height: 22px;
       border-radius: 6px;
-      background: var(--btn-bg);
+      background: var(--btn-bg);    /* bleibt */
       border: 2px solid rgba(0,0,0,0.35);
       cursor: pointer;
     }
@@ -649,11 +670,10 @@
       <div class="ball" aria-label="Kugel"></div>
     </div>
 
-    <!-- Kippspeed zwischen Box und Panel -->
-    <div class="kippspeedBlock" aria-label="Kippspeed">
+    <!-- Kippspeed zwischen Box und Panel: schwarzer Streifen -->
+    <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
       <div class="kippspeedLabel">KIPPSPEED</div>
       <div class="sliderRow">
-        <!-- Wenn du die Dateien im Repo anders benannt hast: hier den Dateinamen anpassen -->
         <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
         <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
         <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
@@ -688,12 +708,21 @@
     const kipGroup  = document.getElementById("kipGroup");
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
+    const kippspeedBlock = document.getElementById("kippspeedBlock");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
+    }
+
+    // exakt 3 Rasterzeilen hoch: (Boardbreite / 8) * 3
+    function setKippspeedStripHeight(){
+      const w = Math.round(boardEl.getBoundingClientRect().width);
+      const cell = w / 8;
+      const h = Math.round(cell * 3);
+      document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
     /* Speed -> echte Dauersteuerung (Top-Speed deutlich schneller) */
@@ -1022,6 +1051,11 @@
 
       buildGridOnce();
 
+      // Streifen exakt setzen
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
+      setTimeout(setKippspeedStripHeight, 80);
+
       reroll12_keepEmpty();
       showW();
       renderWEmpty();
@@ -1030,6 +1064,9 @@
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
     });
   </script>
 </body>
