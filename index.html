@@ -28,7 +28,6 @@
       --slot-border-w: 2px;
       --slot-fill: #ead7be;
 
-      /* ===== Einheitliches Box-Schwarz ===== */
       --box-black: #000;
       --box-border: 4px;
       --box-radius: 0px;
@@ -37,27 +36,13 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      /* ===== UI (Variante A: Rostton) ===== */
       --ui-panel-bg: #7a3f2b;
       --ui-text: #ead7be;
 
-      /* Kippspeed-Streifen Höhe: dynamisch = 3 Rasterzeilen */
       --kippstrip-h: auto;
-
-      /* Corner-Tag */
-      --corner-tag-color: rgba(234, 215, 190, 0.70);
-
-      /* Corner Abstand innerhalb der schwarzen Eckfelder (in Rasteranteilen) */
-      --corner-pad: 0.70;
 
       --rotSign: 1;
       --rot: 0deg;
-
-      /* ===== NEU: Start-Overlay Raster-Offsets (feinjustierbar) ===== */
-      /* Bezug: Mittelpunkt (Ball) = (4*step, 4*step) */
-      --start-ox: 0.00;   /* in Rasterzellen */
-      --start-oy: 1.35;   /* in Rasterzellen nach unten */
-      --start-gap: 0.14;  /* Button-Gap in Rasterzellen */
     }
 
     html, body { height: 100%; }
@@ -99,14 +84,28 @@
       align-items:center;
     }
 
+    /* ===== TITELZEILE: links + Mitte + rechts (alles schwarz, gleiche Grundlinie) ===== */
     .title{
       width: 100%;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      margin-bottom: 2px;
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: baseline;
+      gap: 12px;
       user-select:none;
     }
+    .titleSide{
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      font-size: clamp(14px, 2.5vmin, 20px);
+      color: rgba(0,0,0,0.92);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.35),
+        0 10px 18px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+    .titleSide.left{ justify-self: end; }
+    .titleSide.right{ justify-self: start; }
+
     .title h1{
       margin: 0;
       padding: 0;
@@ -117,9 +116,17 @@
       text-shadow:
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.25);
+      justify-self: center;
+      line-height: 1;
+    }
+    .ver{
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: 0.10em;
+      margin-left: 10px;
+      opacity: 0.92;
     }
 
-    /* ===== gemeinsame BoxShell (Board + Sliderpanel) ===== */
     .boxShell{
       width: 100%;
       box-sizing: border-box;
@@ -181,35 +188,6 @@
       box-shadow:
         inset 0 0 0 2px #000,
         0 0 0 1px rgba(0,0,0,0.25);
-    }
-
-    /* ===== Corner Tags: oben links & oben rechts im schwarzen Rahmeneck ===== */
-    .cornerTag{
-      position:absolute;
-      z-index: 6;
-      pointer-events:none;
-      user-select:none;
-      color: var(--corner-tag-color);
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      font-size: clamp(14px, 2.5vmin, 20px);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      white-space: nowrap;
-    }
-    .cornerTag .kipp{ text-transform: uppercase; }
-    .cornerTag .color{ text-transform: lowercase; font-weight: 800; letter-spacing: 0.02em; }
-
-    .cornerTag.tl{
-      left: calc(var(--corner-pad) * var(--step));
-      top:  calc(var(--corner-pad) * var(--step));
-      transform: translate(-50%, -50%) rotate(-45deg);
-      transform-origin: 50% 50%;
-    }
-    .cornerTag.tr{
-      left: calc((8 - var(--corner-pad)) * var(--step));
-      top:  calc(var(--corner-pad) * var(--step));
-      transform: translate(-50%, -50%) rotate(45deg);
-      transform-origin: 50% 50%;
     }
 
     .floor{
@@ -462,62 +440,12 @@
       opacity: 0;
       will-change: transform, opacity;
 
-      width: calc(var(--step) * 2.20);
+      /* Größe sichtbar stabil: */
+      width: calc(var(--step) * 2.65);
       height: auto;
 
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
     }
-
-    /* ===== NEU: Start-Overlay (Q3) ===== */
-    .startOverlay{
-      position:absolute;
-      z-index: 998; /* unter Pfeil, über allem anderen */
-      left: calc(4 * var(--step) + (var(--start-ox) * var(--step)));
-      top:  calc(4 * var(--step) + (var(--start-oy) * var(--step)));
-      transform: translate(-50%, 0);
-      pointer-events: auto;
-      user-select:none;
-    }
-    .startOverlay.hidden{ display:none !important; }
-
-    .startPrompt{
-      font-weight: 1000;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: rgba(234,215,190,0.95);
-      text-shadow: 0 2px 10px rgba(0,0,0,0.55);
-      font-size: clamp(14px, 2.6vmin, 18px);
-      margin-bottom: calc(var(--step) * 0.18);
-      text-align:center;
-      white-space: nowrap;
-    }
-
-    .pickRow{
-      display:flex;
-      gap: calc(var(--start-gap) * var(--step));
-      justify-content:center;
-      align-items:center;
-    }
-
-    .pickBtn{
-      width:  calc(var(--step) * 0.75);
-      height: calc(var(--step) * 0.75);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: rgba(234,215,190,0.92);
-      border: 3px solid rgba(0,0,0,0.70);
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.30),
-        0 0 0 2px rgba(255,255,255,0.10) inset;
-      font-weight: 1000;
-      color: #111;
-      line-height: 1;
-      font-size: clamp(14px, 3.4vmin, 20px);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .pickBtn:active{ transform: translateY(1px) scale(0.98); }
 
     /* ===== Kippspeed Panel ===== */
     .kippspeedBlock{
@@ -599,7 +527,6 @@
       cursor: pointer;
     }
 
-    /* UI Panel */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -742,16 +669,13 @@
   <div class="stage">
 
     <div class="title" aria-label="Titel">
-      <h1>DigiKIPP</h1>
+      <div class="titleSide left">KIPP <span style="font-weight:800;">color</span></div>
+      <h1>DigiKIPP <span class="ver">V-ARROW-Q3-01</span></h1>
+      <div class="titleSide right">KIPP <span style="font-weight:800;">color</span></div>
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
-
-        <!-- Corner subtitles: nur oben -->
-        <div class="cornerTag tl"><span class="kipp">KIPP</span> <span class="color">color</span></div>
-        <div class="cornerTag tr"><span class="kipp">KIPP</span> <span class="color">color</span></div>
-
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -787,21 +711,8 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- ===== Pfeil (oberste Ebene) ===== -->
+        <!-- Pfeil: Dateiname FIX -->
         <img id="kippArrow" class="kippArrow hidden" src="kipp_arrow_pictogram_22x18mm_3px.png" alt="">
-
-        <!-- ===== NEU: Start-Overlay (Q3) ===== -->
-        <div id="startOverlay" class="startOverlay hidden" aria-label="Start Overlay">
-          <div class="startPrompt">KIPPZIEL?</div>
-          <div class="pickRow" aria-label="Auswahl 1 bis 6">
-            <div class="pickBtn" data-pick="1">1</div>
-            <div class="pickBtn" data-pick="2">2</div>
-            <div class="pickBtn" data-pick="3">3</div>
-            <div class="pickBtn" data-pick="4">4</div>
-            <div class="pickBtn" data-pick="5">5</div>
-            <div class="pickBtn" data-pick="6">6</div>
-          </div>
-        </div>
       </div>
 
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
@@ -843,12 +754,8 @@
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
 
-    // ===== Arrow Element + Animation Handle =====
     const kippArrow = document.getElementById("kippArrow");
     let arrowAnim = null;
-
-    // ===== Start Overlay =====
-    const startOverlay = document.getElementById("startOverlay");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1076,14 +983,6 @@
       kipGroup.classList.remove("hidden");
     }
 
-    // =================== START OVERLAY HELPERS ===================
-    function hideStartOverlay(){
-      startOverlay.classList.add("hidden");
-    }
-    function showStartOverlay(){
-      startOverlay.classList.remove("hidden");
-    }
-
     // =================== ARROW ENGINE ===================
 
     function getStepPx(){
@@ -1092,7 +991,6 @@
     }
 
     function getArrowAnchorForRot(rotIdx){
-      // Raster-Zielkanten:
       // Q0: SW Ecke von 3B
       // Q1: NW Ecke von 2F
       // Q2: NE Ecke von 6G
@@ -1140,32 +1038,14 @@
       kippArrow.style.transform = "none";
     }
 
-    // NEU: statischer Pfeil (Q3)
-    function showArrowStaticForThisRot(){
-      stopArrowHard();
-      const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
-
-      const ax = anchor.tx * 100;
-      const ay = anchor.ty * 100;
-      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
-
-      kippArrow.classList.remove("hidden");
-      kippArrow.style.opacity = "1";
-      kippArrow.style.transform = baseTransform;
-    }
-
-    // FIX: Wanderrichtung immer Richtung Pfeilspitze:
-    // Bild zeigt nach rechts => lokale +X Richtung.
-    // Nach rotate(deg): globaler Drift = dist*(cos, sin).
+    // Bewegung IMMER Richtung Pfeilspitze (Pfeilbild zeigt lokal nach rechts)
     function startArrowForThisRot(totalMs){
       stopArrowHard();
 
       const step = getStepPx();
       const { x, y, deg, anchor } = getArrowAnchorForRot(rotIndex);
 
-      // Distanz: ~2 Rasterzellen in Pfeilrichtung
       const dist = step * 1.95;
-
       const rad = (deg * Math.PI) / 180;
       const dx = Math.cos(rad) * dist;
       const dy = Math.sin(rad) * dist;
@@ -1192,11 +1072,24 @@
       arrowAnim.onfinish = () => stopArrowHard();
     }
 
+    // Q3: Pfeil bleibt statisch sichtbar (Spielstart)
+    function showStaticArrowQ3(){
+      stopArrowHard();
+
+      const { x, y, deg, anchor } = getArrowAnchorForRot(3);
+      const ax = anchor.tx * 100;
+      const ay = anchor.ty * 100;
+
+      const baseTransform = `translate(${x}px, ${y}px) translate(${ax}%, ${ay}%) rotate(${deg}deg)`;
+
+      kippArrow.classList.remove("hidden");
+      kippArrow.style.transform = baseTransform;
+      kippArrow.style.opacity = "1";
+    }
+
     // =================== Ablauf ===================
 
     function reroll12_keepEmpty(){
-      hideStartOverlay();
-
       const twelve = getUniqueRandomNumbers(12, 1, 12);
       planned[0] = twelve.slice(0,4);
       planned[1] = twelve.slice(4,8);
@@ -1229,7 +1122,6 @@
       if(running) return;
       running = true;
       btnStart.disabled = true;
-      hideStartOverlay();
 
       const { holdMsFull, holdMsKip } = getTiming();
       const halfFull = Math.round(holdMsFull / 2);
@@ -1289,14 +1181,11 @@
       await sleep(holdMsKip);
       stopArrowHard();
 
-      // Ende: weiterdrehen auf Q3 (Spielstart)
-      advanceFullCW();          // <-- jetzt sind wir in rotIndex = 3 (Q3)
+      // Ende: Q3 / Spielstart (statischer Pfeil)
+      advanceFullCW();   // rotIndex wird 3
       showW();
       renderW(false);
-
-      // Q3: Pfeil bleibt statisch + Overlay erscheint
-      showArrowStaticForThisRot();
-      showStartOverlay();
+      showStaticArrowQ3();
 
       btnStart.textContent = "ZAHLEN NEU SETZEN";
       btnStart.disabled = false;
@@ -1304,15 +1193,6 @@
     }
 
     btnStart.addEventListener("click", runShow7);
-
-    // Dummy: Klicks auf 1..6 (nur zum Testen)
-    startOverlay.addEventListener("click", (e) => {
-      const btn = e.target.closest(".pickBtn");
-      if(!btn) return;
-      const v = btn.dataset.pick;
-      console.log("Pick:", v);
-      // hier kommt später deine echte Logik rein
-    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1338,7 +1218,6 @@
       requestAnimationFrame(setKippspeedStripHeight);
 
       stopArrowHard();
-      hideStartOverlay();
     });
   </script>
 </body>
