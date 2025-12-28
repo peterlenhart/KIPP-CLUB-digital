@@ -32,7 +32,7 @@
       --box-border: 4px;
       --box-radius: 0px;
 
-      --btn-bg: #ead7be;     /* dein Beige */
+      --btn-bg: #ead7be;
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
@@ -54,7 +54,6 @@
       margin:0;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
       background:
         radial-gradient(ellipse at center, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.38) 100%),
         linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.00) 18%, rgba(0,0,0,0.00) 82%, rgba(0,0,0,0.22)),
@@ -79,7 +78,7 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: clamp(10px, 2.2vh, 18px); /* vernünftiger Nord-Abstand */
+      margin-top: 4vh;
       padding-bottom: 2vh;
       display:flex;
       flex-direction: column;
@@ -91,10 +90,7 @@
     .boxShell{
       width: 100%;
       box-sizing: border-box;
-
-      /* WICHTIG: nicht mehr schwarz, sonst sieht man den "gelöschten Streifen" nicht */
-      background: transparent;
-
+      background: var(--box-black);
       border: var(--box-border) solid var(--box-black);
       border-radius: var(--box-radius);
       box-shadow:
@@ -150,6 +146,36 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
+    /* ===== KIPP Color in Rasterzeile 1 (schwarze Flächen A–B und G–H) ===== */
+    .topStripLabel{
+      position:absolute;
+      top: 0;
+      height: var(--step);           /* exakt 1 Rasterzeile */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      pointer-events:none;
+      z-index: 6;
+      color: var(--btn-bg);          /* beige */
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: clamp(12px, 2.1vmin, 16px);
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.55),
+        0 6px 12px rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+    .topStripLabel.left{
+      left: 0;
+      width: calc(2 * var(--step));  /* A–B */
+    }
+    .topStripLabel.right{
+      left: calc(6 * var(--step));   /* G–H */
+      width: calc(2 * var(--step));
+    }
+
     .floor{
       position:absolute;
       left: var(--step);
@@ -186,24 +212,6 @@
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
       z-index: 3;
       pointer-events: none;
-    }
-
-    /* ===== KIP color Labels in Rasterzeile 1 (oben) ===== */
-    .kippColorLabel{
-      position:absolute;
-      z-index: 6500;
-      color: var(--btn-bg);
-      font-weight: 1000;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-size: clamp(12px, 2.4vmin, 16px);
-      text-shadow:
-        0 2px 0 rgba(0,0,0,0.35),
-        0 10px 18px rgba(0,0,0,0.35);
-      user-select:none;
-      white-space: nowrap;
-      transform: translate(-50%, -50%);
-      pointer-events:none;
     }
 
     .wFaceGroup,
@@ -371,7 +379,7 @@
       position:absolute;
       left: 0;
       top: 0;
-      z-index: 9000;
+      z-index: 9000; /* IMMER oberste Ebene */
       pointer-events:none;
       user-select:none;
 
@@ -379,6 +387,7 @@
       height: auto;
 
       transform-origin: 0 100%;
+
       transform:
         translate(var(--arrow-x, 0px), var(--arrow-y, 0px))
         translateY(-100%)
@@ -444,13 +453,6 @@
       filter: brightness(0.98);
     }
 
-    /* ===== Trennstreifen: halbe Rasterzeile, transparent ===== */
-    .kippSeparator{
-      width: 100%;
-      height: 0px;           /* wird per JS auf step/2 gesetzt */
-      background: transparent;
-    }
-
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -462,15 +464,16 @@
       gap: 6px;
     }
 
+    /* Schreibweise nach deinem Prinzip */
     .kippspeedLabel{
       font-weight: 1000;
       letter-spacing: 0.10em;
-      text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       font-size: 16px;
       line-height: 1.05;
       text-align: center;
+      text-transform: none; /* NICHT alles caps */
     }
 
     .sliderRow{
@@ -542,6 +545,7 @@
       gap: 10px;
     }
 
+    /* Schreibweise nach deinem Prinzip */
     .uiLabel{
       font-weight: 900;
       letter-spacing: 0.04em;
@@ -550,6 +554,8 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       font-size: 22px;
       line-height: 1.05;
+      text-transform: none; /* NICHT alles caps */
+      white-space: nowrap;
     }
 
     .targetCard{
@@ -562,7 +568,7 @@
     .progressText{
       color: var(--ui-text);
       font-weight: 900;
-      font-size: 18px;
+      font-size: 16px; /* (00-11) kleiner */
       line-height: 1.05;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
@@ -570,6 +576,7 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       min-width: 64px;
       text-align:left;
+      opacity: 0.95;
     }
 
     .targetSquare{
@@ -586,6 +593,7 @@
       align-items:center;
       justify-content:center;
       user-select:none;
+      flex: 0 0 auto;
     }
 
     .targetSquare span{
@@ -634,7 +642,7 @@
       color: var(--btn-text);
       font-weight: 1000;
       letter-spacing: 0.06em;
-      text-transform: uppercase;
+      text-transform: none; /* nach deinem Prinzip */
       padding: 14px 16px;
       border-radius: 14px;
       cursor: pointer;
@@ -661,12 +669,12 @@
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
 
+        <!-- KIPP Color (Rasterzeile 1, links A–B und rechts G–H) -->
+        <div class="topStripLabel left">KIPP Color</div>
+        <div class="topStripLabel right">KIPP Color</div>
+
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
-
-        <!-- KIP color Labels (Rasterzeile 1, AB und GH) -->
-        <div id="kippColorLeft" class="kippColorLabel">KIP color</div>
-        <div id="kippColorRight" class="kippColorLabel">KIP color</div>
 
         <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
           <div class="cubeShadow" aria-hidden="true"></div>
@@ -719,11 +727,8 @@
 
       </div>
 
-      <!-- Trennstreifen: halbe Rasterzeile (step/2) -->
-      <div id="kippSeparator" class="kippSeparator" aria-hidden="true"></div>
-
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
-        <div class="kippspeedLabel">KIPPSPEED</div>
+        <div class="kippspeedLabel">KIPP Speed</div>
         <div class="sliderRow">
           <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
           <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
@@ -735,20 +740,20 @@
     <div class="uiPanel" aria-label="UI Panel">
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
-          <div class="uiLabel">Kippziel</div>
+          <div class="uiLabel">KIPP Ziel</div>
           <div class="targetCard">
             <div class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
-            <div class="progressText" aria-label="Progress (Dummy)">(00/11)</div>
+            <div class="progressText" aria-label="Progress (Dummy)">(00-11)</div>
           </div>
         </div>
 
         <div class="pointsBlock" aria-label="Punkteblock rechts (Dummy)">
-          <div class="pointsNow">0p</div>
+          <div class="pointsNow">0P</div>
           <div class="hiLine">Highscore: <span>66</span></div>
         </div>
       </div>
 
-      <button id="btnStart" class="startBtn">START</button>
+      <button id="btnStart" class="startBtn">KIPP Start</button>
     </div>
 
   </div>
@@ -764,10 +769,6 @@
     const arrowPng  = document.getElementById("kippArrowPng");
     const hudGroup  = document.getElementById("hudGroup");
     const kippLabel = document.getElementById("kippLabel");
-
-    const kippColorLeft  = document.getElementById("kippColorLeft");
-    const kippColorRight = document.getElementById("kippColorRight");
-    const kippSeparator  = document.getElementById("kippSeparator");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -967,38 +968,12 @@
       return { cx: step * 4, cy: step * 4, step };
     }
 
-    /* ===== KIP color in Rasterzeile 1: über AB und GH zentriert ===== */
-    function layoutKipColorLabels(){
-      const step = getStepPx();
-
-      // Zentren über AB und GH:
-      const xLeft  = step * 1;  // Mitte über A+B
-      const xRight = step * 7;  // Mitte über G+H
-
-      // In Zeile 1 -> wir setzen es in die obere Hälfte dieser Zeile
-      const y = step * 0.35;
-
-      kippColorLeft.style.left  = xLeft + "px";
-      kippColorLeft.style.top   = y + "px";
-
-      kippColorRight.style.left = xRight + "px";
-      kippColorRight.style.top  = y + "px";
-    }
-
-    /* ===== Separator: halbe Rasterzeile ===== */
-    function setSeparatorHeight(){
-      const step = getStepPx();
-      const h = Math.round(step / 2);
-      kippSeparator.style.height = h + "px";
-    }
-
-    // ===== Pfeil: nur am Anfang und am Ende =====
     function placeArrow(){
       const { cx, cy, step } = getPivot();
       const deg = rotDeg[rotIndex];
 
-      const baseX = step * 1; // Spalte B
-      const baseY = step * 4; // untere Kante Zeile 4
+      const baseX = step * 1;
+      const baseY = step * 4;
 
       const p = rotatePoint(baseX, baseY, cx, cy, deg);
 
@@ -1015,7 +990,6 @@
       arrowPng.classList.add("hidden");
     }
 
-    // ===== HUD: Kippzahl + 1..6 =====
     function layoutChoiceUI(){
       const { cx, cy, step } = getPivot();
       const deg = rotDeg[rotIndex];
@@ -1160,19 +1134,16 @@
 
     btnStart.addEventListener("click", runShow7);
 
-    function relayoutAll(){
-      setBoardSquare();
-      setKippspeedStripHeight();
-      setSeparatorHeight();
-      layoutKipColorLabels();
-
-      if(!arrowPng.classList.contains("hidden")) placeArrow();
-      if(!hudGroup.classList.contains("hidden")) layoutChoiceUI();
-    }
-
     window.addEventListener("load", () => {
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+      setTimeout(setBoardSquare, 80);
+
       buildGridOnce();
-      relayoutAll();
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
+      setTimeout(setKippspeedStripHeight, 80);
 
       reroll12_keepEmpty();
       showW();
@@ -1180,7 +1151,14 @@
     });
 
     window.addEventListener("resize", () => {
-      relayoutAll();
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
+
+      if(!arrowPng.classList.contains("hidden")) placeArrow();
+      if(!hudGroup.classList.contains("hidden")) layoutChoiceUI();
     });
   </script>
 </body>
