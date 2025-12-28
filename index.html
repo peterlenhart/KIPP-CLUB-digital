@@ -44,7 +44,6 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* Auswahl */
       --sel-size: 48px;
     }
 
@@ -392,24 +391,19 @@
       position:absolute;
       left: 0;
       top: 0;
-      z-index: 9000; /* IMMER oberste Ebene */
+      z-index: 9000;
       pointer-events:none;
       user-select:none;
-
-      /* Pfeil.png ist "würfelflächen-groß" => 3 Rasterzellen */
       width: calc(var(--step) * 3);
       height: auto;
-
-      /* Anchor: unten-links */
       transform-origin: 0 100%;
-
       transform:
         translate(var(--arrow-x, 0px), var(--arrow-y, 0px))
         translateY(-100%)
         rotate(var(--arrow-rot, 0deg));
     }
 
-    /* ===== HUD: Kippzahl + 6 Auswahlquadrate ===== */
+    /* ===== HUD ===== */
     .hudGroup{
       position:absolute;
       inset:0;
@@ -458,7 +452,7 @@
     .choiceBtn span{
       font-weight: 1000;
       font-size: clamp(16px, 4.2vmin, 26px);
-      color: #7a3f2b; /* rostbraun */
+      color: #7a3f2b;
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
     }
@@ -468,6 +462,7 @@
       filter: brightness(0.98);
     }
 
+    /* ===== Speed-Panel bleibt wie es ist (kein Separieren/Löschen) ===== */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -576,10 +571,11 @@
       margin-left: 0;
     }
 
+    /* (00/11) bewusst kleiner */
     .progressText{
       color: var(--ui-text);
       font-weight: 900;
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1.05;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
@@ -587,6 +583,7 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       min-width: 64px;
       text-align:left;
+      opacity: 0.95;
     }
 
     .targetSquare{
@@ -624,6 +621,7 @@
       user-select:none;
     }
 
+    /* 0P bleibt groß + P bleibt groß */
     .pointsNow{
       font-weight: 1000;
       letter-spacing: 0.02em;
@@ -632,6 +630,7 @@
       font-size: 44px;
       line-height: 0.95;
       font-variant-numeric: tabular-nums;
+      text-transform: uppercase;
     }
 
     .hiLine{
@@ -676,9 +675,10 @@
   <div class="stage">
 
     <div class="titleRow" aria-label="Titelzeile">
-      <div class="sideTitle left">KIP color</div>
+      <!-- Deine Anforderung: Schreibweise kann so bleiben (also nicht KIPP Color) -->
+      <div class="sideTitle left">KIPP COLOR</div>
       <div class="titleMain"><h1>DigiKIPP</h1></div>
-      <div class="sideTitle right">KIP color</div>
+      <div class="sideTitle right">KIPP COLOR</div>
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
@@ -719,7 +719,7 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- HUD: Kippzahl + Auswahl 1..6 -->
+        <!-- HUD -->
         <div id="hudGroup" class="hudGroup hidden" aria-label="HUD">
           <div class="hudUpright">
             <div id="kippLabel" class="kippLabel">Kippzahl?</div>
@@ -733,11 +733,11 @@
           </div>
         </div>
 
-        <!-- Pfeil: PNG aus Repo -->
+        <!-- Pfeil -->
         <img id="kippArrowPng" class="kippArrowPng hidden" src="Pfeil.png" alt="Kipprichtung Pfeil" />
-
       </div>
 
+      <!-- Speed-Panel bleibt wie es ist -->
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
         <div class="kippspeedLabel">KIPPSPEED</div>
         <div class="sliderRow">
@@ -751,7 +751,7 @@
     <div class="uiPanel" aria-label="UI Panel">
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
-          <!-- geändert: KIPP ZIEL -->
+          <!-- KIPP Ziel -> KIPP ZIEL -->
           <div class="uiLabel">KIPP ZIEL</div>
           <div class="targetCard">
             <div class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
@@ -760,12 +760,13 @@
         </div>
 
         <div class="pointsBlock" aria-label="Punkteblock rechts (Dummy)">
-          <div class="pointsNow">0p</div>
+          <!-- 0P bleibt 0P -->
+          <div class="pointsNow">0P</div>
           <div class="hiLine">Highscore: <span>66</span></div>
         </div>
       </div>
 
-      <!-- geändert: Buttontext -->
+      <!-- KIPP Start -> KIPP ZAHLEN setzen -->
       <button id="btnStart" class="startBtn">KIPP ZAHLEN setzen</button>
     </div>
 
@@ -846,16 +847,13 @@
       grid.dataset.built = "1";
     }
 
-    const lastVal = new WeakMap();
     function renderNumber(span, n){
       if(!span) return;
       if(n === null || n === undefined){
-        lastVal.set(span, null);
         span.textContent = "";
         return;
       }
       span.textContent = String(n);
-      lastVal.set(span, n);
     }
 
     function getUniqueRandomNumbers(count, min, max){
@@ -985,8 +983,8 @@
       const { cx, cy, step } = getPivot();
       const deg = rotDeg[rotIndex];
 
-      const baseX = step * 1; // Spalte B
-      const baseY = step * 4; // untere Kante Zeile 4
+      const baseX = step * 1;
+      const baseY = step * 4;
 
       const p = rotatePoint(baseX, baseY, cx, cy, deg);
 
@@ -1073,11 +1071,6 @@
 
     let running = false;
 
-    // Button-Mode:
-    // "setzen" = erster Klick
-    // "mischen" = danach (Text bleibt)
-    let btnMode = "setzen";
-
     async function runShow7(){
       if(running) return;
       running = true;
@@ -1085,6 +1078,10 @@
 
       const { holdMsFull, holdMsKip } = getTiming();
       const halfFull = Math.round(holdMsFull / 2);
+
+      // Deine Anforderung: Button wechselt nach Tipp auf "KIPP ZAHLEN mischen"
+      // (Funktion dahinter später)
+      btnStart.textContent = "KIPP ZAHLEN mischen";
 
       reroll12_keepEmpty();
 
@@ -1138,10 +1135,6 @@
       showArrow();
       showChoiceHUD();
 
-      // Nach dem ersten "setzen"-Klick: Button wird zu "mischen"
-      btnMode = "mischen";
-      btnStart.textContent = "KIPP ZAHLEN mischen";
-
       btnStart.disabled = false;
       running = false;
     }
@@ -1153,11 +1146,7 @@
       console.log("Kippwahl:", val);
     });
 
-    btnStart.addEventListener("click", () => {
-      // Egal ob "setzen" oder "mischen": wir spielen aktuell die gleiche Demo ab.
-      // Funktion dahinter (setzen vs mischen) kommt später.
-      runShow7();
-    });
+    btnStart.addEventListener("click", runShow7);
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1170,13 +1159,12 @@
       requestAnimationFrame(setKippspeedStripHeight);
       setTimeout(setKippspeedStripHeight, 80);
 
+      // Button-Starttext exakt wie gefordert
+      btnStart.textContent = "KIPP ZAHLEN setzen";
+
       reroll12_keepEmpty();
       showW();
       renderWEmpty();
-
-      // Initialer Button-Text:
-      btnMode = "setzen";
-      btnStart.textContent = "KIPP ZAHLEN setzen";
     });
 
     window.addEventListener("resize", () => {
