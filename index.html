@@ -43,8 +43,6 @@
 
       --rotSign: 1;
       --rot: 0deg;
-
-      --sel-size: 48px;
     }
 
     html, body { height: 100%; }
@@ -386,82 +384,6 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Pfeil: PNG (Pfeil.png) ===== */
-    .kippArrowPng{
-      position:absolute;
-      left: 0;
-      top: 0;
-      z-index: 9000;
-      pointer-events:none;
-      user-select:none;
-      width: calc(var(--step) * 3);
-      height: auto;
-      transform-origin: 0 100%;
-      transform:
-        translate(var(--arrow-x, 0px), var(--arrow-y, 0px))
-        translateY(-100%)
-        rotate(var(--arrow-rot, 0deg));
-    }
-
-    /* ===== HUD ===== */
-    .hudGroup{
-      position:absolute;
-      inset:0;
-      z-index: 7000;
-      pointer-events:none;
-    }
-    .hudUpright{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-    }
-
-    .kippLabel{
-      position:absolute;
-      color: var(--btn-bg);
-      font-weight: 1000;
-      letter-spacing: 0.04em;
-      text-shadow:
-        0 2px 0 rgba(0,0,0,0.30),
-        0 10px 18px rgba(0,0,0,0.35);
-      font-size: clamp(14px, 2.8vmin, 18px);
-      user-select:none;
-      white-space: nowrap;
-    }
-
-    .choiceBtn{
-      position:absolute;
-      width: var(--sel-size);
-      height: var(--sel-size);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
-        var(--btn-bg);
-      border: 2px solid rgba(0,0,0,0.55);
-      box-shadow:
-        0 18px 22px rgba(0,0,0,0.35),
-        0 8px 14px rgba(0,0,0,0.22),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-      pointer-events:auto;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .choiceBtn span{
-      font-weight: 1000;
-      font-size: clamp(16px, 4.2vmin, 26px);
-      color: #7a3f2b;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      line-height: 1;
-    }
-
-    .choiceBtn:active{
-      transform: scale(0.985);
-      filter: brightness(0.98);
-    }
-
     /* ===== EXIT (Raster 1H) ===== */
     .exitBtn{
       position:absolute;
@@ -498,7 +420,7 @@
       filter: brightness(1.05);
     }
 
-    /* ===== Speed-Panel ===== */
+    /* ===== Konsole-Block ===== */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -571,6 +493,26 @@
       filter: drop-shadow(0 1px 0 rgba(255,255,255,0.25));
       transform: translateX(1px);
     }
+
+    /* Pause Icon (||) */
+    .pauseIcon{
+      width: 18px;
+      height: 22px;
+      position: relative;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.25));
+    }
+    .pauseIcon::before,
+    .pauseIcon::after{
+      content:"";
+      position:absolute;
+      top:0;
+      width: 6px;
+      height: 22px;
+      background: #7a3f2b;
+      border-radius: 1px;
+    }
+    .pauseIcon::before{ left: 0; }
+    .pauseIcon::after { right: 0; }
 
     .okText{
       font-weight: 1000;
@@ -871,23 +813,6 @@
         <button id="exitBtn" class="exitBtn" aria-label="Spiel beenden">
           <span>X</span>
         </button>
-
-        <!-- HUD -->
-        <div id="hudGroup" class="hudGroup hidden" aria-label="HUD">
-          <div class="hudUpright">
-            <div id="kippLabel" class="kippLabel">Kippzahl?</div>
-
-            <div class="choiceBtn" data-choice="1"><span>1</span></div>
-            <div class="choiceBtn" data-choice="2"><span>2</span></div>
-            <div class="choiceBtn" data-choice="3"><span>3</span></div>
-            <div class="choiceBtn" data-choice="4"><span>4</span></div>
-            <div class="choiceBtn" data-choice="5"><span>5</span></div>
-            <div class="choiceBtn" data-choice="6"><span>6</span></div>
-          </div>
-        </div>
-
-        <!-- Pfeil (Demo NICHT, Zahlensetzen JA) -->
-        <img id="kippArrowPng" class="kippArrowPng hidden" src="Pfeil.png" alt="Kipprichtung Pfeil" />
       </div>
 
       <!-- Console-Block (bleibt gleich groß; Inhalte wechseln) -->
@@ -898,8 +823,9 @@
           <div class="kippspeedTop">
             <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
 
-            <button id="btnPlay" class="squareBtn" aria-label="Demo starten">
-              <span class="playIcon" aria-hidden="true"></span>
+            <!-- Play/Pause Dual -->
+            <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren">
+              <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
             </button>
 
             <button id="btnOk" class="squareBtn" aria-label="Geschwindigkeit bestätigen">
@@ -966,15 +892,12 @@
     const kipGroup    = document.getElementById("kipGroup");
     const speedSlider = document.getElementById("speedSlider");
 
-    const arrowPng    = document.getElementById("kippArrowPng");
-    const hudGroup    = document.getElementById("hudGroup");
-    const kippLabel   = document.getElementById("kippLabel");
-
     const kippspeedBlock = document.getElementById("kippspeedBlock");
     const speedMode   = document.getElementById("speedMode");
     const gameMode    = document.getElementById("gameMode");
 
     const btnPlay     = document.getElementById("btnPlay");
+    const playGlyph   = document.getElementById("playGlyph");
     const btnOk       = document.getElementById("btnOk");
     const exitBtn     = document.getElementById("exitBtn");
 
@@ -1002,7 +925,7 @@
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
-    // gleiche Zeit für Vollansicht und Zwischenkipp (dein Wunsch)
+    // gleiche Zeit für Vollansicht und Zwischenkipp
     function getTiming(){
       const v = Number(speedSlider.value || 3);
       const hold = Math.max(520, Math.round(2200 - v * 186));
@@ -1123,64 +1046,6 @@
       }
     }
 
-    // Pfeil-Positionierung (für Zahlensetzen)
-    function getStepPx(){ return boardEl.getBoundingClientRect().width / 8; }
-    function rotatePoint(px, py, cx, cy, deg){
-      const rad = deg * Math.PI / 180;
-      const x = px - cx;
-      const y = py - cy;
-      const xr = x * Math.cos(rad) - y * Math.sin(rad);
-      const yr = x * Math.sin(rad) + y * Math.cos(rad);
-      return { x: xr + cx, y: yr + cy };
-    }
-    function getPivot(){
-      const step = getStepPx();
-      return { cx: step * 4, cy: step * 4, step };
-    }
-    function placeArrow(){
-      const { cx, cy, step } = getPivot();
-      const deg = rotDeg[rotIndex];
-      const baseX = step * 1;
-      const baseY = step * 4;
-      const p = rotatePoint(baseX, baseY, cx, cy, deg);
-      arrowPng.style.setProperty("--arrow-x", p.x + "px");
-      arrowPng.style.setProperty("--arrow-y", p.y + "px");
-      arrowPng.style.setProperty("--arrow-rot", deg + "deg");
-    }
-    function showArrow(){ placeArrow(); arrowPng.classList.remove("hidden"); }
-    function hideArrow(){ arrowPng.classList.add("hidden"); }
-
-    // HUD Layout (nur Zahlensetzen-Ende)
-    function layoutChoiceUI(){
-      const { cx, cy, step } = getPivot();
-      const deg = rotDeg[rotIndex];
-      const size = step * 0.75;
-      document.documentElement.style.setProperty("--sel-size", size + "px");
-      const yLine = step * 0.5;
-
-      for(let i=0;i<6;i++){
-        const base = { x: step * (1.5 + i), y: yLine };
-        const p = rotatePoint(base.x, base.y, cx, cy, deg);
-        const left = p.x - size/2;
-        const top  = p.y - size;
-        // ✅ FIX: keine Backslashes, echtes Template-String:
-        const el = hudGroup.querySelector(`.choiceBtn[data-choice="${i+1}"]`);
-        if(el){
-          el.style.left = left + "px";
-          el.style.top  = top + "px";
-          el.style.transform = "none";
-        }
-      }
-
-      const labelX = step * 1.5 - (size/2);
-      const labelY = (yLine - size) - (step * 0.65);
-      const lp = rotatePoint(labelX, labelY, cx, cy, deg);
-      kippLabel.style.left = lp.x + "px";
-      kippLabel.style.top  = lp.y + "px";
-    }
-    function showChoiceHUD(){ layoutChoiceUI(); hudGroup.classList.remove("hidden"); }
-    function hideChoiceHUD(){ hudGroup.classList.add("hidden"); }
-
     function advanceFullCW(){
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
@@ -1192,15 +1057,15 @@
       faceIndex = 0;
       setRotationSnap();
       clearAllNumbers();
-      hideChoiceHUD();
-      hideArrow();
       showW();
       renderWEmpty();
     }
 
     // ===== Attention Logic =====
     let hasAdjustedOnce = false;
+
     let runningDemo     = false;
+    let demoPaused      = false;
     let demoToken       = 0;
 
     let runningSet      = false;
@@ -1231,63 +1096,80 @@
       setAttentionSet(true);
     }
 
+    function setPlayGlyph(isPause){
+      playGlyph.className = isPause ? "pauseIcon" : "playIcon";
+    }
+
     // ===== MODE SWITCH =====
     function showSpeedMode(){
       speedMode.classList.remove("hidden");
       gameMode.classList.add("hidden");
       gcTop.classList.add("hiddenInfo");
       enterSpeedAttention();
+      setPlayGlyph(false);
     }
 
     function showGameMode(){
       speedMode.classList.add("hidden");
       gameMode.classList.remove("hidden");
-      gcTop.classList.add("hiddenInfo"); // wird erst NACH Zahlensetzen angezeigt
+      gcTop.classList.add("hiddenInfo"); // erst NACH Zahlensetzen anzeigen
       enterSetAttention();               // Zahlen setzen blinkt als erste Aktion
     }
 
-    // ===== Demo Ablauf (Play) – ohne Pfeil/HUD/Zahlen =====
+    // ===== Demo Ablauf (Play/Pause) – ohne Pfeil/HUD/Zahlen =====
+    async function waitOrPause(ms, myToken){
+      const slice = 40; // fein genug für Pause
+      let elapsed = 0;
+      while(elapsed < ms){
+        if(myToken !== demoToken) return false;
+        if(demoPaused){
+          await sleep(60);
+          continue;
+        }
+        const step = Math.min(slice, ms - elapsed);
+        await sleep(step);
+        elapsed += step;
+      }
+      return (myToken === demoToken);
+    }
+
     async function runDemoCycle(){
       if(runningDemo) return;
       runningDemo = true;
+      demoPaused = false;
       const myToken = ++demoToken;
-
-      hideArrow();
-      hideChoiceHUD();
-
-      const { holdMs } = getTiming();
 
       // sofort „was passiert“: direkt mit Zwischenkipp starten
       showKip();
       renderKipEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       advanceFullCW();
       showW();
       renderWEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       showKip(); renderKipEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       advanceFullCW();
       showW(); renderWEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       showKip(); renderKipEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       advanceFullCW();
       showW(); renderWEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       // Erweiterung: Q3 -> Zwischenkipp -> W2 auf Q0
       showKip(); renderKipEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       advanceFullCW();
       showW(); renderWEmpty();
-      await sleep(holdMs); if(myToken !== demoToken) { runningDemo=false; return; }
+      if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       runningDemo = false;
     }
@@ -1295,9 +1177,11 @@
     function cancelDemo(){
       demoToken++;
       runningDemo = false;
+      demoPaused = false;
+      setPlayGlyph(false);
     }
 
-    // ===== Zahlensetzen-Logik (dein "bekannter Ablauf") =====
+    // ===== Zahlensetzen-Logik (bekannter Ablauf, ohne Pfeil/HUD) =====
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -1357,8 +1241,6 @@
 
       clearAllNumbers();
       setRotationSnap();
-
-      hideChoiceHUD();
     }
 
     async function runSetNumbersCycle(){
@@ -1366,58 +1248,51 @@
       runningSet = true;
       const myToken = ++setToken;
 
-      const { holdMs } = getTiming();
-
-      // Zahlensetzen: Pfeil + HUD erlaubt (Demo nicht)
       reroll12_keepEmpty();
 
-      showArrow();
-      showW();
       // 1) erst leer (kurz), dann Zahlen
+      showW();
       renderWEmpty();
-      await sleep(Math.round(holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(0);
       renderW();
-      await sleep(Math.round(holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      hideArrow();
       showKip();
       renderKip();
-      await sleep(holdMs); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW();
       showW();
       renderWEmpty();
-      await sleep(Math.round(holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(1);
       renderW();
-      await sleep(Math.round(holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       showKip();
       renderKip();
-      await sleep(holdMs); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW();
       showW();
       renderWEmpty();
-      await sleep(Math.round(holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(2);
       renderW();
-      await sleep(Math.round(holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       showKip();
       renderKip();
-      await sleep(holdMs); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      // Ende: wieder Vollansicht + HUD
+      // Ende: wieder Vollansicht
       advanceFullCW();
       showW();
       renderW();
-      showArrow();
-      showChoiceHUD();
 
       // Nach Abschluss: Ziel-Info auf der schwarzen Konsole anzeigen
       showTargetInfoAfterSet();
@@ -1433,7 +1308,6 @@
     // ===== Ziel-Info (vorerst: random Farbe + Zahl; Deck-System später) =====
     const targetColors = ["--blau","--orange","--gruen","--violett"];
     function showTargetInfoAfterSet(){
-      // einmal setzen und stehen lassen (00/11, 0P, Highscore fix wie gewünscht)
       const n = Math.floor(Math.random() * 12) + 1;
       const cVar = targetColors[Math.floor(Math.random() * targetColors.length)];
       gcSquare.style.background = getComputedStyle(document.documentElement).getPropertyValue(cVar).trim();
@@ -1442,24 +1316,38 @@
       gcPoints.textContent = "0P";
       gcHi.textContent = "66";
       gcTop.classList.remove("hiddenInfo");
-      // Button "Zahlen setzen" soll danach nicht mehr blinken (weil erledigt)
       setAttentionSet(false);
     }
 
     // ===== Events =====
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
-      enterPlayAttention();
+      // während Demo-Pause darf man regeln; Demo läuft weiter mit aktueller Timing-Berechnung
+      if(!runningDemo) enterPlayAttention();
     });
 
+    // Play/Pause Dual:
+    // - wenn Demo nicht läuft -> Start (Glyph: Pause)
+    // - wenn Demo läuft -> Toggle Pause/Resume (Glyph wechselt)
     btnPlay.addEventListener("click", async () => {
       if(!hasAdjustedOnce) enterPlayAttention();
-      setAttentionPlay(false);
-      await runDemoCycle();
-      enterPlayAttention();
+
+      if(!runningDemo){
+        setAttentionPlay(false);
+        setPlayGlyph(true);       // jetzt Pause anzeigen
+        await runDemoCycle();
+        // nach Ende: wieder Play anzeigen + Blinkhinweis
+        setPlayGlyph(false);
+        enterPlayAttention();
+        return;
+      }
+
+      // Demo läuft -> Pause/Resume toggeln
+      demoPaused = !demoPaused;
+      setPlayGlyph(demoPaused ? false : true);
     });
 
-    // OK: Speed-Mode aus, Game-Console rein, W1Q0 anzeigen, alles stoppen
+    // OK: Demo/Set abbrechen, W1Q0 anzeigen, Game-Mode rein
     btnOk.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
@@ -1469,9 +1357,8 @@
       showGameMode();
     });
 
-    // Zahlen setzen: startet den bekannten Zyklus
+    // Zahlen setzen
     btnSetNumbers.addEventListener("click", async () => {
-      // Beim Start: Pfeil/HUD kommen vom Zyklus
       await runSetNumbersCycle();
     });
 
@@ -1488,14 +1375,6 @@
       if(ok){
         window.location.href = "about:blank";
       }
-    });
-
-    // HUD Click (später relevant)
-    hudGroup.addEventListener("click", (e) => {
-      const btn = e.target.closest(".choiceBtn");
-      if(!btn) return;
-      const val = Number(btn.dataset.choice);
-      console.log("Kippwahl:", val);
     });
 
     window.addEventListener("load", () => {
@@ -1519,9 +1398,6 @@
 
       setKippspeedStripHeight();
       requestAnimationFrame(setKippspeedStripHeight);
-
-      if(!arrowPng.classList.contains("hidden")) placeArrow();
-      if(!hudGroup.classList.contains("hidden")) layoutChoiceUI();
     });
   </script>
 </body>
