@@ -614,11 +614,9 @@
       50%      { transform: scale(1.015); filter: brightness(1.05); }
     }
 
-    /* Blinken der Schrift: langsamer */
     .kippspeedBlock.attention .kippspeedLabel{
       animation: kspBlink 1.2s infinite;
     }
-    /* Pulsieren (Slider+Icons) bleibt wie vorher */
     .kippspeedBlock.attention .sliderRow{
       animation: sliderPulse 0.9s infinite;
       transform-origin: 50% 50%;
@@ -811,7 +809,6 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- HUD -->
         <div id="hudGroup" class="hudGroup hidden" aria-label="HUD">
           <div class="hudUpright">
             <div id="kippLabel" class="kippLabel">Kippzahl?</div>
@@ -825,11 +822,9 @@
           </div>
         </div>
 
-        <!-- Pfeil -->
         <img id="kippArrowPng" class="kippArrowPng hidden" src="Pfeil.png" alt="Kipprichtung Pfeil" />
       </div>
 
-      <!-- Speed-Panel (Start) -->
       <div class="kippspeedBlock attention" id="kippspeedBlock" aria-label="Kippspeed">
         <div class="speedTopRow">
           <div class="kippspeedLabel" id="kspLabel">KIPP SPEED (KSP)</div>
@@ -845,7 +840,6 @@
           <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
         </div>
 
-        <!-- 1–10 Beschriftung unter dem Slider -->
         <div class="ticksRow" aria-hidden="true">
           <div class="tickPad"></div>
           <div class="ticks" id="ticks">
@@ -857,7 +851,6 @@
       </div>
     </div>
 
-    <!-- UI Panel (unten) bleibt vorerst immer unsichtbar -->
     <div class="uiPanel uiHidden" id="uiPanel" aria-label="UI Panel">
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
@@ -911,8 +904,8 @@
 
     function getTiming(){
       const v = Number(speedSlider.value || 3);
-      const holdMsFull = Math.max(800, Math.round(3200 - v * 266));
       const holdMsKip  = Math.max(520, Math.round(2200 - v * 186));
+      const holdMsFull = holdMsKip; // <<< Änderung: Vollansicht = exakt gleich lang wie Zwischenkipp
       return { holdMsFull, holdMsKip };
     }
 
@@ -1073,14 +1066,12 @@
       showArrow();
     }
 
-    // ===== 1–10 Ticks aktiv markieren =====
     function updateTickActive(){
-      const v = Number(speedSlider.value || 0); // 0..9
+      const v = Number(speedSlider.value || 0);
       const ticks = ticksEl.querySelectorAll(".tick");
       ticks.forEach((t, i) => t.classList.toggle("active", i === v));
     }
 
-    // ===== Aufmerksamkeit stoppen (wenn Spieler interagiert) =====
     function stopAttention(){
       kippspeedBlock.classList.remove("attention");
     }
@@ -1089,25 +1080,37 @@
     let demoRunning = false;
     let demoToken = 0;
 
-    async function runSpeedDemo(){
+    async function runSpeedDemo({ startImmediate = false } = {}){
       if(demoRunning) return;
       demoRunning = true;
       const myToken = ++demoToken;
 
       const { holdMsFull, holdMsKip } = getTiming();
 
-      resetToStartView(); // W1/Q0 + Pfeil
+      // Startzustand immer sauber:
+      resetToStartView();
 
-      // 1) W
-      await sleep(holdMsFull);
-      if(myToken !== demoToken) { demoRunning=false; return; }
+      // >>> Änderung: Wenn OK gedrückt wurde, sofort von W1/Q0 weg!
+      if(startImmediate){
+        // sofort zur Zwischenkippdarstellung springen (visuelles "es passiert was")
+        hideArrow();
+        showKip();
+        renderKipEmpty();
+        await sleep(holdMsKip);
+        if(myToken !== demoToken) { demoRunning=false; return; }
+      }else{
+        // Slider-"Loslassen" darf gern normal starten (W kurz zeigen)
+        await sleep(holdMsFull);
+        if(myToken !== demoToken) { demoRunning=false; return; }
 
-      // 2) KIP
-      hideArrow();
-      showKip();
-      renderKipEmpty();
-      await sleep(holdMsKip);
-      if(myToken !== demoToken) { demoRunning=false; return; }
+        hideArrow();
+        showKip();
+        renderKipEmpty();
+        await sleep(holdMsKip);
+        if(myToken !== demoToken) { demoRunning=false; return; }
+      }
+
+      // Ab hier: W/KIP immer gleiche Dauer (holdMsFull == holdMsKip)
 
       // 3) W
       advanceFullCW();
@@ -1145,19 +1148,16 @@
       demoRunning = false;
     }
 
-    function triggerDemoNow(){
-      // Demo abbrechen + neu starten
+    function triggerDemoNow(options){
       demoToken++;
       demoRunning = false;
-      runSpeedDemo();
+      runSpeedDemo(options);
     }
 
-    // OK/X Buttons
     btnOk.addEventListener("click", () => {
       stopAttention();
-      triggerDemoNow(); // <<< OK startet die Demo (ohne Zahlen)
-      // uiPanel bleibt unsichtbar (kommt später)
-      uiPanel.classList.add("uiHidden");
+      uiPanel.classList.add("uiHidden"); // bleibt unsichtbar
+      triggerDemoNow({ startImmediate: true }); // <<< OK: sofort weiter zur 2. Darstellung
     });
 
     btnExit.addEventListener("click", () => {
@@ -1165,7 +1165,6 @@
       const ok = confirm("Spiel wirklich beenden?");
       if(!ok) return;
 
-      // Platzhalter bis Startseite existiert:
       document.body.innerHTML = `
         <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:system-ui; background:#000; color:#ead7be;">
           <div style="text-align:center;">
@@ -1176,26 +1175,21 @@
       `;
     });
 
-    // ===== bestehender Start-Flow (später) bleibt drin =====
     btnStart.addEventListener("click", () => {
-      // bleibt Platzhalter
       btnStart.textContent = "KIPP ZAHLEN mischen";
     });
 
-    // Slider Events: beim Bewegen Aufmerksamkeit stoppen + Tick highlight
     speedSlider.addEventListener("input", () => {
       stopAttention();
       updateTickActive();
-      // wenn jemand herumzieht: Demo abbrechen (wird erst bei release neu gestartet)
       demoToken++;
       demoRunning = false;
     });
 
-    // "Loslassen" -> Demo starten
     speedSlider.addEventListener("change", () => {
       stopAttention();
       updateTickActive();
-      triggerDemoNow();
+      triggerDemoNow({ startImmediate: false });
     });
 
     window.addEventListener("load", () => {
@@ -1209,13 +1203,9 @@
       requestAnimationFrame(setKippspeedStripHeight);
       setTimeout(setKippspeedStripHeight, 80);
 
-      // UI Panel unten: Start = unsichtbar (kommt später)
       uiPanel.classList.add("uiHidden");
 
-      // Startzustand: W1/Q0 ohne Zahlen + Pfeil sichtbar
       resetToStartView();
-
-      // Tick-Status initial
       updateTickActive();
     });
 
