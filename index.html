@@ -43,16 +43,6 @@
 
       --rotSign: 1;
       --rot: 0deg;
-
-      /* ===== Tisch / Filz (NEU) ===== */
-      --table-wine-0: #2a0b12;  /* sehr dunkel */
-      --table-wine-1: #3a0f1a;  /* Grundton */
-      --table-wine-2: #511320;  /* Licht */
-      --table-wine-3: #651a2a;  /* Highlight */
-      --table-vignette: rgba(0,0,0,0.55);
-      --table-shadow: rgba(0,0,0,0.28);
-      --table-grain-a: rgba(255,255,255,0.035);
-      --table-grain-b: rgba(0,0,0,0.06);
     }
 
     html, body { height: 100%; }
@@ -61,48 +51,25 @@
       margin:0;
       display:flex;
       justify-content:center;
-
-      /* ===== Weinroter Tisch (Filz-Look), neutral in Schwarz schattiert ===== */
       background:
-        /* Vignette */
-        radial-gradient(ellipse at center, rgba(0,0,0,0.00) 42%, var(--table-vignette) 100%),
-
-        /* sanfter Top/Bottom Falloff (nur schwarz) */
-        linear-gradient(180deg,
-          rgba(0,0,0,0.22),
-          rgba(0,0,0,0.00) 18%,
-          rgba(0,0,0,0.00) 82%,
-          rgba(0,0,0,0.26)
-        ),
-
-        /* feine Filz-Struktur (quer) */
+        radial-gradient(ellipse at center, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.38) 100%),
+        linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.00) 18%, rgba(0,0,0,0.00) 82%, rgba(0,0,0,0.22)),
         repeating-linear-gradient(
           90deg,
-          var(--table-grain-b) 0px,
-          var(--table-grain-b) 1px,
-          transparent 1px,
-          transparent 56px
+          rgba(0,0,0,0.10) 0px,
+          rgba(0,0,0,0.10) 2px,
+          rgba(255,255,255,0.04) 2px,
+          rgba(255,255,255,0.04) 56px
         ),
-
-        /* feine Filz-Struktur (diagonal) */
         repeating-linear-gradient(
-          14deg,
-          rgba(0,0,0,0.045) 0px,
-          rgba(0,0,0,0.045) 7px,
-          rgba(255,255,255,0.028) 7px,
-          rgba(255,255,255,0.028) 14px
+          12deg,
+          rgba(0,0,0,0.05) 0px,
+          rgba(0,0,0,0.05) 8px,
+          rgba(255,255,255,0.03) 8px,
+          rgba(255,255,255,0.03) 16px
         ),
-
-        /* “Bloom” in der Mitte (weinrot, nicht schmutzig) */
-        radial-gradient(120% 95% at 50% 42%,
-          rgba(255,255,255,0.06) 0%,
-          rgba(255,255,255,0.00) 55%
-        ),
-
-        /* Grund-Farbverlauf */
-        linear-gradient(180deg, var(--table-wine-3), var(--table-wine-1) 40%, var(--table-wine-0));
+        linear-gradient(180deg, #e0b47c, #c89259);
       background-attachment: fixed;
-
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
@@ -964,6 +931,7 @@
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
+    // gleiche Zeit für Vollansicht und Zwischenkipp
     function getTiming(){
       const v = Number(speedSlider.value || 3);
       const hold = Math.max(520, Math.round(2200 - v * 186));
@@ -1027,6 +995,7 @@
       return pool.slice(0, count);
     }
 
+    // ===== Rotation / Views =====
     const rotDeg = [0, 90, 180, 270];
     let rotIndex  = 0;
     let faceIndex = 0;
@@ -1098,6 +1067,7 @@
       renderWEmpty();
     }
 
+    // ===== Attention Logic =====
     let hasAdjustedOnce = false;
 
     let runningDemo     = false;
@@ -1136,6 +1106,7 @@
       playGlyph.className = isPause ? "pauseIcon" : "playIcon";
     }
 
+    // ===== MODE SWITCH =====
     function showSpeedMode(){
       speedMode.classList.remove("hidden");
       gameMode.classList.add("hidden");
@@ -1147,12 +1118,13 @@
     function showGameMode(){
       speedMode.classList.add("hidden");
       gameMode.classList.remove("hidden");
-      gcTop.classList.add("hiddenInfo");
-      enterSetAttention();
+      gcTop.classList.add("hiddenInfo"); // erst NACH Zahlensetzen anzeigen
+      enterSetAttention();               // Zahlen setzen blinkt als erste Aktion
     }
 
+    // ===== Demo Ablauf (Play/Pause) – ohne Pfeil/HUD/Zahlen =====
     async function waitOrPause(ms, myToken){
-      const slice = 40;
+      const slice = 40; // fein genug für Pause
       let elapsed = 0;
       while(elapsed < ms){
         if(myToken !== demoToken) return false;
@@ -1173,6 +1145,7 @@
       demoPaused = false;
       const myToken = ++demoToken;
 
+      // sofort „was passiert“: direkt mit Zwischenkipp starten
       showKip();
       renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
@@ -1196,6 +1169,7 @@
       showW(); renderWEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
+      // Erweiterung: Q3 -> Zwischenkipp -> W2 auf Q0
       showKip(); renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
@@ -1213,6 +1187,7 @@
       setPlayGlyph(false);
     }
 
+    // ===== Zahlensetzen-Logik (bekannter Ablauf, ohne Pfeil/HUD) =====
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -1281,6 +1256,7 @@
 
       reroll12_keepEmpty();
 
+      // 1) erst leer (kurz), dann Zahlen
       showW();
       renderWEmpty();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
@@ -1319,10 +1295,12 @@
       renderKip();
       if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
+      // Ende: wieder Vollansicht
       advanceFullCW();
       showW();
       renderW();
 
+      // Nach Abschluss: Ziel-Info auf der schwarzen Konsole anzeigen
       showTargetInfoAfterSet();
 
       runningSet = false;
@@ -1333,6 +1311,7 @@
       runningSet = false;
     }
 
+    // ===== Ziel-Info (vorerst: random Farbe + Zahl; Deck-System später) =====
     const targetColors = ["--blau","--orange","--gruen","--violett"];
     function showTargetInfoAfterSet(){
       const n = Math.floor(Math.random() * 12) + 1;
@@ -1346,27 +1325,35 @@
       setAttentionSet(false);
     }
 
+    // ===== Events =====
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
+      // während Demo-Pause darf man regeln; Demo läuft weiter mit aktueller Timing-Berechnung
       if(!runningDemo) enterPlayAttention();
     });
 
+    // Play/Pause Dual:
+    // - wenn Demo nicht läuft -> Start (Glyph: Pause)
+    // - wenn Demo läuft -> Toggle Pause/Resume (Glyph wechselt)
     btnPlay.addEventListener("click", async () => {
       if(!hasAdjustedOnce) enterPlayAttention();
 
       if(!runningDemo){
         setAttentionPlay(false);
-        setPlayGlyph(true);
+        setPlayGlyph(true);       // jetzt Pause anzeigen
         await runDemoCycle();
+        // nach Ende: wieder Play anzeigen + Blinkhinweis
         setPlayGlyph(false);
         enterPlayAttention();
         return;
       }
 
+      // Demo läuft -> Pause/Resume toggeln
       demoPaused = !demoPaused;
       setPlayGlyph(demoPaused ? false : true);
     });
 
+    // OK: Demo/Set abbrechen, W1Q0 anzeigen, Game-Mode rein
     btnOk.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
@@ -1376,10 +1363,12 @@
       showGameMode();
     });
 
+    // Zahlen setzen
     btnSetNumbers.addEventListener("click", async () => {
       await runSetNumbersCycle();
     });
 
+    // STOP: Abbruch + zurück zur Speed-Einstellung
     btnStop.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
