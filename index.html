@@ -1163,7 +1163,8 @@
         const p = rotatePoint(base.x, base.y, cx, cy, deg);
         const left = p.x - size/2;
         const top  = p.y - size;
-        const el = hudGroup.querySelector(\`.choiceBtn[data-choice="\${i+1}"]\`);
+        // ✅ FIX: keine Backslashes, echtes Template-String:
+        const el = hudGroup.querySelector(`.choiceBtn[data-choice="${i+1}"]`);
         if(el){
           el.style.left = left + "px";
           el.style.top  = top + "px";
