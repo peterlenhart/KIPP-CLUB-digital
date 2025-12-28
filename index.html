@@ -43,6 +43,13 @@
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* ===== Box.png Farbangleichung Richtung ehemaligem BoxFloor =====
+         - box-filter: nimmt Gelbstich raus / Richtung Magenta-Rotbraun
+         - box-tint-opacity: wie stark der alte Bodenfarbton reinmischt
+      */
+      --box-filter: saturate(0.92) hue-rotate(-10deg) brightness(0.92) contrast(1.08);
+      --box-tint-opacity: 0.35; /* 0.25 = subtil | 0.45 = kräftiger */
     }
 
     html, body { height: 100%; }
@@ -186,7 +193,7 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== FLOOR: ersetzt durch Box.png, exakt im 6×6 Innenraum (NW an Raster 2B) ===== */
+    /* ===== FLOOR: Box.png im 6×6 Innenraum (NW an Raster 2B) ===== */
     .floor{
       position:absolute;
       left: var(--step);
@@ -203,6 +210,9 @@
       background-position: center;
       background-size: 100% 100%;
 
+      /* Farbangleichung Richtung BoxFloor */
+      filter: var(--box-filter);
+
       /* optional: leichter “Einbettungslook” wie vorher */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
@@ -211,6 +221,17 @@
         inset  26px 0 40px rgba(0,0,0,0.26),
         inset  0 -26px 40px rgba(0,0,0,0.30),
         inset  0  26px 40px rgba(0,0,0,0.30);
+    }
+
+    /* Tönungs-Overlay (mischt den alten Bodenfarbton rein, nimmt gelb raus) */
+    .floor::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: var(--floor);
+      opacity: var(--box-tint-opacity);
+      mix-blend-mode: multiply;
+      pointer-events:none;
     }
 
     .ball{
