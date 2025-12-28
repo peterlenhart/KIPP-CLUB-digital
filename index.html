@@ -173,7 +173,6 @@
       border-radius: var(--cell-radius);
       box-sizing: border-box;
       box-shadow: none;
-      position: relative; /* NEU: damit Zielzahl im Feld zentriert werden kann */
     }
 
     .c-orange{ background: var(--orange); }
@@ -187,51 +186,24 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== Zielzahl im Rand-Farbquadrat (NEU) ===== */
-    .cell .targetNum{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 1000;
-      color:#111;
-      font-size: clamp(18px, 5.2vmin, 34px);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      line-height: 1;
-      transform: rotate(var(--num-rot, 0deg));
-      transform-origin: 50% 50%;
-      user-select:none;
-      pointer-events:none;
-    }
-
-    /* Ausrichtung: Zahlenkopf zeigt zum Boxinneren */
-    .edge-north{ --num-rot: 180deg; } /* oben -> Kopf nach unten */
-    .edge-south{ --num-rot: 0deg;   } /* unten -> Kopf nach oben */
-    .edge-west { --num-rot: 90deg;  } /* links -> Kopf nach rechts */
-    .edge-east { --num-rot: -90deg; } /* rechts -> Kopf nach links */
-
-    /* sanftes "Atmen" fürs Ziel (optional) */
-    @keyframes targetPulse{
-      0%,100%{ transform: rotate(var(--num-rot,0deg)) scale(1); }
-      50%    { transform: rotate(var(--num-rot,0deg)) scale(1.06); }
-    }
-    .cell.targetActive .targetNum{
-      animation: targetPulse 1.2s ease-in-out infinite;
-    }
-
+    /* ===== FLOOR: ersetzt durch Box.png, exakt im 6×6 Innenraum (NW an Raster 2B) ===== */
     .floor{
       position:absolute;
       left: var(--step);
       top:  var(--step);
       width: calc(6 * var(--cell) + 5 * var(--cell-gap));
       height: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      background:
-        linear-gradient(135deg, rgba(255,255,255,0.18), rgba(0,0,0,0.06)),
-        var(--floor);
       border-radius: 0;
       z-index: 2;
       pointer-events: none;
+
+      /* Bild */
+      background-image: url("Box.png");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 100% 100%;
+
+      /* optional: leichter “Einbettungslook” wie vorher */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -993,31 +965,15 @@
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
-
       for(let r=1; r<=8; r++){
         for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
-
           const coord = key(r, cols[c]);
-          cell.dataset.coord = coord;
-
-          // Kanten-Orientierung fürs Randfeld (damit Zahlenkopf zum Inneren zeigt)
-          if (r === 1) cell.classList.add("edge-north");
-          else if (r === 8) cell.classList.add("edge-south");
-          else if (cols[c] === "A") cell.classList.add("edge-west");
-          else if (cols[c] === "H") cell.classList.add("edge-east");
-
           if(colorMap.has(coord)){
             cell.classList.add(colorMap.get(coord));
             cell.classList.add("colorCell");
           }
-
-          // Ziel-Zahl-Span immer anlegen (sichtbar nur wenn gesetzt)
-          const t = document.createElement("span");
-          t.className = "targetNum";
-          cell.appendChild(t);
-
           grid.appendChild(cell);
         }
       }
@@ -1037,38 +993,6 @@
         [pool[i], pool[j]] = [pool[j], pool[i]];
       }
       return pool.slice(0, count);
-    }
-
-    // ===== Ziel am Rand (NEU) =====
-    const targetColorClasses = ["c-blau","c-orange","c-gruen","c-violett"];
-
-    function clearBorderTarget(){
-      const cells = grid.querySelectorAll(".cell.colorCell");
-      cells.forEach(c=>{
-        c.classList.remove("targetActive");
-        const s = c.querySelector(".targetNum");
-        if(s) s.textContent = "";
-      });
-    }
-
-    function setBorderTarget(targetNumber, targetColorClass){
-      clearBorderTarget();
-
-      const cells = grid.querySelectorAll(".cell.colorCell");
-      cells.forEach(c=>{
-        if(c.classList.contains(targetColorClass)){
-          const s = c.querySelector(".targetNum");
-          if(s) s.textContent = String(targetNumber);
-          c.classList.add("targetActive");
-        }
-      });
-    }
-
-    function rollNewBorderTarget(){
-      const n = Math.floor(Math.random() * 12) + 1;
-      const colClass = targetColorClasses[Math.floor(Math.random() * targetColorClasses.length)];
-      setBorderTarget(n, colClass);
-      return { n, colClass };
     }
 
     // ===== Rotation / Views =====
@@ -1323,7 +1247,6 @@
 
       clearAllNumbers();
       setRotationSnap();
-      clearBorderTarget(); // NEU: Ziel am Rand löschen beim Neuwürfeln
     }
 
     async function runSetNumbersCycle(){
@@ -1389,21 +1312,12 @@
     }
 
     // ===== Ziel-Info (vorerst: random Farbe + Zahl; Deck-System später) =====
-    // NEU: Wir werfen zusätzlich das Ziel an den Randfeldern aus (alle 4 Felder der Zielfarbe).
+    const targetColors = ["--blau","--orange","--gruen","--violett"];
     function showTargetInfoAfterSet(){
-      const t = rollNewBorderTarget(); // <- NEU: schreibt Zahl in alle 4 Rand-Farbquadrate der Zielfarbe
-
-      // bisherige Anzeige im Konsolenbereich bleibt vorerst (kannst du später optisch umbauen)
-      const cVarMap = {
-        "c-blau":"--blau",
-        "c-orange":"--orange",
-        "c-gruen":"--gruen",
-        "c-violett":"--violett",
-      };
-      const cVar = cVarMap[t.colClass];
+      const n = Math.floor(Math.random() * 12) + 1;
+      const cVar = targetColors[Math.floor(Math.random() * targetColors.length)];
       gcSquare.style.background = getComputedStyle(document.documentElement).getPropertyValue(cVar).trim();
-      gcNum.textContent = String(t.n);
-
+      gcNum.textContent = String(n);
       gcProgress.textContent = "(00/11)";
       gcPoints.textContent = "0P";
       gcHi.textContent = "66";
@@ -1459,7 +1373,6 @@
       cancelDemo();
       cancelSetNumbers();
       resetToW1Q0_Empty();
-      clearBorderTarget(); // NEU
       showSpeedMode();
     });
 
@@ -1482,7 +1395,6 @@
       setTimeout(setKippspeedStripHeight, 80);
 
       resetToW1Q0_Empty();
-      clearBorderTarget(); // NEU
       showSpeedMode();
     });
 
