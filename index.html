@@ -43,6 +43,29 @@
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* ===== Kipp-Entscheidung Overlay: HITBOX TUNING (Startwerte) =====
+         Alles in % relativ zum 6×6 Box-Innenraum (dem Overlay-Bild).
+         Wenn was nicht exakt sitzt: NUR diese Werte anpassen.
+      */
+      --hit-num-top: 4%;
+      --hit-num-h:   14%;
+      --hit-num-gap: 3%;
+      --hit-num-w:   13%;
+      --hit-num-left0: 5%;
+
+      --hit-arrow1-left: 13%;
+      --hit-arrow1-top:  30%;
+      --hit-arrow1-w:    26%;
+      --hit-arrow1-h:    30%;
+
+      --hit-arrow2-left: 36%;
+      --hit-arrow2-top:  56%;
+      --hit-arrow2-w:    34%;
+      --hit-arrow2-h:    20%;
+
+      /* Debug: 1 = Hitbox-Rahmen sichtbar */
+      --hit-debug: 0;
     }
 
     html, body { height: 100%; }
@@ -383,78 +406,6 @@
     .k-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
-
-    /* ===== Kipp-Entscheidungs-Overlay (PNG + Hotspots) ===== */
-    .kippDecision{
-      position:absolute;
-      left: var(--step);  /* Raster 2B */
-      top:  var(--step);  /* Raster 2B */
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      z-index: 8000;
-      pointer-events: none;
-      user-select:none;
-    }
-    .kippDecision.hidden{ display:none !important; }
-
-    .kippDecision img{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit: contain;
-      pointer-events:none;
-      user-select:none;
-    }
-
-    /* Hotspots liegen über dem PNG, fangen Clicks ab */
-    .hotspotLayer{
-      position:absolute;
-      inset:0;
-      pointer-events:auto;
-    }
-    .hotspot{
-      position:absolute;
-      pointer-events:auto;
-      background: rgba(0,0,0,0.0);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* Puls-Overlays (animieren, obwohl PNG "alles in einer Datei" ist) */
-    @keyframes hsPulse{
-      0%,100%{ transform: translateZ(0) scale(1); opacity: .18; }
-      50%    { transform: translateZ(0) scale(1.08); opacity: .42; }
-    }
-    @keyframes hsBlink{
-      0%,100%{ opacity: .10; }
-      50%    { opacity: .36; }
-    }
-    .pulseBox{
-      position:absolute;
-      inset:0;
-      border: 2px solid rgba(234,215,190,0.55);
-      box-shadow:
-        0 0 0 2px rgba(0,0,0,0.55) inset,
-        0 10px 18px rgba(0,0,0,0.35);
-      background: rgba(255,255,255,0.02);
-      opacity: .22;
-      border-radius: 2px;
-      pointer-events:none;
-      transform-origin: 50% 50%;
-      animation: hsPulse 1.25s ease-in-out infinite;
-    }
-    .pulseBox.arrow{
-      border-color: rgba(234,215,190,0.65);
-      animation: hsBlink 0.9s ease-in-out infinite;
-    }
-    .pulseBox.selected{
-      opacity: .85;
-      border-color: rgba(249,150,30,0.95);
-      box-shadow:
-        0 0 0 2px rgba(0,0,0,0.65) inset,
-        0 12px 22px rgba(0,0,0,0.45);
-      animation: none;
-    }
 
     /* ===== EXIT (Raster 1H) ===== */
     .exitBtn{
@@ -831,6 +782,74 @@
     .attnSet .gcBtn.set{
       animation: blinkSoft 0.85s ease-in-out infinite;
     }
+
+    /* ===== Kipp-Entscheidung Overlay (Q3 jetzt) ===== */
+    .decisionOverlay{
+      position:absolute;
+      left: var(--step);
+      top:  var(--step);
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      z-index: 5000;
+      pointer-events:auto;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .decisionOverlay.hidden{ display:none !important; }
+
+    .decisionOverlay img{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      pointer-events:none; /* wichtig: Klicks gehen an Hitboxes */
+    }
+
+    .hit{
+      position:absolute;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.00);
+      border: calc(var(--hit-debug) * 2px) solid rgba(0,255,255,0.80);
+      box-sizing: border-box;
+      pointer-events:auto;
+    }
+    .hit:active{
+      transform: scale(0.99);
+    }
+    .hit.selected{
+      outline: 3px solid rgba(234,215,190,0.85);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.35);
+    }
+
+    .hit.num{
+      top: var(--hit-num-top);
+      height: var(--hit-num-h);
+      width: var(--hit-num-w);
+    }
+    .hit.num.n1{ left: calc(var(--hit-num-left0) + (0 * (var(--hit-num-w) + var(--hit-num-gap)))); }
+    .hit.num.n2{ left: calc(var(--hit-num-left0) + (1 * (var(--hit-num-w) + var(--hit-num-gap)))); }
+    .hit.num.n3{ left: calc(var(--hit-num-left0) + (2 * (var(--hit-num-w) + var(--hit-num-gap)))); }
+    .hit.num.n4{ left: calc(var(--hit-num-left0) + (3 * (var(--hit-num-w) + var(--hit-num-gap)))); }
+    .hit.num.n5{ left: calc(var(--hit-num-left0) + (4 * (var(--hit-num-w) + var(--hit-num-gap)))); }
+    .hit.num.n6{ left: calc(var(--hit-num-left0) + (5 * (var(--hit-num-w) + var(--hit-num-gap)))); }
+
+    /* Pfeile: 2 große Hitboxen */
+    .hit.arrow.a1{
+      left: var(--hit-arrow1-left);
+      top:  var(--hit-arrow1-top);
+      width: var(--hit-arrow1-w);
+      height: var(--hit-arrow1-h);
+    }
+    .hit.arrow.a2{
+      left: var(--hit-arrow2-left);
+      top:  var(--hit-arrow2-top);
+      width: var(--hit-arrow2-w);
+      height: var(--hit-arrow2-h);
+    }
+
   </style>
 </head>
 
@@ -881,10 +900,22 @@
 
         <div class="ball" aria-label="Kugel"></div>
 
-        <!-- Kipp-Entscheidung Overlay -->
-        <div id="kippDecision" class="kippDecision hidden" aria-label="Kipp Entscheidung">
-          <img id="kippDecisionImg" src="" alt="Kipp Entscheidung Overlay">
-          <div id="hotspotLayer" class="hotspotLayer" aria-label="Hotspots"></div>
+        <!-- ===== Kipp-Entscheidung Overlay (Q3) ===== -->
+        <div id="decisionOverlay" class="decisionOverlay hidden" aria-label="Kippentscheidung Overlay">
+          <img id="decisionImg" src="KippEntscheidung_Q3.png" alt="Kippentscheidung Q3">
+
+          <!-- Pfeile (2 Hitboxen) -->
+          <!-- a1 = Pfeil 1, a2 = Pfeil 2 (Mapping: siehe JS unten) -->
+          <div class="hit arrow a1" data-kind="arrow" data-arrow="a1" aria-label="Pfeil 1"></div>
+          <div class="hit arrow a2" data-kind="arrow" data-arrow="a2" aria-label="Pfeil 2"></div>
+
+          <!-- Zahlen 1–6 -->
+          <div class="hit num n1" data-kind="num" data-num="1" aria-label="1"></div>
+          <div class="hit num n2" data-kind="num" data-num="2" aria-label="2"></div>
+          <div class="hit num n3" data-kind="num" data-num="3" aria-label="3"></div>
+          <div class="hit num n4" data-kind="num" data-num="4" aria-label="4"></div>
+          <div class="hit num n5" data-kind="num" data-num="5" aria-label="5"></div>
+          <div class="hit num n6" data-kind="num" data-num="6" aria-label="6"></div>
         </div>
 
         <!-- EXIT Button auf Raster 1H -->
@@ -893,7 +924,7 @@
         </button>
       </div>
 
-      <!-- Console-Block -->
+      <!-- Console-Block (bleibt gleich groß; Inhalte wechseln) -->
       <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
 
         <!-- MODE 1: Speed -->
@@ -989,10 +1020,7 @@
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
 
-    // Overlay
-    const kippDecisionEl  = document.getElementById("kippDecision");
-    const kippDecisionImg = document.getElementById("kippDecisionImg");
-    const hotspotLayer    = document.getElementById("hotspotLayer");
+    const decisionOverlay = document.getElementById("decisionOverlay");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1074,8 +1102,8 @@
 
     // ===== Rotation / Views =====
     const rotDeg = [0, 90, 180, 270];
-    let rotIndex  = 0;   // 0..3 (Q0..Q3)
-    let faceIndex = 0;   // 0..2 (W1..W3)
+    let rotIndex  = 0;
+    let faceIndex = 0;
 
     function setRotationSnap(){
       const deg = rotDeg[rotIndex];
@@ -1130,13 +1158,14 @@
     }
 
     function advanceFullCW(){
-      rotIndex  = (rotIndex + 1) % 4;     // Q0->Q1->Q2->Q3
-      faceIndex = (faceIndex + 1) % 3;    // W1->W2->W3
+      rotIndex  = (rotIndex + 1) % 4;
+      faceIndex = (faceIndex + 1) % 3;
       setRotationSnap();
     }
+
     function advanceFullCCW(){
-      rotIndex  = (rotIndex + 3) % 4;     // Q0->Q3->Q2->Q1
-      faceIndex = (faceIndex + 2) % 3;    // W1->W3->W2
+      rotIndex  = (rotIndex + 3) % 4;         // -1 mod 4
+      faceIndex = (faceIndex + 2) % 3;        // -1 mod 3
       setRotationSnap();
     }
 
@@ -1145,7 +1174,6 @@
       faceIndex = 0;
       setRotationSnap();
       clearAllNumbers();
-      hideDecisionOverlay();
       showW();
       renderWEmpty();
     }
@@ -1160,6 +1188,7 @@
     let runningSet      = false;
     let setToken        = 0;
 
+    // Player Move
     let runningMove     = false;
     let moveToken       = 0;
 
@@ -1212,7 +1241,7 @@
 
     // ===== Demo Ablauf (Play/Pause) – ohne Pfeil/HUD/Zahlen =====
     async function waitOrPause(ms, myToken){
-      const slice = 40;
+      const slice = 40; // fein genug für Pause
       let elapsed = 0;
       while(elapsed < ms){
         if(myToken !== demoToken) return false;
@@ -1232,8 +1261,6 @@
       runningDemo = true;
       demoPaused = false;
       const myToken = ++demoToken;
-
-      hideDecisionOverlay();
 
       showKip();
       renderKipEmpty();
@@ -1304,24 +1331,31 @@
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
     }
+
+    // NOTE: Für CCW ist die Zwischenkipp-Vorschau erstmal "symmetrisch" gehalten.
+    // Die Vollansichten bleiben korrekt (das ist fürs Auslösen & Testen entscheidend).
     function mapHiddenToVisible_CCW(face){
+      // Startwert, falls du später sagst "Zwischenkipp links muss anders":
       const [f1,f2,f3,f4] = face;
-      // Gegenrichtung (Spiegel zur CW-Abbildung)
-      return [f2, f1, f4, f3];
+      return [f4, f3, f2, f1];
     }
 
-    function renderKipDir(dir){
+    function renderKipDirectional(dir){
       setRotationSnap();
       const curr = sets[faceIndex];
-      const nextFaceIndex = (dir === "CW") ? ((faceIndex + 1) % 3) : ((faceIndex + 2) % 3);
+
+      const nextFaceIndex = (dir === "cw")
+        ? (faceIndex + 1) % 3
+        : (faceIndex + 2) % 3; // -1 mod 3
+
       const next = sets[nextFaceIndex];
 
-      // Rechts = aktuelle Vollfläche (wie bisher)
+      // rechte Fläche = aktueller Face (unverrückbar)
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
 
-      // Links = Vorschau (abhängig von Richtung)
-      const preview = (dir === "CW") ? mapHiddenToVisible_CW(next) : mapHiddenToVisible_CCW(next);
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], preview[i]);
+      // linke Fläche = Vorschau auf nächsten Face
+      const nextPreview = (dir === "cw") ? mapHiddenToVisible_CW(next) : mapHiddenToVisible_CCW(next);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
     }
 
     function reroll12_keepEmpty(){
@@ -1342,7 +1376,6 @@
 
       clearAllNumbers();
       setRotationSnap();
-      hideDecisionOverlay();
     }
 
     async function runSetNumbersCycle(){
@@ -1350,57 +1383,59 @@
       runningSet = true;
       const myToken = ++setToken;
 
+      cancelMove(); // falls noch was laufen sollte
       hideDecisionOverlay();
-      cancelMove();
 
       reroll12_keepEmpty();
 
       showW();
       renderWEmpty();
-      await sleep(Math.round(getTiming().holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(0);
       renderW();
-      await sleep(Math.round(getTiming().holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       showKip();
-      renderKipDir("CW");
-      await sleep(getTiming().holdMs); if(myToken !== setToken) { runningSet=false; return; }
+      renderKipDirectional("cw");
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW();
       showW();
       renderWEmpty();
-      await sleep(Math.round(getTiming().holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(1);
       renderW();
-      await sleep(Math.round(getTiming().holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       showKip();
-      renderKipDir("CW");
-      await sleep(getTiming().holdMs); if(myToken !== setToken) { runningSet=false; return; }
+      renderKipDirectional("cw");
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW();
       showW();
       renderWEmpty();
-      await sleep(Math.round(getTiming().holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(2);
       renderW();
-      await sleep(Math.round(getTiming().holdMs * 0.5)); if(myToken !== setToken) { runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       showKip();
-      renderKipDir("CW");
-      await sleep(getTiming().holdMs); if(myToken !== setToken) { runningSet=false; return; }
+      renderKipDirectional("cw");
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
+      // Ende: wieder Vollansicht
       advanceFullCW();
       showW();
       renderW();
 
+      // Ziel-Info anzeigen
       showTargetInfoAfterSet();
 
-      // nach "Zahlen setzen" sofort in die Kipp-Entscheidung
-      showDecisionOverlayForCurrentQuadrant();
+      // >>> JETZT: erste Kippentscheidung aktivieren (Q3 Overlay fürs Testen)
+      showDecisionOverlay_Q3();
 
       runningSet = false;
     }
@@ -1410,7 +1445,7 @@
       runningSet = false;
     }
 
-    // ===== Ziel-Info (vorerst: random Farbe + Zahl) =====
+    // ===== Ziel-Info =====
     const targetColors = ["--blau","--orange","--gruen","--violett"];
     function showTargetInfoAfterSet(){
       const n = Math.floor(Math.random() * 12) + 1;
@@ -1424,191 +1459,98 @@
       setAttentionSet(false);
     }
 
-    // ===== Kipp-Entscheidung Overlay (4 PNGs + animierte Hotspots) =====
-    const overlayFiles = {
-      Q0: "KippEntscheidung_Q0.png",
-      Q1: "KippEntscheidung_Q1.png",
-      Q2: "KippEntscheidung_Q2.png",
-      Q3: "KippEntscheidung_Q3.png",
-    };
+    // ===== Kippentscheidung (Q3) =====
+    let chosenDir = null;   // "cw" | "ccw"
+    let chosenCount = null; // 1..6
 
-    function quadrantFromRotIndex(){
-      // rotIndex: 0->Q0, 1->Q1, 2->Q2, 3->Q3
-      return ["Q0","Q1","Q2","Q3"][rotIndex] || "Q0";
+    function clearDecisionSelections(){
+      chosenDir = null;
+      chosenCount = null;
+      decisionOverlay.querySelectorAll(".hit.selected").forEach(el => el.classList.remove("selected"));
     }
 
-    // Hotspot-Geometrie (in Prozent vom 6×6 Overlay)
-    // -> Das ist so angelegt, dass du es NUR hier feinjustieren müsstest, falls nötig.
-    const HS = {
-      // Pfeile: links/rechts (ungefähr)
-      arrowLeft:  { x:  6, y: 14, w: 28, h: 22 },
-      arrowRight: { x: 66, y: 14, w: 28, h: 22 },
+    function showDecisionOverlay_Q3(){
+      clearDecisionSelections();
+      decisionOverlay.classList.remove("hidden");
 
-      // 1..6 Buttons (Reihe unten)
-      // Wave von links nach rechts
-      nums: [
-        { n:1, x:  8, y: 64, w: 12.5, h: 16 },
-        { n:2, x: 22, y: 64, w: 12.5, h: 16 },
-        { n:3, x: 36, y: 64, w: 12.5, h: 16 },
-        { n:4, x: 50, y: 64, w: 12.5, h: 16 },
-        { n:5, x: 64, y: 64, w: 12.5, h: 16 },
-        { n:6, x: 78, y: 64, w: 12.5, h: 16 },
-      ]
-    };
-
-    let selectedDir = null;   // "CW" | "CCW"
-    let selectedCount = null; // 1..6
-
-    function clearHotspots(){
-      hotspotLayer.innerHTML = "";
-    }
-
-    function mkHotspot(id, rectPct, onClick){
-      const d = document.createElement("div");
-      d.className = "hotspot";
-      d.dataset.id = id;
-      d.style.left   = rectPct.x + "%";
-      d.style.top    = rectPct.y + "%";
-      d.style.width  = rectPct.w + "%";
-      d.style.height = rectPct.h + "%";
-      d.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick();
-      }, { passive:false });
-
-      // Puls-Layer (sichtbar, aber transparent)
-      const pulse = document.createElement("div");
-      pulse.className = "pulseBox";
-      d.appendChild(pulse);
-
-      return d;
-    }
-
-    function applyPulseStyles(){
-      // arrows alternierend blinken
-      const left = hotspotLayer.querySelector('[data-id="dirCCW"] .pulseBox');
-      const right = hotspotLayer.querySelector('[data-id="dirCW"] .pulseBox');
-      if(left)  left.classList.add("arrow");
-      if(right) right.classList.add("arrow");
-
-      if(left)  left.style.animationDelay = "0ms";
-      if(right) right.style.animationDelay = "450ms";
-
-      // numbers wave
-      HS.nums.forEach((r, i) => {
-        const el = hotspotLayer.querySelector(`[data-id="n${r.n}"] .pulseBox`);
-        if(el){
-          el.style.animationDelay = (i * 90) + "ms";
-        }
-      });
-    }
-
-    function setSelectedVisuals(){
-      // clear all selected
-      hotspotLayer.querySelectorAll(".pulseBox").forEach(p => p.classList.remove("selected"));
-
-      if(selectedDir === "CW"){
-        const p = hotspotLayer.querySelector('[data-id="dirCW"] .pulseBox');
-        if(p) p.classList.add("selected");
-      }
-      if(selectedDir === "CCW"){
-        const p = hotspotLayer.querySelector('[data-id="dirCCW"] .pulseBox');
-        if(p) p.classList.add("selected");
-      }
-      if(selectedCount){
-        const p = hotspotLayer.querySelector(`[data-id="n${selectedCount}"] .pulseBox`);
-        if(p) p.classList.add("selected");
-      }
-    }
-
-    function showDecisionOverlayForCurrentQuadrant(){
-      selectedDir = null;
-      selectedCount = null;
-      clearHotspots();
-
-      const q = quadrantFromRotIndex();
-      kippDecisionImg.src = overlayFiles[q] || overlayFiles.Q0;
-
-      // Pfeile
-      hotspotLayer.appendChild(mkHotspot("dirCCW", HS.arrowLeft, () => {
-        selectedDir = "CCW";
-        setSelectedVisuals();
-        tryStartPlayerMoveIfReady();
-      }));
-      hotspotLayer.appendChild(mkHotspot("dirCW", HS.arrowRight, () => {
-        selectedDir = "CW";
-        setSelectedVisuals();
-        tryStartPlayerMoveIfReady();
-      }));
-
-      // Zahlen 1..6
-      HS.nums.forEach((r) => {
-        hotspotLayer.appendChild(mkHotspot(`n${r.n}`, r, () => {
-          selectedCount = r.n;
-          setSelectedVisuals();
-          tryStartPlayerMoveIfReady();
-        }));
-      });
-
-      applyPulseStyles();
-      setSelectedVisuals();
-
-      kippDecisionEl.classList.remove("hidden");
-      kippDecisionEl.style.pointerEvents = "none";     // Container selbst nicht
-      hotspotLayer.style.pointerEvents = "auto";       // nur Hotspots
-
-      // während Entscheidung: Stop bleibt möglich, Demo aus
-      cancelDemo();
+      // Hinweis: wir testen jetzt NUR die erste Entscheidung.
+      // Mapping der Pfeile:
+      // a1 = "cw", a2 = "ccw"  (wenn du es umgekehrt willst: unten in onArrowClick tauschen)
     }
 
     function hideDecisionOverlay(){
-      kippDecisionEl.classList.add("hidden");
-      clearHotspots();
-      selectedDir = null;
-      selectedCount = null;
+      decisionOverlay.classList.add("hidden");
+      clearDecisionSelections();
     }
 
-    function tryStartPlayerMoveIfReady(){
-      if(!selectedDir || !selectedCount) return;
-      // sobald beides gewählt, starten
+    function tryStartMoveIfReady(){
+      if(!chosenDir || !chosenCount) return;
       hideDecisionOverlay();
-      runPlayerMove(selectedDir, selectedCount);
+      runPlayerMove(chosenDir, chosenCount);
     }
 
-    // ===== Player Move (dir + count) =====
+    function onArrowClick(el){
+      const a = el.dataset.arrow;
+
+      // Mapping:
+      // a1 = cw, a2 = ccw
+      chosenDir = (a === "a1") ? "cw" : "ccw";
+
+      // UI markieren
+      decisionOverlay.querySelectorAll('.hit.arrow').forEach(x => x.classList.remove("selected"));
+      el.classList.add("selected");
+
+      tryStartMoveIfReady();
+    }
+
+    function onNumClick(el){
+      const n = Number(el.dataset.num);
+      if(!(n>=1 && n<=6)) return;
+      chosenCount = n;
+
+      decisionOverlay.querySelectorAll('.hit.num').forEach(x => x.classList.remove("selected"));
+      el.classList.add("selected");
+
+      tryStartMoveIfReady();
+    }
+
+    // ===== Player Move (aus Entscheidung) =====
+    function cancelMove(){
+      moveToken++;
+      runningMove = false;
+    }
+
     async function runPlayerMove(dir, count){
       if(runningMove) return;
       runningMove = true;
       const myToken = ++moveToken;
 
-      const { holdMs } = getTiming();
+      // Sicherheit: falls Demo/Set noch laufen
+      cancelDemo();
+      cancelSetNumbers();
 
       for(let i=0; i<count; i++){
-        // Zwischenkipp anzeigen
-        showKip();
-        renderKipDir(dir);
-        await sleep(holdMs);
-        if(myToken !== moveToken){ runningMove=false; return; }
+        if(myToken !== moveToken) { runningMove=false; return; }
 
-        // zur nächsten Vollfläche
-        if(dir === "CW") advanceFullCW();
+        // Zwischenkipp
+        showKip();
+        renderKipDirectional(dir);
+        await sleep(getTiming().holdMs);
+        if(myToken !== moveToken) { runningMove=false; return; }
+
+        // Vollansicht + „Kipp abgeschlossen“
+        if(dir === "cw") advanceFullCW();
         else advanceFullCCW();
 
         showW();
         renderW();
-        await sleep(holdMs);
-        if(myToken !== moveToken){ runningMove=false; return; }
+        await sleep(getTiming().holdMs);
       }
 
-      // Nach dem Zug: wieder Overlay passend zur aktuellen Würfellage
-      showDecisionOverlayForCurrentQuadrant();
+      // Nach dem Move: wieder Entscheidung (fürs weitere Testen)
+      // (Q3 nur als erster Schritt – später wechselst du zu Q0–Q2 je nach Würfellage)
+      showDecisionOverlay_Q3();
 
-      runningMove = false;
-    }
-
-    function cancelMove(){
-      moveToken++;
       runningMove = false;
     }
 
@@ -1618,7 +1560,6 @@
       if(!runningDemo) enterPlayAttention();
     });
 
-    // Play/Pause Dual
     btnPlay.addEventListener("click", async () => {
       if(!hasAdjustedOnce) enterPlayAttention();
 
@@ -1635,7 +1576,6 @@
       setPlayGlyph(demoPaused ? false : true);
     });
 
-    // OK: Demo/Set/Move abbrechen, Game-Mode rein
     btnOk.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
@@ -1646,12 +1586,10 @@
       showGameMode();
     });
 
-    // Zahlen setzen
     btnSetNumbers.addEventListener("click", async () => {
       await runSetNumbersCycle();
     });
 
-    // STOP: alles abbrechen + zurück zur Speed-Einstellung
     btnStop.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
@@ -1665,6 +1603,17 @@
       if(ok){
         window.location.href = "about:blank";
       }
+    });
+
+    // Klicks auf Overlay-Hitboxen
+    decisionOverlay.addEventListener("click", (e) => {
+      const t = e.target;
+      if(!(t instanceof HTMLElement)) return;
+      if(!t.classList.contains("hit")) return;
+
+      const kind = t.dataset.kind;
+      if(kind === "arrow") onArrowClick(t);
+      if(kind === "num") onNumClick(t);
     });
 
     window.addEventListener("load", () => {
