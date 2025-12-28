@@ -462,7 +462,7 @@
       filter: brightness(0.98);
     }
 
-    /* ===== Speed-Panel bleibt wie es ist (kein Separieren/Löschen) ===== */
+    /* ===== Speed-Panel (Start-Schritt) ===== */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -472,6 +472,15 @@
       flex-direction: column;
       justify-content: center;
       gap: 6px;
+      position: relative;
+    }
+
+    .speedTopRow{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      padding: 0 12px;
     }
 
     .kippspeedLabel{
@@ -483,6 +492,41 @@
       font-size: 16px;
       line-height: 1.05;
       text-align: center;
+      flex: 1 1 auto;
+    }
+
+    .speedActions{
+      display:flex;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .sqBtn{
+      width: 44px;
+      height: 44px;
+      border-radius: 0;
+      border: 2px solid rgba(0,0,0,0.55);
+      background: var(--btn-bg);
+      box-shadow:
+        0 18px 22px rgba(0,0,0,0.35),
+        0 8px 14px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      color: #2a160c;
+      user-select:none;
+      pointer-events:auto;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+    }
+    .sqBtn:active{ transform: scale(0.985); filter: brightness(0.98); }
+
+    .sqBtn.exit{
+      background: #c20000;
+      color: #fff;
     }
 
     .sliderRow{
@@ -532,6 +576,53 @@
       cursor: pointer;
     }
 
+    .ticksRow{
+      padding: 0 12px 2px;
+      display:grid;
+      grid-template-columns: auto 1fr auto;
+      align-items:center;
+      gap: 14px;
+    }
+    .ticks{
+      display:grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 0;
+      align-items:end;
+    }
+    .tick{
+      text-align:center;
+      color: rgba(234,215,190,0.92);
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1;
+      user-select:none;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+    }
+    .tick.active{
+      color: rgba(234,215,190,1);
+      transform: translateY(-1px);
+    }
+    .tickPad{ width: clamp(44px, 10vmin, 62px); height: 1px; }
+
+    /* ===== Aufmerksamkeit: Blinken/Pulsieren ===== */
+    @keyframes kspBlink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.35; }
+    }
+    @keyframes sliderPulse {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50%      { transform: scale(1.015); filter: brightness(1.05); }
+    }
+
+    .kippspeedBlock.attention .kippspeedLabel{
+      animation: kspBlink 0.75s infinite;
+    }
+    .kippspeedBlock.attention .sliderRow{
+      animation: sliderPulse 0.9s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    /* ===== UI Panel (unten) ===== */
     .uiPanel{
       width: 100%;
       box-sizing: border-box;
@@ -546,6 +637,8 @@
       flex-direction: column;
       gap: 10px;
     }
+
+    .uiHidden{ display:none !important; }
 
     .uiRow{
       display:flex;
@@ -621,7 +714,6 @@
       user-select:none;
     }
 
-    /* 0P bleibt groß + P bleibt groß */
     .pointsNow{
       font-weight: 1000;
       letter-spacing: 0.02em;
@@ -675,7 +767,6 @@
   <div class="stage">
 
     <div class="titleRow" aria-label="Titelzeile">
-      <!-- Deine Anforderung: Schreibweise kann so bleiben (also nicht KIPP Color) -->
       <div class="sideTitle left">KIPP COLOR</div>
       <div class="titleMain"><h1>DigiKIPP</h1></div>
       <div class="sideTitle right">KIPP COLOR</div>
@@ -737,21 +828,38 @@
         <img id="kippArrowPng" class="kippArrowPng hidden" src="Pfeil.png" alt="Kipprichtung Pfeil" />
       </div>
 
-      <!-- Speed-Panel bleibt wie es ist -->
-      <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
-        <div class="kippspeedLabel">KIPPSPEED</div>
-        <div class="sliderRow">
+      <!-- Speed-Panel (Start) -->
+      <div class="kippspeedBlock attention" id="kippspeedBlock" aria-label="Kippspeed">
+        <div class="speedTopRow">
+          <div class="kippspeedLabel" id="kspLabel">KIPP SPEED (KSP)</div>
+          <div class="speedActions">
+            <button id="btnOk" class="sqBtn" aria-label="OK">OK</button>
+            <button id="btnExit" class="sqBtn exit" aria-label="Beenden">X</button>
+          </div>
+        </div>
+
+        <div class="sliderRow" id="sliderRow">
           <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
-          <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
+          <input id="speedSlider" type="range" min="0" max="9" step="1" value="3" aria-label="Speed Slider">
           <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
+        </div>
+
+        <!-- 1–10 Beschriftung unter dem Slider -->
+        <div class="ticksRow" aria-hidden="true">
+          <div class="tickPad"></div>
+          <div class="ticks" id="ticks">
+            <div class="tick">1</div><div class="tick">2</div><div class="tick">3</div><div class="tick">4</div><div class="tick">5</div>
+            <div class="tick">6</div><div class="tick">7</div><div class="tick">8</div><div class="tick">9</div><div class="tick">10</div>
+          </div>
+          <div class="tickPad"></div>
         </div>
       </div>
     </div>
 
-    <div class="uiPanel" aria-label="UI Panel">
+    <!-- UI Panel (unten) ist zu Beginn unsichtbar -->
+    <div class="uiPanel uiHidden" id="uiPanel" aria-label="UI Panel">
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
-          <!-- KIPP Ziel -> KIPP ZIEL -->
           <div class="uiLabel">KIPP ZIEL</div>
           <div class="targetCard">
             <div class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
@@ -760,13 +868,11 @@
         </div>
 
         <div class="pointsBlock" aria-label="Punkteblock rechts (Dummy)">
-          <!-- 0P bleibt 0P -->
           <div class="pointsNow">0P</div>
           <div class="hiLine">Highscore: <span>66</span></div>
         </div>
       </div>
 
-      <!-- KIPP Start -> KIPP ZAHLEN setzen -->
       <button id="btnStart" class="startBtn">KIPP ZAHLEN setzen</button>
     </div>
 
@@ -779,6 +885,11 @@
     const kipGroup  = document.getElementById("kipGroup");
     const btnStart  = document.getElementById("btnStart");
     const speedSlider = document.getElementById("speedSlider");
+    const kippspeedBlock = document.getElementById("kippspeedBlock");
+    const uiPanel = document.getElementById("uiPanel");
+    const btnOk = document.getElementById("btnOk");
+    const btnExit = document.getElementById("btnExit");
+    const ticksEl = document.getElementById("ticks");
 
     const arrowPng  = document.getElementById("kippArrowPng");
     const hudGroup  = document.getElementById("hudGroup");
@@ -800,8 +911,8 @@
 
     function getTiming(){
       const v = Number(speedSlider.value || 3);
-      const holdMsFull = Math.max(800, Math.round(3200 - v * 266));
-      const holdMsKip  = Math.max(520, Math.round(2200 - v * 186));
+      const holdMsFull = Math.max(800, Math.round(3200 - v * 266)); // W-Ansicht
+      const holdMsKip  = Math.max(520, Math.round(2200 - v * 186)); // KIP-Ansicht
       return { holdMsFull, holdMsKip };
     }
 
@@ -856,16 +967,6 @@
       span.textContent = String(n);
     }
 
-    function getUniqueRandomNumbers(count, min, max){
-      const pool = [];
-      for(let i=min; i<=max; i++) pool.push(i);
-      for(let i=pool.length-1; i>0; i--){
-        const j = Math.floor(Math.random() * (i+1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      return pool.slice(0, count);
-    }
-
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -903,52 +1004,10 @@
       kipGroup.querySelector('[data-slot="W2_D"] .num > span'),
     ];
 
-    function ensureAssigned(idx){
-      if(assigned[idx]) return;
-      sets[idx] = planned[idx].slice();
-      assigned[idx] = true;
-    }
-
     function setRotationSnap(){
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
-    }
-
-    function renderW(){
-      setRotationSnap();
-      const curr = sets[faceIndex];
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], curr[i]);
-      }
-    }
-
-    function renderWEmpty(){
-      setRotationSnap();
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsW[i], null);
-      }
-    }
-
-    function mapHiddenToVisible_CW(face){
-      const [f1,f2,f3,f4] = face;
-      return [f4, f3, f2, f1];
-    }
-
-    function renderKip(){
-      setRotationSnap();
-      const curr = sets[faceIndex];
-      const nextFaceIndex = (faceIndex + 1) % 3;
-      const next = sets[nextFaceIndex];
-
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], curr[i]);
-      }
-
-      const nextPreview = mapHiddenToVisible_CW(next);
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
-      }
     }
 
     function showW(){
@@ -959,6 +1018,17 @@
     function showKip(){
       wFace.classList.add("hidden");
       kipGroup.classList.remove("hidden");
+    }
+
+    function renderWEmpty(){
+      setRotationSnap();
+      for(let i=0;i<4;i++) renderNumber(slotTargetsW[i], null);
+    }
+
+    function renderKipEmpty(){
+      setRotationSnap();
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], null);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], null);
     }
 
     function getStepPx(){
@@ -1001,67 +1071,8 @@
       arrowPng.classList.add("hidden");
     }
 
-    function layoutChoiceUI(){
-      const { cx, cy, step } = getPivot();
-      const deg = rotDeg[rotIndex];
-
-      const size = step * 0.75;
-      document.documentElement.style.setProperty("--sel-size", size + "px");
-
-      const yLine = step * 0.5;
-
-      for(let i=0;i<6;i++){
-        const base = { x: step * (1.5 + i), y: yLine };
-        const p = rotatePoint(base.x, base.y, cx, cy, deg);
-
-        const left = p.x - size/2;
-        const top  = p.y - size;
-
-        const el = hudGroup.querySelector(`.choiceBtn[data-choice="${i+1}"]`);
-        if(el){
-          el.style.left = left + "px";
-          el.style.top  = top + "px";
-          el.style.transform = "none";
-        }
-      }
-
-      const labelX = step * 1.5 - (size/2);
-      const labelY = (yLine - size) - (step * 0.65);
-      const lp = rotatePoint(labelX, labelY, cx, cy, deg);
-      kippLabel.style.left = lp.x + "px";
-      kippLabel.style.top  = lp.y + "px";
-    }
-
-    function showChoiceHUD(){
-      layoutChoiceUI();
-      hudGroup.classList.remove("hidden");
-    }
-    function hideChoiceHUD(){
-      hudGroup.classList.add("hidden");
-    }
-
-    function reroll12_keepEmpty(){
-      const twelve = getUniqueRandomNumbers(12, 1, 12);
-      planned[0] = twelve.slice(0,4);
-      planned[1] = twelve.slice(4,8);
-      planned[2] = twelve.slice(8,12);
-
-      sets = [
-        [null,null,null,null],
-        [null,null,null,null],
-        [null,null,null,null],
-      ];
-      assigned = [false,false,false];
-
-      rotIndex  = 0;
-      faceIndex = 0;
-
-      [...slotTargetsW, ...slotTargetsKipRight, ...slotTargetsKipLeft].forEach(s => { if(s) s.textContent=""; });
-      setRotationSnap();
-
-      hideChoiceHUD();
-      showArrow();
-    }
+    function hideChoiceHUD(){ hudGroup.classList.add("hidden"); }
+    function showChoiceHUD(){ hudGroup.classList.remove("hidden"); }
 
     function advanceFullCW(){
       rotIndex  = (rotIndex + 1) % 4;
@@ -1069,84 +1080,162 @@
       setRotationSnap();
     }
 
+    function resetToStartView(){
+      rotIndex = 0;
+      faceIndex = 0;
+      setRotationSnap();
+      showW();
+      renderWEmpty();
+      hideChoiceHUD();
+      showArrow();
+    }
+
+    // ===== 1–10 Ticks aktiv markieren =====
+    function updateTickActive(){
+      const v = Number(speedSlider.value || 0); // 0..9
+      const ticks = ticksEl.querySelectorAll(".tick");
+      ticks.forEach((t, i) => t.classList.toggle("active", i === v));
+    }
+
+    // ===== Aufmerksamkeit stoppen (wenn Spieler interagiert) =====
+    function stopAttention(){
+      kippspeedBlock.classList.remove("attention");
+    }
+
+    // ===== Demo-Zyklus ohne Zahlen (7 Darstellungen) =====
+    let demoRunning = false;
+    let demoToken = 0;
+
+    async function runSpeedDemo(){
+      if(demoRunning) return;
+      demoRunning = true;
+      const myToken = ++demoToken;
+
+      const { holdMsFull, holdMsKip } = getTiming();
+
+      // 7 Bilder: W, KIP, W, KIP, W, KIP, W  (alles ohne Zahlen)
+      resetToStartView(); // W1/Q0 + Pfeil
+
+      // 1) W
+      await sleep(holdMsFull);
+      if(myToken !== demoToken) { demoRunning=false; return; }
+
+      // 2) KIP
+      hideArrow();
+      showKip();
+      renderKipEmpty();
+      await sleep(holdMsKip);
+      if(myToken !== demoToken) { demoRunning=false; return; }
+
+      // 3) W
+      advanceFullCW();
+      showW();
+      renderWEmpty();
+      showArrow();
+      await sleep(holdMsFull);
+      if(myToken !== demoToken) { demoRunning=false; return; }
+
+      // 4) KIP
+      hideArrow();
+      showKip();
+      renderKipEmpty();
+      await sleep(holdMsKip);
+      if(myToken !== demoToken) { demoRunning=false; return; }
+
+      // 5) W
+      advanceFullCW();
+      showW();
+      renderWEmpty();
+      showArrow();
+      await sleep(holdMsFull);
+      if(myToken !== demoToken) { demoRunning=false; return; }
+
+      // 6) KIP
+      hideArrow();
+      showKip();
+      renderKipEmpty();
+      await sleep(holdMsKip);
+      if(myToken !== demoToken) { demoRunning=false; return; }
+
+      // 7) zurück auf W1/Q0
+      resetToStartView();
+
+      demoRunning = false;
+    }
+
+    // Demo starten, wenn Regler "in Ruhe gelassen" wurde (release/change)
+    function triggerDemoAfterRelease(){
+      // falls eine Demo gerade läuft: abbrechen + neu starten
+      demoToken++;
+      demoRunning = false;
+      runSpeedDemo();
+    }
+
+    // OK/X Buttons
+    btnOk.addEventListener("click", () => {
+      stopAttention();
+      // Demo ggf. abbrechen
+      demoToken++;
+      demoRunning = false;
+
+      // Speed-Panel bleibt (für später evtl. ausblendbar) – hier: Panel bleibt sichtbar
+      // und das untere Panel wird eingeblendet (wie besprochen: erst nach OK).
+      uiPanel.classList.remove("uiHidden");
+
+      // Startbutton-Text sicher setzen
+      btnStart.textContent = "KIPP ZAHLEN setzen";
+    });
+
+    btnExit.addEventListener("click", () => {
+      stopAttention();
+      const ok = confirm("Spiel wirklich beenden?");
+      if(!ok) return;
+
+      // Platzhalter bis Startseite existiert:
+      // (Später: window.location.href = "start.html";)
+      document.body.innerHTML = `
+        <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:system-ui; background:#000; color:#ead7be;">
+          <div style="text-align:center;">
+            <div style="font-size:26px; font-weight:900; letter-spacing:0.06em;">SPIEL BEENDET</div>
+            <div style="opacity:0.85; margin-top:10px;">(Startseite kommt später)</div>
+          </div>
+        </div>
+      `;
+    });
+
+    // ===== bestehender Start-Flow (dein späterer Step) bleibt drin =====
     let running = false;
+    function sleepP(ms){ return new Promise(res => setTimeout(res, ms)); }
 
     async function runShow7(){
       if(running) return;
       running = true;
       btnStart.disabled = true;
 
-      const { holdMsFull, holdMsKip } = getTiming();
-      const halfFull = Math.round(holdMsFull / 2);
-
-      // Deine Anforderung: Button wechselt nach Tipp auf "KIPP ZAHLEN mischen"
-      // (Funktion dahinter später)
+      // hier später deine echte Zahlenlogik – aktuell bleibt das bestehen
       btnStart.textContent = "KIPP ZAHLEN mischen";
-
-      reroll12_keepEmpty();
-
-      showW();
-      renderWEmpty();
-      showArrow();
-      hideChoiceHUD();
-      await sleep(halfFull);
-
-      ensureAssigned(0);
-      renderW();
-      await sleep(halfFull);
-
-      hideArrow();
-      showKip();
-      renderKip();
-      await sleep(holdMsKip);
-
-      advanceFullCW();
-      showW();
-      renderWEmpty();
-      await sleep(halfFull);
-
-      ensureAssigned(1);
-      renderW();
-      await sleep(halfFull);
-
-      hideArrow();
-      showKip();
-      renderKip();
-      await sleep(holdMsKip);
-
-      advanceFullCW();
-      showW();
-      renderWEmpty();
-      await sleep(halfFull);
-
-      ensureAssigned(2);
-      renderW();
-      await sleep(halfFull);
-
-      hideArrow();
-      showKip();
-      renderKip();
-      await sleep(holdMsKip);
-
-      advanceFullCW();
-      showW();
-      renderW();
-
-      showArrow();
-      showChoiceHUD();
 
       btnStart.disabled = false;
       running = false;
     }
 
-    hudGroup.addEventListener("click", (e) => {
-      const btn = e.target.closest(".choiceBtn");
-      if(!btn) return;
-      const val = Number(btn.dataset.choice);
-      console.log("Kippwahl:", val);
+    btnStart.addEventListener("click", runShow7);
+
+    // Slider Events: beim Bewegen Aufmerksamkeit stoppen + Tick highlight
+    speedSlider.addEventListener("input", () => {
+      stopAttention();
+      updateTickActive();
+      // wenn jemand herumzieht: Demo abbrechen (wird erst bei release neu gestartet)
+      demoToken++;
+      demoRunning = false;
     });
 
-    btnStart.addEventListener("click", runShow7);
+    // "Loslassen" -> Demo starten
+    speedSlider.addEventListener("change", () => {
+      stopAttention();
+      updateTickActive();
+      triggerDemoAfterRelease();
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1159,12 +1248,14 @@
       requestAnimationFrame(setKippspeedStripHeight);
       setTimeout(setKippspeedStripHeight, 80);
 
-      // Button-Starttext exakt wie gefordert
-      btnStart.textContent = "KIPP ZAHLEN setzen";
+      // UI Panel unten: Start = unsichtbar
+      uiPanel.classList.add("uiHidden");
 
-      reroll12_keepEmpty();
-      showW();
-      renderWEmpty();
+      // Startzustand: W1/Q0 ohne Zahlen + Pfeil sichtbar
+      resetToStartView();
+
+      // Tick-Status initial
+      updateTickActive();
     });
 
     window.addEventListener("resize", () => {
@@ -1175,7 +1266,6 @@
       requestAnimationFrame(setKippspeedStripHeight);
 
       if(!arrowPng.classList.contains("hidden")) placeArrow();
-      if(!hudGroup.classList.contains("hidden")) layoutChoiceUI();
     });
   </script>
 </body>
