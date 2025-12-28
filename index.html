@@ -87,6 +87,49 @@
       align-items:center;
     }
 
+    .titleRow{
+      width: 100%;
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      user-select:none;
+      margin-bottom: 2px;
+    }
+
+    .sideTitle{
+      flex: 1 1 0;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      font-size: clamp(14px, 2.5vmin, 20px);
+      color: rgba(0,0,0,0.92);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.35),
+        0 10px 18px rgba(0,0,0,0.10);
+      white-space: nowrap;
+    }
+    .sideTitle.left{ text-align: left; padding-left: 6px; }
+    .sideTitle.right{ text-align: right; padding-right: 6px; }
+
+    .titleMain{
+      flex: 0 0 auto;
+      display:flex;
+      justify-content:center;
+      align-items: baseline;
+    }
+    .titleMain h1{
+      margin: 0;
+      padding: 0;
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      font-size: clamp(26px, 6.4vmin, 46px);
+      color: rgba(0,0,0,0.92);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.35),
+        0 10px 18px rgba(0,0,0,0.25);
+      line-height: 1;
+    }
+
     .boxShell{
       width: 100%;
       box-sizing: border-box;
@@ -144,36 +187,6 @@
       box-shadow:
         inset 0 0 0 2px #000,
         0 0 0 1px rgba(0,0,0,0.25);
-    }
-
-    /* ===== KIPP Color in Rasterzeile 1 (schwarze Flächen A–B und G–H) ===== */
-    .topStripLabel{
-      position:absolute;
-      top: 0;
-      height: var(--step);           /* exakt 1 Rasterzeile */
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-      pointer-events:none;
-      z-index: 6;
-      color: var(--btn-bg);          /* beige */
-      font-weight: 1000;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-size: clamp(12px, 2.1vmin, 16px);
-      text-shadow:
-        0 1px 0 rgba(0,0,0,0.55),
-        0 6px 12px rgba(0,0,0,0.25);
-      white-space: nowrap;
-    }
-    .topStripLabel.left{
-      left: 0;
-      width: calc(2 * var(--step));  /* A–B */
-    }
-    .topStripLabel.right{
-      left: calc(6 * var(--step));   /* G–H */
-      width: calc(2 * var(--step));
     }
 
     .floor{
@@ -383,9 +396,11 @@
       pointer-events:none;
       user-select:none;
 
+      /* Pfeil.png ist "würfelflächen-groß" => 3 Rasterzellen */
       width: calc(var(--step) * 3);
       height: auto;
 
+      /* Anchor: unten-links */
       transform-origin: 0 100%;
 
       transform:
@@ -443,7 +458,7 @@
     .choiceBtn span{
       font-weight: 1000;
       font-size: clamp(16px, 4.2vmin, 26px);
-      color: #7a3f2b;
+      color: #7a3f2b; /* rostbraun */
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
     }
@@ -464,16 +479,15 @@
       gap: 6px;
     }
 
-    /* Schreibweise nach deinem Prinzip */
     .kippspeedLabel{
       font-weight: 1000;
       letter-spacing: 0.10em;
+      text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       font-size: 16px;
       line-height: 1.05;
       text-align: center;
-      text-transform: none; /* NICHT alles caps */
     }
 
     .sliderRow{
@@ -545,7 +559,6 @@
       gap: 10px;
     }
 
-    /* Schreibweise nach deinem Prinzip */
     .uiLabel{
       font-weight: 900;
       letter-spacing: 0.04em;
@@ -554,8 +567,6 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       font-size: 22px;
       line-height: 1.05;
-      text-transform: none; /* NICHT alles caps */
-      white-space: nowrap;
     }
 
     .targetCard{
@@ -568,7 +579,7 @@
     .progressText{
       color: var(--ui-text);
       font-weight: 900;
-      font-size: 16px; /* (00-11) kleiner */
+      font-size: 18px;
       line-height: 1.05;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
@@ -576,7 +587,6 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.25);
       min-width: 64px;
       text-align:left;
-      opacity: 0.95;
     }
 
     .targetSquare{
@@ -593,7 +603,6 @@
       align-items:center;
       justify-content:center;
       user-select:none;
-      flex: 0 0 auto;
     }
 
     .targetSquare span{
@@ -642,7 +651,7 @@
       color: var(--btn-text);
       font-weight: 1000;
       letter-spacing: 0.06em;
-      text-transform: none; /* nach deinem Prinzip */
+      text-transform: uppercase;
       padding: 14px 16px;
       border-radius: 14px;
       cursor: pointer;
@@ -666,12 +675,14 @@
 <body>
   <div class="stage">
 
+    <div class="titleRow" aria-label="Titelzeile">
+      <div class="sideTitle left">KIP color</div>
+      <div class="titleMain"><h1>DigiKIPP</h1></div>
+      <div class="sideTitle right">KIP color</div>
+    </div>
+
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
       <div class="board" id="board">
-
-        <!-- KIPP Color (Rasterzeile 1, links A–B und rechts G–H) -->
-        <div class="topStripLabel left">KIPP Color</div>
-        <div class="topStripLabel right">KIPP Color</div>
 
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
@@ -728,7 +739,7 @@
       </div>
 
       <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Kippspeed">
-        <div class="kippspeedLabel">KIPP Speed</div>
+        <div class="kippspeedLabel">KIPPSPEED</div>
         <div class="sliderRow">
           <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
           <input id="speedSlider" type="range" min="0" max="9" value="3" aria-label="Speed Slider">
@@ -740,20 +751,22 @@
     <div class="uiPanel" aria-label="UI Panel">
       <div class="uiRow">
         <div style="display:flex; align-items:flex-end; gap: 12px;">
-          <div class="uiLabel">KIPP Ziel</div>
+          <!-- geändert: KIPP ZIEL -->
+          <div class="uiLabel">KIPP ZIEL</div>
           <div class="targetCard">
             <div class="targetSquare" aria-label="Ziel (Dummy)"><span>7</span></div>
-            <div class="progressText" aria-label="Progress (Dummy)">(00-11)</div>
+            <div class="progressText" aria-label="Progress (Dummy)">(00/11)</div>
           </div>
         </div>
 
         <div class="pointsBlock" aria-label="Punkteblock rechts (Dummy)">
-          <div class="pointsNow">0P</div>
+          <div class="pointsNow">0p</div>
           <div class="hiLine">Highscore: <span>66</span></div>
         </div>
       </div>
 
-      <button id="btnStart" class="startBtn">KIPP Start</button>
+      <!-- geändert: Buttontext -->
+      <button id="btnStart" class="startBtn">KIPP ZAHLEN setzen</button>
     </div>
 
   </div>
@@ -972,8 +985,8 @@
       const { cx, cy, step } = getPivot();
       const deg = rotDeg[rotIndex];
 
-      const baseX = step * 1;
-      const baseY = step * 4;
+      const baseX = step * 1; // Spalte B
+      const baseY = step * 4; // untere Kante Zeile 4
 
       const p = rotatePoint(baseX, baseY, cx, cy, deg);
 
@@ -1060,6 +1073,11 @@
 
     let running = false;
 
+    // Button-Mode:
+    // "setzen" = erster Klick
+    // "mischen" = danach (Text bleibt)
+    let btnMode = "setzen";
+
     async function runShow7(){
       if(running) return;
       running = true;
@@ -1120,7 +1138,10 @@
       showArrow();
       showChoiceHUD();
 
-      btnStart.textContent = "ZAHLEN NEU SETZEN";
+      // Nach dem ersten "setzen"-Klick: Button wird zu "mischen"
+      btnMode = "mischen";
+      btnStart.textContent = "KIPP ZAHLEN mischen";
+
       btnStart.disabled = false;
       running = false;
     }
@@ -1132,7 +1153,11 @@
       console.log("Kippwahl:", val);
     });
 
-    btnStart.addEventListener("click", runShow7);
+    btnStart.addEventListener("click", () => {
+      // Egal ob "setzen" oder "mischen": wir spielen aktuell die gleiche Demo ab.
+      // Funktion dahinter (setzen vs mischen) kommt später.
+      runShow7();
+    });
 
     window.addEventListener("load", () => {
       setBoardSquare();
@@ -1148,6 +1173,10 @@
       reroll12_keepEmpty();
       showW();
       renderWEmpty();
+
+      // Initialer Button-Text:
+      btnMode = "setzen";
+      btnStart.textContent = "KIPP ZAHLEN setzen";
     });
 
     window.addEventListener("resize", () => {
