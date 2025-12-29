@@ -43,6 +43,9 @@
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* NEU: gemeinsamer Button-Gap für DecisionPanel */
+      --dec-gap: 10px;
     }
 
     html, body { height: 100%; }
@@ -229,11 +232,11 @@
       transform-origin: 50% 50%;
       will-change: transform, opacity;
     }
-    /* Rotation so, dass Zahlenkopf nach innen zeigt (= von außen lesbar) */
-    .trot-top    { transform: translate(-50%, -50%) rotate(180deg); }
-    .trot-bottom { transform: translate(-50%, -50%) rotate(0deg); }
-    .trot-left   { transform: translate(-50%, -50%) rotate(90deg); }
-    .trot-right  { transform: translate(-50%, -50%) rotate(-90deg); }
+    /* NEU: Zahlenfüße Richtung Box-Inneres (Baselines zeigen nach innen) */
+    .trot-top    { transform: translate(-50%, -50%) rotate(0deg); }
+    .trot-bottom { transform: translate(-50%, -50%) rotate(180deg); }
+    .trot-left   { transform: translate(-50%, -50%) rotate(-90deg); }
+    .trot-right  { transform: translate(-50%, -50%) rotate(90deg); }
 
     /* ===== FLOOR ===== */
     .floor{
@@ -661,7 +664,7 @@
 
     .gcRow{
       display:flex;
-      gap: 8px;
+      gap: var(--dec-gap);
       justify-content: space-between;
       align-items:center;
     }
@@ -688,33 +691,12 @@
       filter: brightness(0.97);
     }
 
+    /* NEU: Buttons größer/formatfüllender */
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
-      font-weight: 1000;
-      padding: 10px 0;
-      border-radius: 10px;
-      cursor: pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.20),
-        0 0 0 1px rgba(255,255,255,0.12) inset;
-    }
-    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
-    .miniBtn.sel{
-      background: var(--ui-panel-bg);
-      color: var(--ui-text);
-      border-color: rgba(0,0,0,0.55);
-    }
-
-    .dirBtn{
-      flex: 1 1 0;
-      border: 1px solid rgba(0,0,0,0.35);
-      background: var(--ui-panel-bg);
-      color: var(--ui-text);
       font-weight: 1000;
       padding: 12px 0;
       border-radius: 12px;
@@ -723,7 +705,39 @@
       -webkit-tap-highlight-color: transparent;
       box-shadow:
         0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
+      font-size: 20px;       /* größer */
+      line-height: 1;        /* formatfüllender */
+    }
+    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
+    .miniBtn.sel{
+      background: var(--ui-panel-bg);
+      color: var(--ui-text);
+      border-color: rgba(0,0,0,0.55);
+    }
+
+    /* NEU: Richtungstasten wie Zahlentasten (Größe, Radius, etc.) + rechtsbündig + Abstand zur Zahlenreihe */
+    .dirRow{
+      justify-content: flex-end;      /* rechtsbündig */
+      margin-top: 6px;               /* Abstand zur Zahlenreihe */
+    }
+    .dirBtn{
+      flex: 0 0 auto;                /* NICHT mehr Full-Row */
+      width: calc((100% - 5 * var(--dec-gap)) / 6); /* exakt wie 1 Zahlenbutton */
+      border: 1px solid rgba(0,0,0,0.35);
+      background: var(--ui-panel-bg);
+      color: var(--ui-text);
+      font-weight: 1000;
+      padding: 12px 0;               /* wie miniBtn */
+      border-radius: 12px;           /* wie miniBtn */
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
         0 0 0 1px rgba(255,255,255,0.10) inset;
+      font-size: 26px;               /* Symbol größer/formatfüllender */
+      line-height: 1;
     }
     .dirBtn:active{ transform: translateY(1px) scale(0.99); }
 
@@ -865,7 +879,7 @@
                   <button class="miniBtn" data-k="6" type="button">6</button>
                 </div>
 
-                <div class="gcRow" aria-label="Richtung">
+                <div class="gcRow dirRow" aria-label="Richtung">
                   <button id="btnDirCCW" class="dirBtn" type="button">⟲</button>
                   <button id="btnDirCW"  class="dirBtn" type="button">⟳</button>
                 </div>
@@ -1224,6 +1238,9 @@
       return [f2, f1, f4, f3];
     }
 
+    // WICHTIG: CCW-Zwischenkipp rückwärtszyklisch:
+    // - Bei CCW ist "next" = (faceIndex + 2) % 3 korrekt.
+    // - Aber die Zwischenansicht muss auch spiegeln: der "laufende" Würfel wandert bei CCW von rechts nach links.
     function renderKip(dir){
       setRotationSnap();
       const curr = sets[faceIndex];
@@ -1231,13 +1248,17 @@
       if(dir === "CCW"){
         const nextFaceIndex = (faceIndex + 2) % 3;
         const next = sets[nextFaceIndex];
-        for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
+
+        // NEU: Bei CCW kommt der "curr" auf die linke Hälfte (W2_*),
+        // und das Preview der nächsten Lage auf die rechte Hälfte (W1_*)
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], curr[i]);
+
         const nextPreview = mapHiddenToVisible_CCW(next);
-        for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], nextPreview[i]);
         return;
       }
 
-      // CW default
+      // CW default (wie gehabt): curr rechts (W1_*), preview links (W2_*)
       const nextFaceIndex = (faceIndex + 1) % 3;
       const next = sets[nextFaceIndex];
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
@@ -1328,7 +1349,6 @@
       if(r === 8) return "trot-bottom";
       if(c === "A") return "trot-left";
       if(c === "H") return "trot-right";
-      // sollte bei unseren farbigen Rahmenfeldern nicht passieren
       return "trot-bottom";
     }
 
@@ -1383,14 +1403,11 @@
       }
 
       if(eligible.length === 0){
-        // Sicherheitsfall: wenn "nicht sichtbar" nichts mehr hergibt, dann Deck resetten
-        // (du hast "Ausnahmesituation" erwähnt – hier ist die stabile Sicherheitslösung)
         deckCount = Array(13).fill(0);
         for(let n=1; n<=12; n++){
           if(!visible.has(n)) eligible.push(n);
         }
         if(eligible.length === 0){
-          // wirklich alles sichtbar? dann nehmen wir irgendwas (sollte praktisch nicht passieren)
           for(let n=1; n<=12; n++) eligible.push(n);
         }
       }
@@ -1407,15 +1424,13 @@
     }
 
     function beginPlayerPhase(){
-      // UI umschalten
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
       enterSetAttention(false);
 
-      // Spielzustand
       roundIndex = 0;
       tryIndex = 0;
-      setPoints(points); // bleibt
+      setPoints(points);
       gcHi.textContent = "80";
 
       deckCount = Array(13).fill(0);
@@ -1426,7 +1441,6 @@
     function endGame(){
       clearTargets();
       alert("10 Runden vorbei! Punkte: " + points);
-      // zurück zur Speed-Ansicht
       showSpeedMode();
     }
 
@@ -1480,24 +1494,22 @@
         await sleep(Math.round(getTiming().holdMs * 0.60));
       }
 
-      // Trefferprüfung (Minimalregel): Zielzahl sichtbar?
+      // Trefferprüfung: Zielzahl sichtbar?
       const vis = visibleNumbersSet();
       const hit = vis.has(currentTargetNumber);
 
       if(hit){
         awardForTry();
-        // neues Ziel, nächste Runde
         nextRoundOrEnd();
       }else{
         tryIndex++;
         if(tryIndex >= MAX_TRIES){
-          // neues Ziel (Runde zählt trotzdem weiter)
           nextRoundOrEnd();
-        }else{
-          // gleiches Ziel bleibt – nur nächste Chance
-          // (Zielzahl bleibt stehen)
         }
       }
+
+      // NEU: nach ausgeführtem Kipp wieder "beige" (Auswahl löschen)
+      selectKippCount(null);
 
       busyMove = false;
     }
@@ -1546,7 +1558,6 @@
       await runSetNumbersCycle();
     });
 
-    // ↩︎ Zurück: übernimmt STOP-Funktion (zur Speed-Ansicht)
     backBtn.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
