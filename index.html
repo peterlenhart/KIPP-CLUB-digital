@@ -36,15 +36,14 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      --ui-panel-bg: #7a3f2b;   /* rotbraun */
-      --ui-text: #ead7be;       /* hellbeige */
+      --ui-panel-bg: #7a3f2b;
+      --ui-text: #ead7be;
 
       --kippstrip-h: auto;
 
       --rotSign: 1;
       --rot: 0deg;
 
-      /* (nur falls du es später wieder willst) */
       --ui-scale: 1;
     }
 
@@ -87,7 +86,23 @@
       align-items:center;
     }
 
-    /* ===== HEADER ===== */
+    /* ===== BOX SHELL ===== */
+    .boxShell{
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--box-black);       /* ✅ schwarz durchgezogen */
+      border: var(--box-border) solid var(--box-black);
+      border-radius: var(--box-radius);
+      box-shadow:
+        10px 18px 42px rgba(0,0,0,0.55),
+        3px 6px 16px rgba(0,0,0,0.35);
+      overflow: hidden;
+      display:flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ===== HEADER (jetzt IN der BoxShell) ===== */
     .titleRow{
       width: 100%;
       display:flex;
@@ -95,10 +110,12 @@
       justify-content: space-between;
       gap: 10px;
       user-select:none;
-      margin-bottom: 2px;
+
+      background: #000;                 /* ✅ schwarz oben */
+      padding: 10px 10px;
+      box-sizing: border-box;
     }
 
-    /* ✅ invertiert (weiß) */
     .navBtn{
       width: 46px;
       height: 46px;
@@ -110,7 +127,7 @@
       cursor: pointer;
 
       background: transparent;
-      border: 2px solid rgba(255,255,255,0.85);
+      border: 2px solid rgba(255,255,255,0.85);  /* ✅ invertiert */
       box-shadow: 0 10px 16px rgba(0,0,0,0.10);
       padding:0;
     }
@@ -140,33 +157,19 @@
       padding: 0;
       font-weight: 1000;
       letter-spacing: 0.08em;
-      font-size: clamp(22px, 6.0vmin, 44px);
-      color: rgba(0,0,0,0.92);
+      font-size: clamp(22px, 6.0vmin, 40px);
+      color: var(--ui-text);            /* ✅ auf schwarz lesbar */
       text-shadow:
-        0 1px 0 rgba(255,255,255,0.35),
+        0 1px 0 rgba(0,0,0,0.55),
         0 10px 18px rgba(0,0,0,0.25);
       line-height: 1;
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
+      text-transform: uppercase;        /* Titel darf uppercase sein */
     }
 
-    /* ===== BOX SHELL ===== */
-    .boxShell{
-      width: 100%;
-      box-sizing: border-box;
-      background: var(--box-black);
-      border: var(--box-border) solid var(--box-black);
-      border-radius: var(--box-radius);
-      box-shadow:
-        10px 18px 42px rgba(0,0,0,0.55),
-        3px 6px 16px rgba(0,0,0,0.35);
-      overflow: hidden;
-      display:flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
+    /* ===== BOARD ===== */
     .board{
       position:relative;
       width: 100%;
@@ -212,7 +215,6 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== Target Zahl auf farbigen Feldern ===== */
     @keyframes targetBreath{
       0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
       50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
@@ -242,7 +244,6 @@
     .trot-left   { --trot: -90deg; }
     .trot-right  { --trot: 90deg; }
 
-    /* ===== FLOOR ===== */
     .floor{
       position:absolute;
       left: var(--step);
@@ -445,11 +446,10 @@
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
     /* ===== Konsole-Block ===== */
-    /* ✅ “schwarz durchgezogen”: kein padding/kein Rand */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
-      background: var(--box-black);
+      background: #000; /* ✅ schwarz unten */
       user-select:none;
       display:flex;
       flex-direction: column;
@@ -472,8 +472,8 @@
     }
 
     .kippspeedLabel{
-      font-weight: 1000;
-      letter-spacing: 0.10em;
+      font-weight: 900;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
@@ -539,7 +539,7 @@
 
     .okText{
       font-weight: 1000;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       color: #7a3f2b;
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       font-size: 16px;
@@ -597,13 +597,13 @@
     .gameConsole{
       width:100%;
       height:100%;
-      padding: 12px 12px 14px 12px;
+      padding: 10px 12px 12px 12px;  /* ✅ kompakter, damit Tasten sichtbar */
       box-sizing:border-box;
       display:flex;
       flex-direction: column;
       justify-content: space-between;
       gap: 10px;
-      background: #000; /* ✅ schwarz durch */
+      background: #000;
     }
 
     .gcTop{
@@ -611,7 +611,7 @@
       align-items:flex-end;
       justify-content: flex-end;
       gap: 10px;
-      min-height: 48px;
+      min-height: 42px;
     }
 
     .gcRight{
@@ -667,24 +667,25 @@
       filter: brightness(0.97);
     }
 
-    /* ===== Neues Keypad ===== */
     #decisionPanel{
       width: 100%;
       box-sizing: border-box;
       padding: 0;
     }
 
+    /* ✅ Typografie: nicht uppercase, vernünftige Größe */
     .tryHint{
-      font-weight: 1000;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      text-transform: none;              /* ✅ */
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 28px;
-      line-height: 1.0;
+      font-size: clamp(16px, 4.6vmin, 26px);  /* ✅ kleiner */
+      line-height: 1.06;
       text-align: left;
       user-select:none;
-      margin: 2px 0 10px 0;
+      margin: 0 0 10px 0;
+      white-space: normal;
     }
 
     .keypad{
@@ -704,9 +705,9 @@
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-      font-size: clamp(20px, 7vmin, 34px);
+      font-size: clamp(18px, 6.2vmin, 32px);
       line-height: 1;
-      padding: 14px 0;
+      padding: 12px 0;
       border-radius: 10px;
       cursor: pointer;
       user-select:none;
@@ -725,13 +726,13 @@
 
     .endText{
       width: 100%;
-      padding: 18px 0 6px 0;
+      padding: 12px 0 6px 0;
       text-align: left;
       font-weight: 1000;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--ui-text);
-      font-size: 34px;
+      font-size: clamp(22px, 6vmin, 34px);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       user-select:none;
     }
@@ -741,22 +742,22 @@
 <body>
   <div class="stage">
 
-    <!-- HEADER -->
-    <div class="titleRow" aria-label="Titelzeile">
-      <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
-        <span>←</span>
-      </button>
-
-      <div class="titleMain"><h1>KIPP COLOR</h1></div>
-
-      <button id="exitBtnTop" class="navBtn" aria-label="Spiel beenden" type="button">
-        <span>X</span>
-      </button>
-    </div>
-
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
-      <div class="board" id="board">
 
+      <!-- ✅ HEADER jetzt in der BoxShell -->
+      <div class="titleRow" aria-label="Titelzeile">
+        <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
+          <span>←</span>
+        </button>
+
+        <div class="titleMain"><h1>KIPP COLOR</h1></div>
+
+        <button id="exitBtnTop" class="navBtn" aria-label="Spiel beenden" type="button">
+          <span>X</span>
+        </button>
+      </div>
+
+      <div class="board" id="board">
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -799,7 +800,7 @@
         <!-- MODE 1: Speed -->
         <div id="speedMode" class="modeBlock">
           <div class="kippspeedTop">
-            <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
+            <div class="kippspeedLabel" id="kippspeedLabel">Kipp speed (KSP)</div>
 
             <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
               <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
@@ -829,10 +830,10 @@
             </div>
 
             <div class="gcBottom" aria-label="Aktionen">
-              <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
+              <button id="btnSetNumbers" class="gcBtn set" type="button">Zahlen setzen</button>
 
               <div id="decisionPanel" class="hidden">
-                <div id="tryHint" class="tryHint">1. Versuch. Tippe auf 2 Tasten</div>
+                <div id="tryHint" class="tryHint">1. Versuch: Tippe auf 2 Tasten</div>
 
                 <div class="keypad" aria-label="Keypad">
                   <div class="spacer"></div>
@@ -848,7 +849,7 @@
                   <button class="keyBtn" data-k="6" type="button">6</button>
                 </div>
 
-                <div id="endBlock" class="hidden endText">ENDE</div>
+                <div id="endBlock" class="hidden endText">Ende</div>
               </div>
             </div>
 
@@ -1336,13 +1337,13 @@
       });
     }
 
-    const MAX_ROUNDS = 10;     // 10 Zielvorgaben
-    const MAX_TRIES  = 3;      // 3 Versuche
+    const MAX_ROUNDS = 10;
+    const MAX_TRIES  = 3;
     const SCORE_BY_TRY = [8,5,3];
 
     let deckCount = Array(13).fill(0);
-    let roundIndex = 0; // 0..9
-    let tryIndex   = 0; // 0..2
+    let roundIndex = 0;
+    let tryIndex   = 0;
     let points     = 0;
 
     let currentTargetNumber = null;
@@ -1365,14 +1366,12 @@
 
     function pickNewTarget(){
       const visible = visibleNumbersSet();
-
       const eligible = [];
       for(let n=1; n<=12; n++){
         if(deckCount[n] >= 4) continue;
         if(visible.has(n)) continue;
         eligible.push(n);
       }
-
       if(eligible.length === 0){
         deckCount = Array(13).fill(0);
         for(let n=1; n<=12; n++){
@@ -1382,12 +1381,10 @@
           for(let n=1; n<=12; n++) eligible.push(n);
         }
       }
-
       const n = eligible[Math.floor(Math.random() * eligible.length)];
       deckCount[n]++;
 
       const colorClass = TARGET_COLOR_CLASSES[Math.floor(Math.random() * TARGET_COLOR_CLASSES.length)];
-
       currentTargetNumber = n;
       currentTargetColorClass = colorClass;
 
@@ -1395,9 +1392,9 @@
     }
 
     function tryText(){
-      if(tryIndex === 0) return "1. Versuch. Tippe auf 2 Tasten";
-      if(tryIndex === 1) return "2. Versuch. Tippe auf 2 Tasten";
-      return "3. Versuch. Tippe auf 2 Tasten";
+      if(tryIndex === 0) return "1. Versuch: Tippe auf 2 Tasten";
+      if(tryIndex === 1) return "2. Versuch: Tippe auf 2 Tasten";
+      return "3. Versuch: Tippe auf 2 Tasten";
     }
 
     function setTryHint(){
@@ -1414,7 +1411,7 @@
       keyBtns.forEach(b => b.classList.remove("sel"));
     }
 
-    let firstKey = null; // Zahl 0..6
+    let firstKey = null;
     function resetKeyInput(){
       firstKey = null;
       clearKeySelection();
@@ -1453,11 +1450,9 @@
     function missAdvanceTryOrRound(){
       tryIndex++;
       if(tryIndex >= MAX_TRIES){
-        // 3. Versuch auch daneben -> 0 Punkte, neue Zielvorgabe
         nextRoundOrEnd();
         return;
       }
-      // nächste Versuchsstufe, selbe Zielvorgabe
       setTryHint();
       resetKeyInput();
     }
@@ -1466,7 +1461,6 @@
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
 
-      // reset UI
       tryHintEl.classList.remove("hidden");
       endBlock.classList.add("hidden");
       setKeypadEnabled(true);
@@ -1487,11 +1481,9 @@
 
     async function performKippCW(count){
       if(busyMove) return;
-
-      const c = Math.max(0, Math.min(12, Number(count))); // ✅ 0..12
+      const c = Math.max(0, Math.min(12, Number(count)));
       busyMove = true;
 
-      // bei 0 passiert nur die Auswertung (kein Kipp)
       for(let i=0; i<c; i++){
         showKip();
         renderKip();
@@ -1517,7 +1509,6 @@
       busyMove = false;
     }
 
-    // ✅ Zwei-Tasten-Logik
     keyBtns.forEach(btn=>{
       btn.addEventListener("click", async () => {
         if(busyMove) return;
@@ -1532,14 +1523,11 @@
           return;
         }
 
-        // zweiter Tipp
         const secondKey = val;
-
-        // Optik kurz zeigen
         selectKey(btn);
         await sleep(80);
 
-        const sum = firstKey + secondKey; // ✅ 0..12
+        const sum = firstKey + secondKey;
         resetKeyInput();
 
         await performKippCW(sum);
