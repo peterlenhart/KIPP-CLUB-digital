@@ -993,14 +993,14 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
-    // zentral: "nächstes Face" abhängig von Richtung
+    // zentral: "nächstes Face" abhängig von Richtung (echtes Weiterdrehen)
     function nextFaceIdx(curr, dir){
-      return (curr + (dir === DIR_CW ? 1 : 2)) % 3; // -1 mod 3 == +2
+      return (curr + (dir === DIR_CW ? 1 : 2)) % 3; // CCW = -1 mod 3
     }
 
     function advanceFull(dir){
       // Q rotiert 4er-zyklisch
-      rotIndex  = (rotIndex + (dir === DIR_CW ? 1 : 3)) % 4; // -1 mod 4 == +3
+      rotIndex  = (rotIndex + (dir === DIR_CW ? 1 : 3)) % 4; // CCW = -1 mod 4
       // W rotiert 3er-zyklisch
       faceIndex = nextFaceIdx(faceIndex, dir);
       setRotationSnap();
@@ -1208,7 +1208,7 @@
     }
 
     // Mapping: "verdeckte Fläche" -> "sichtbare Reihenfolge" in Zwischenkipp
-    // CW und CCW sind spiegelbildlich.
+    // CW und CCW unterscheiden sich (CCW = rückwärtszyklisch)
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
@@ -1218,23 +1218,27 @@
       return [f2, f1, f4, f3];
     }
 
-    // Render Zwischenkipp abhängig von Richtung:
-    // Right = aktuelle Fläche (faceIndex)
-    // Left  = Preview der nächsten Fläche (CW: +1, CCW: -1)
+    // ===== FIX: Zwischenkipp muss Richtung wirklich übernehmen =====
+    // Bei CCW muss die Vorschaufläche (links) rückwärtszyklisch sein:
+    // previewIdx = nextFaceIdx(faceIndex, DIR_CCW)  => W1->W3->W2->W1...
     function renderKip(dir){
       setRotationSnap();
 
       const curr = sets[faceIndex];
-      const previewIdx = nextFaceIdx(faceIndex, dir);
+
+      // >>> WICHTIG: Preview-Face hängt von der Richtung ab (CW:+1, CCW:-1)
+      const previewIdx  = nextFaceIdx(faceIndex, dir);
       const previewFace = sets[previewIdx];
 
+      // rechts: aktuelle Fläche
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
 
-      const nextPreview = (dir === DIR_CW)
+      // links: Vorschau (je nach Richtung anders gemappt)
+      const previewNums = (dir === DIR_CW)
         ? mapHiddenToVisible_CW(previewFace)
         : mapHiddenToVisible_CCW(previewFace);
 
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], previewNums[i]);
     }
 
     function reroll12_keepEmpty(){
@@ -1257,14 +1261,16 @@
       setRotationSnap();
     }
 
-    async function runSetNumbersCycle(){
+    // >>> FIX: Richtung als Parameter (damit CCW später wirklich CCW ist)
+    async function runSetNumbersCycle(dir){
       if(runningSet) return;
       runningSet = true;
       const myToken = ++setToken;
 
-      reroll12_keepEmpty();
+      // Standard (wie bisher): falls nicht übergeben -> CW
+      dir = (dir === DIR_CCW) ? DIR_CCW : DIR_CW;
 
-      const dir = DIR_CW; // Zahlensetzen bleibt (vorerst) CW – aber renderKip kann jetzt auch CCW.
+      reroll12_keepEmpty();
 
       showW();
       renderWEmpty();
@@ -1362,8 +1368,10 @@
       showGameMode();
     });
 
+    // ZAHLEN SETZEN: bleibt wie bisher CW.
+    // Wenn du zum Test CCW willst: runSetNumbersCycle(DIR_CCW)
     btnSetNumbers.addEventListener("click", async () => {
-      await runSetNumbersCycle();
+      await runSetNumbersCycle(DIR_CW);
     });
 
     btnStop.addEventListener("click", () => {
