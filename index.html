@@ -36,8 +36,8 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      --ui-panel-bg: #7a3f2b;   /* rotbraun */
-      --ui-text: #ead7be;       /* hellbeige */
+      --ui-panel-bg: #7a3f2b;
+      --ui-text: #ead7be;
 
       --kippstrip-h: auto;
 
@@ -106,19 +106,24 @@
       cursor: pointer;
 
       background: transparent;
-      border: 2px solid rgba(0,0,0,0.55);
-      box-shadow: 0 10px 16px rgba(0,0,0,0.10);
-      padding:0;
+      border: 2px solid rgba(0,0,0,0.20);
+      box-shadow:
+        0 10px 16px rgba(0,0,0,0.10);
     }
     .navBtn span{
       font-weight: 1000;
       font-size: 26px;
       line-height: 1;
-      color: rgba(0,0,0,0.88);
+      color: rgba(0,0,0,0.80);
       text-shadow: 0 1px 0 rgba(255,255,255,0.30);
       transform: translateY(-0.5px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* verhindert Emoji-Look */
     }
+    /* typischer Back-Pfeil: etwas „ruhiger“ */
+    #backBtn span{
+      font-size: 28px;
+      transform: translateY(-1px);
+    }
+
     .navBtn:active{
       transform: scale(0.98);
       filter: brightness(1.03);
@@ -161,6 +166,7 @@
       display:flex;
       flex-direction: column;
       gap: 0;
+      position: relative;
     }
 
     .board{
@@ -194,7 +200,7 @@
       border-radius: var(--cell-radius);
       box-sizing: border-box;
       box-shadow: none;
-      position: relative;
+      position: relative; /* für Target-Overlay */
     }
 
     .c-orange{ background: var(--orange); }
@@ -209,17 +215,17 @@
     }
 
     /* ===== Target Zahl auf farbigen Feldern ===== */
-    /* FIX: Rotation darf NICHT durch Animation überschrieben werden -> Rotation über CSS-Variable */
     @keyframes targetBreath{
-      0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
-      50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
+      0%,100%{ transform: translate(-50%, -50%) scale(1); opacity: 0.95; }
+      50%    { transform: translate(-50%, -50%) scale(1.10); opacity: 1; }
     }
     .targetBadge{
       position:absolute;
       left:50%;
       top:50%;
-      font-weight: 900;
-      font-size: clamp(18px, 8vmin, 36px); /* exakt wie Slot-Zahlen */
+      transform: translate(-50%, -50%);
+      font-weight: 1000;
+      font-size: clamp(14px, 4.6vmin, 22px);
       color: rgba(0,0,0,0.92);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
@@ -229,16 +235,23 @@
       animation: targetBreath 1.25s ease-in-out infinite;
       transform-origin: 50% 50%;
       will-change: transform, opacity;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    }
+    /* Dot für 6/9: kleiner Punkt unten rechts */
+    .targetBadge.needsDot::after{
+      content:"•";
+      position:absolute;
+      right: -0.25em;
+      bottom: -0.25em;
+      font-size: 0.55em;
+      line-height: 1;
+      opacity: 0.95;
     }
 
-    /* ✅ Zahlenfuß IMMER Richtung Boxmitte */
-    .trot-top    { --trot: 0deg; }     /* oben: Fuß nach unten */
-    .trot-bottom { --trot: 180deg; }   /* unten: Fuß nach oben */
-    .trot-left   { --trot: -90deg; }   /* links: Fuß nach rechts (zur Mitte) */
-    .trot-right  { --trot: 90deg; }    /* rechts: Fuß nach links (zur Mitte) */
+    /* Rotation: Zahlenfuß Richtung Boxmitte */
+    .trot-top    { transform: translate(-50%, -50%) rotate(180deg); }
+    .trot-bottom { transform: translate(-50%, -50%) rotate(0deg); }
+    .trot-left   { transform: translate(-50%, -50%) rotate(-90deg); } /* links: CCW */
+    .trot-right  { transform: translate(-50%, -50%) rotate(90deg); }  /* rechts: CW */
 
     /* ===== FLOOR ===== */
     .floor{
@@ -442,6 +455,36 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
+    /* ===== HUD (höchste Ebene im Spielbereich) ===== */
+    .hud{
+      position:absolute;
+      right: calc(0.6 * var(--step));
+      bottom: calc(0.55 * var(--step)); /* sitzt über dem unteren Rahmen */
+      z-index: 999;
+      display:flex;
+      flex-direction: column;
+      align-items:flex-end;
+      gap: 2px;
+      pointer-events:none;
+      user-select:none;
+    }
+    .hudPoints{
+      font-weight: 1000;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: 34px;
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .hudHi{
+      color: var(--ui-text);
+      font-weight: 800;
+      font-size: 12px;
+      opacity: 0.92;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+    }
+
     /* ===== Konsole-Block ===== */
     .kippspeedBlock{
       width: 100%;
@@ -454,7 +497,8 @@
       gap: 6px;
       position: relative;
       padding-top: 6px;
-      padding-bottom: 6px;
+      padding-bottom: 10px; /* mehr Luft unten */
+      box-sizing: border-box;
     }
 
     .modeBlock{ width:100%; box-sizing:border-box; }
@@ -590,55 +634,57 @@
       cursor: pointer;
     }
 
+    .speedScale{
+      width: 100%;
+      padding: 0 12px 2px;
+      box-sizing: border-box;
+      display:grid;
+      grid-template-columns: 1fr repeat(10, 1fr) 1fr;
+      align-items:center;
+      pointer-events:none;
+      opacity: 0.95;
+    }
+    .speedScale .num{
+      grid-row: 1;
+      font-weight: 1000;
+      font-size: 12px;
+      color: rgba(234,215,190,0.92);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      text-align:center;
+      letter-spacing: 0.02em;
+      user-select:none;
+    }
+    .speedScale .padL{ grid-column: 1; }
+    .speedScale .padR{ grid-column: 12; }
+
     /* ===== Game Console ===== */
     .gameConsole{
       width:100%;
       height:100%;
-      padding: 8px 12px;
+      padding: 10px 12px 14px; /* unten mehr Platz */
       box-sizing:border-box;
       display:flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .gcTop{
-      display:flex;
-      align-items:flex-end;
-      justify-content: flex-end;
+      justify-content: flex-end; /* alles nach unten, aber mit Luft */
       gap: 10px;
-      min-height: 48px;
-    }
-
-    .gcRight{
-      display:flex;
-      flex-direction: column;
-      align-items:flex-end;
-      gap: 2px;
-      user-select:none;
-    }
-
-    .gcPoints{
-      font-weight: 1000;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 34px;
-      line-height: 0.95;
-      letter-spacing: 0.02em;
-      font-variant-numeric: tabular-nums;
-    }
-    .gcHi{
-      color: var(--ui-text);
-      font-weight: 800;
-      font-size: 12px;
-      opacity: 0.92;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
     }
 
     .gcBottom{
       display:flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+    }
+
+    .gcTitle{
+      font-weight: 1000;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      line-height: 1;
+      /* kleiner als „zu übertrieben“ */
+      font-size: clamp(20px, 5.2vmin, 34px);
+      margin: 0;
     }
 
     .gcRow{
@@ -670,43 +716,13 @@
       filter: brightness(0.97);
     }
 
-    /* ===== KIPPANZAHL Label + Layout FIX ===== */
-    #decisionPanel{
-      padding: 0 12px; /* linksbündig mit erster Taste wie gewünscht */
-      box-sizing: border-box;
-    }
-
-    .kippCountTitle{
-      font-weight: 1000;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-
-      /* so groß wie 00P */
-      font-size: 34px;
-      line-height: 0.95;
-
-      text-align: left;
-      user-select:none;
-
-      margin-top: 10px;
-      margin-bottom: 14px; /* größerer Abstand zu den Buttons */
-    }
-
-    /* ===== Kippanzahl Buttons ===== */
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-
-      /* ✅ Zahl exakt wie Slotzahlen */
-      font-size: clamp(18px, 8vmin, 36px);
-      line-height: 1;
-
-      padding: 14px 0;
+      padding: 10px 0;
       border-radius: 10px;
       cursor: pointer;
       user-select:none;
@@ -716,13 +732,30 @@
         0 0 0 1px rgba(255,255,255,0.12) inset;
     }
     .miniBtn:active{ transform: translateY(1px) scale(0.99); }
-
     .miniBtn.sel{
       background: var(--ui-panel-bg);
       color: var(--ui-text);
       border-color: rgba(0,0,0,0.55);
     }
 
+    .dirBtn{
+      flex: 1 1 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: var(--ui-panel-bg);
+      color: var(--ui-text);
+      font-weight: 1000;
+      padding: 12px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.10) inset;
+    }
+    .dirBtn:active{ transform: translateY(1px) scale(0.99); }
+
+    /* ===== Attention States ===== */
     @keyframes blinkSoft{
       0%, 100% { opacity: 1; }
       50% { opacity: 0.35; }
@@ -738,24 +771,14 @@
 
     .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
     .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
-
-    /* Pulsieren versetzt */
-    #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(3){ animation-delay: 0.20s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(4){ animation-delay: 0.30s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(5){ animation-delay: 0.40s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(6){ animation-delay: 0.50s; }
   </style>
 </head>
 
 <body>
   <div class="stage">
 
-    <!-- HEADER -->
+    <!-- HEADER: ← | KIPP COLOR | X -->
     <div class="titleRow" aria-label="Titelzeile">
-      <!-- FIX 1: Back-Button gleicher Typus wie X (kein Emoji) -->
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <span>←</span>
       </button>
@@ -772,6 +795,12 @@
 
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
+
+        <!-- HUD: höchste Ebene -->
+        <div class="hud" aria-label="HUD">
+          <div id="gcPoints" class="hudPoints">00P</div>
+          <div class="hudHi">Highscore: <span id="gcHi">80</span></div>
+        </div>
 
         <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
           <div class="cubeShadow" aria-hidden="true"></div>
@@ -828,23 +857,33 @@
             <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
             <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
           </div>
+
+          <div class="speedScale" aria-hidden="true">
+            <div class="num padL"></div>
+            <div class="num" style="grid-column:2">1</div>
+            <div class="num" style="grid-column:3">2</div>
+            <div class="num" style="grid-column:4">3</div>
+            <div class="num" style="grid-column:5">4</div>
+            <div class="num" style="grid-column:6">5</div>
+            <div class="num" style="grid-column:7">6</div>
+            <div class="num" style="grid-column:8">7</div>
+            <div class="num" style="grid-column:9">8</div>
+            <div class="num" style="grid-column:10">9</div>
+            <div class="num" style="grid-column:11">10</div>
+            <div class="num padR"></div>
+          </div>
         </div>
 
         <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-            <div class="gcTop" aria-label="Punkteblock">
-              <div class="gcRight">
-                <div id="gcPoints" class="gcPoints">00P</div>
-                <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
-              </div>
-            </div>
-
             <div class="gcBottom" aria-label="Aktionen">
+              <!-- Phase A: Zahlen setzen -->
               <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
 
+              <!-- Phase B: Kipp-Entscheidung -->
               <div id="decisionPanel" class="hidden">
-                <div class="kippCountTitle">KIPPANZAHL?</div>
+                <h2 class="gcTitle" id="kippCountTitle">KIPP Anzahl wählen</h2>
 
                 <div class="gcRow" aria-label="Kippanzahl">
                   <button class="miniBtn" data-k="1" type="button">1</button>
@@ -854,9 +893,14 @@
                   <button class="miniBtn" data-k="5" type="button">5</button>
                   <button class="miniBtn" data-k="6" type="button">6</button>
                 </div>
+
+                <!-- Richtung bleibt im Code vorhanden, aber UI kann später genutzt werden -->
+                <div class="gcRow hidden" aria-label="Richtung">
+                  <button id="btnDirCCW" class="dirBtn" type="button">⟲</button>
+                  <button id="btnDirCW"  class="dirBtn" type="button">⟳</button>
+                </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -885,6 +929,8 @@
 
     const btnSetNumbers = document.getElementById("btnSetNumbers");
     const decisionPanel = document.getElementById("decisionPanel");
+    const btnDirCW      = document.getElementById("btnDirCW");
+    const btnDirCCW     = document.getElementById("btnDirCCW");
 
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
@@ -899,7 +945,8 @@
     function setKippspeedStripHeight(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       const cell = w / 8;
-      const h = Math.round(cell * 3);
+      // mehr Platz: damit unten NICHT abgeschnitten wird
+      const h = Math.round(cell * 3.7);
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
@@ -996,6 +1043,11 @@
     function advanceFullCW(){
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
+      setRotationSnap();
+    }
+    function advanceFullCCW(){
+      rotIndex  = (rotIndex + 3) % 4;
+      faceIndex = (faceIndex + 2) % 3;
       setRotationSnap();
     }
 
@@ -1188,13 +1240,26 @@
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
     }
+    function mapHiddenToVisible_CCW(face){
+      const [f1,f2,f3,f4] = face;
+      return [f2, f1, f4, f3];
+    }
 
-    function renderKip(){
+    function renderKip(dir){
       setRotationSnap();
       const curr = sets[faceIndex];
+
+      if(dir === "CCW"){
+        const nextFaceIndex = (faceIndex + 2) % 3;
+        const next = sets[nextFaceIndex];
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
+        const nextPreview = mapHiddenToVisible_CCW(next);
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+        return;
+      }
+
       const nextFaceIndex = (faceIndex + 1) % 3;
       const next = sets[nextFaceIndex];
-
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
@@ -1228,47 +1293,37 @@
       reroll12_keepEmpty();
 
       showW(); renderWEmpty();
-      await sleep(Math.round(getTiming().holdMs * 0.5));
-      if(myToken!==setToken){ runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(0); renderW();
-      await sleep(Math.round(getTiming().holdMs * 0.5));
-      if(myToken!==setToken){ runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      showKip(); renderKip();
-      await sleep(getTiming().holdMs);
-      if(myToken!==setToken){ runningSet=false; return; }
+      showKip(); renderKip("CW");
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW(); showW(); renderWEmpty();
-      await sleep(Math.round(getTiming().holdMs * 0.5));
-      if(myToken!==setToken){ runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(1); renderW();
-      await sleep(Math.round(getTiming().holdMs * 0.5));
-      if(myToken!==setToken){ runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      showKip(); renderKip();
-      await sleep(getTiming().holdMs);
-      if(myToken!==setToken){ runningSet=false; return; }
+      showKip(); renderKip("CW");
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW(); showW(); renderWEmpty();
-      await sleep(Math.round(getTiming().holdMs * 0.5));
-      if(myToken!==setToken){ runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
       ensureAssigned(2); renderW();
-      await sleep(Math.round(getTiming().holdMs * 0.5));
-      if(myToken!==setToken){ runningSet=false; return; }
+      if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      showKip(); renderKip();
-      await sleep(getTiming().holdMs);
-      if(myToken!==setToken){ runningSet=false; return; }
+      showKip(); renderKip("CW");
+      if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       advanceFullCW();
       showW();
       renderW();
 
       runningSet = false;
-
       beginPlayerPhase();
     }
 
@@ -1298,6 +1353,7 @@
         const badge = document.createElement("div");
         badge.className = "targetBadge " + sideClassForCoord(cell.dataset.coord || "");
         badge.textContent = String(n);
+        if(n === 6 || n === 9) badge.classList.add("needsDot"); // Punkt für 6/9
         cell.appendChild(badge);
       });
     }
@@ -1331,7 +1387,6 @@
 
     function pickNewTarget(){
       const visible = visibleNumbersSet();
-
       const eligible = [];
       for(let n=1; n<=12; n++){
         if(deckCount[n] >= 4) continue;
@@ -1360,35 +1415,10 @@
       showTargetOnColor(colorClass, n);
     }
 
-    let selectedKippCount = null;
-
-    function startPulse(){
-      decisionPanel.classList.add("pulseSeq");
-    }
-    function stopPulse(){
-      decisionPanel.classList.remove("pulseSeq");
-    }
-
-    function selectKippCount(k){
-      selectedKippCount = (k == null) ? null : Number(k);
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-        btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
-      });
-      if(selectedKippCount != null) stopPulse();
-    }
-
-    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-      btn.addEventListener("click", () => {
-        if(busyMove) return;
-        selectKippCount(btn.dataset.k);
-        performKippCW(selectedKippCount);
-      });
-    });
-
     function beginPlayerPhase(){
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
-      enterSetAttention();
+      enterSetAttention(false);
 
       roundIndex = 0;
       tryIndex = 0;
@@ -1397,9 +1427,7 @@
 
       deckCount = Array(13).fill(0);
       pickNewTarget();
-
       selectKippCount(null);
-      startPulse();
     }
 
     function endGame(){
@@ -1423,22 +1451,33 @@
       setPoints(points + add);
     }
 
+    let selectedKippCount = null;
+    function selectKippCount(k){
+      selectedKippCount = (k == null) ? null : Number(k);
+      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+        btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
+      });
+    }
+
+    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+      btn.addEventListener("click", () => selectKippCount(btn.dataset.k));
+    });
+
     let busyMove = false;
 
-    async function performKippCW(count){
+    async function performKipp(dir, count){
       if(busyMove) return;
-      if(!count) return;
-
+      if(!selectedKippCount) return;
       busyMove = true;
 
       const c = Math.max(1, Math.min(6, Number(count)));
-
       for(let i=0; i<c; i++){
         showKip();
-        renderKip();
+        renderKip(dir);
         await sleep(getTiming().holdMs);
 
-        advanceFullCW();
+        if(dir === "CCW") advanceFullCCW();
+        else advanceFullCW();
 
         showW();
         renderW();
@@ -1455,14 +1494,22 @@
         tryIndex++;
         if(tryIndex >= MAX_TRIES){
           nextRoundOrEnd();
+        }else{
+          // Ziel bleibt
         }
       }
 
-      selectKippCount(null);
-      startPulse();
-
       busyMove = false;
     }
+
+    btnDirCW?.addEventListener("click", () => {
+      if(!selectedKippCount) return;
+      performKipp("CW", selectedKippCount);
+    });
+    btnDirCCW?.addEventListener("click", () => {
+      if(!selectedKippCount) return;
+      performKipp("CCW", selectedKippCount);
+    });
 
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
