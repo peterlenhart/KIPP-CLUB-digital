@@ -84,13 +84,12 @@
       align-items:center;
     }
 
-    /* ===== Title Row + Buttons ===== */
     .titleRow{
       width: 100%;
       display:flex;
-      align-items:center;
+      align-items: baseline;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
       user-select:none;
       margin-bottom: 2px;
     }
@@ -105,7 +104,6 @@
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.10);
       white-space: nowrap;
-      line-height: 1;
     }
     .sideTitle.left{ text-align: left; padding-left: 6px; }
     .sideTitle.right{ text-align: right; padding-right: 6px; }
@@ -114,8 +112,7 @@
       flex: 0 0 auto;
       display:flex;
       justify-content:center;
-      align-items:center;
-      gap: 10px;
+      align-items: baseline;
     }
     .titleMain h1{
       margin: 0;
@@ -128,39 +125,6 @@
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.25);
       line-height: 1;
-    }
-
-    .topBtn{
-      width: 44px;
-      height: 44px;
-      border-radius: 0;
-      border: 2px solid rgba(0,0,0,0.55);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
-        var(--btn-bg);
-      box-shadow:
-        0 18px 22px rgba(0,0,0,0.35),
-        0 8px 14px rgba(0,0,0,0.22),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      cursor: pointer;
-      padding:0;
-      line-height:1;
-    }
-    .topBtn:active{
-      transform: scale(0.985);
-      filter: brightness(0.98);
-    }
-    .topBtn span{
-      font-weight: 1000;
-      color: #111;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      font-size: 22px;
-      transform: translateY(-0.5px);
     }
 
     .boxShell{
@@ -423,6 +387,41 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
+    .exitBtn{
+      position:absolute;
+      left: calc(7 * var(--step));
+      top:  0;
+      width: var(--cell);
+      height: var(--cell);
+      z-index: 9500;
+      pointer-events:auto;
+      user-select:none;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background: transparent;
+      border: 2px solid rgba(190,190,190,0.85);
+      box-sizing: border-box;
+      outline: none;
+
+      box-shadow:
+        0 10px 16px rgba(0,0,0,0.30);
+    }
+    .exitBtn span{
+      font-weight: 1000;
+      font-size: clamp(14px, 3.4vmin, 22px);
+      color: rgba(210,210,210,0.95);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+      line-height: 1;
+      transform: translateY(-0.5px);
+    }
+    .exitBtn:active{
+      transform: scale(0.98);
+      filter: brightness(1.05);
+    }
+
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -479,7 +478,6 @@
       user-select:none;
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
-      padding:0;
     }
     .squareBtn:active{
       transform: scale(0.985);
@@ -764,19 +762,8 @@
   <div class="stage">
 
     <div class="titleRow" aria-label="Titelzeile">
-      <button id="backBtn" class="topBtn" aria-label="Zurück">
-        <span>←</span>
-      </button>
-
       <div class="sideTitle left">KIPP COLOR</div>
-
-      <div class="titleMain">
-        <h1>DigiKIPP</h1>
-        <button id="exitBtnTop" class="topBtn" aria-label="Spiel beenden">
-          <span>X</span>
-        </button>
-      </div>
-
+      <div class="titleMain"><h1>DigiKIPP</h1></div>
       <div class="sideTitle right">KIPP COLOR</div>
     </div>
 
@@ -817,6 +804,10 @@
         </div>
 
         <div class="ball" aria-label="Kugel"></div>
+
+        <button id="exitBtn" class="exitBtn" aria-label="Spiel beenden">
+          <span>X</span>
+        </button>
       </div>
 
       <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
@@ -898,9 +889,7 @@
     const btnPlay     = document.getElementById("btnPlay");
     const playGlyph   = document.getElementById("playGlyph");
     const btnOk       = document.getElementById("btnOk");
-
-    const backBtn     = document.getElementById("backBtn");
-    const exitBtnTop  = document.getElementById("exitBtnTop");
+    const exitBtn     = document.getElementById("exitBtn");
 
     const btnSetNumbers = document.getElementById("btnSetNumbers");
     const btnStop       = document.getElementById("btnStop");
@@ -994,6 +983,7 @@
     let rotIndex  = 0; // Q0..Q3
     let faceIndex = 0; // W1..W3 (0..2)
 
+    // Richtungskonstanten
     const DIR_CW  = +1;
     const DIR_CCW = -1;
 
@@ -1003,16 +993,20 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
+    // zentral: "nächstes Face" abhängig von Richtung
     function nextFaceIdx(curr, dir){
-      return (curr + (dir === DIR_CW ? 1 : 2)) % 3; // CCW = -1 mod 3
+      return (curr + (dir === DIR_CW ? 1 : 2)) % 3; // -1 mod 3 == +2
     }
 
     function advanceFull(dir){
-      rotIndex  = (rotIndex + (dir === DIR_CW ? 1 : 3)) % 4;
+      // Q rotiert 4er-zyklisch
+      rotIndex  = (rotIndex + (dir === DIR_CW ? 1 : 3)) % 4; // -1 mod 4 == +3
+      // W rotiert 3er-zyklisch
       faceIndex = nextFaceIdx(faceIndex, dir);
       setRotationSnap();
     }
 
+    // optional: explizite Helfer
     function advanceFullCW(){  advanceFull(DIR_CW); }
     function advanceFullCCW(){ advanceFull(DIR_CCW); }
 
@@ -1081,9 +1075,15 @@
     let runningSet      = false;
     let setToken        = 0;
 
-    function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
-    function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay",  !!on); }
-    function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet",   !!on); }
+    function setAttentionSpeed(on){
+      kippspeedBlock.classList.toggle("attnSpeed", !!on);
+    }
+    function setAttentionPlay(on){
+      kippspeedBlock.classList.toggle("attnPlay", !!on);
+    }
+    function setAttentionSet(on){
+      kippspeedBlock.classList.toggle("attnSet", !!on);
+    }
 
     function enterSpeedAttention(){
       setAttentionSet(false);
@@ -1141,6 +1141,7 @@
       demoPaused = false;
       const myToken = ++demoToken;
 
+      // Demo bleibt CW (wie bisher)
       showKip();
       renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
@@ -1206,6 +1207,8 @@
       for(let i=0;i<4;i++) renderNumber(slotTargetsW[i], curr[i]);
     }
 
+    // Mapping: "verdeckte Fläche" -> "sichtbare Reihenfolge" in Zwischenkipp
+    // CW und CCW sind spiegelbildlich.
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
@@ -1215,21 +1218,23 @@
       return [f2, f1, f4, f3];
     }
 
-    // Zwischenkipp: Richtung korrekt (CW/CCW)
+    // Render Zwischenkipp abhängig von Richtung:
+    // Right = aktuelle Fläche (faceIndex)
+    // Left  = Preview der nächsten Fläche (CW: +1, CCW: -1)
     function renderKip(dir){
       setRotationSnap();
 
       const curr = sets[faceIndex];
-      const previewIdx  = nextFaceIdx(faceIndex, dir);   // <-- Richtung wirkt hier!
+      const previewIdx = nextFaceIdx(faceIndex, dir);
       const previewFace = sets[previewIdx];
 
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
 
-      const previewNums = (dir === DIR_CW)
+      const nextPreview = (dir === DIR_CW)
         ? mapHiddenToVisible_CW(previewFace)
         : mapHiddenToVisible_CCW(previewFace);
 
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], previewNums[i]);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
     }
 
     function reroll12_keepEmpty(){
@@ -1252,14 +1257,14 @@
       setRotationSnap();
     }
 
-    async function runSetNumbersCycle(dir){
+    async function runSetNumbersCycle(){
       if(runningSet) return;
       runningSet = true;
       const myToken = ++setToken;
 
-      dir = (dir === DIR_CCW) ? DIR_CCW : DIR_CW;
-
       reroll12_keepEmpty();
+
+      const dir = DIR_CW; // Zahlensetzen bleibt (vorerst) CW – aber renderKip kann jetzt auch CCW.
 
       showW();
       renderWEmpty();
@@ -1304,6 +1309,7 @@
       renderW();
 
       showTargetInfoAfterSet();
+
       runningSet = false;
     }
 
@@ -1357,9 +1363,7 @@
     });
 
     btnSetNumbers.addEventListener("click", async () => {
-      // Standard wie bisher: CW
-      await runSetNumbersCycle(DIR_CW);
-      // Test CCW (falls du es willst): await runSetNumbersCycle(DIR_CCW);
+      await runSetNumbersCycle();
     });
 
     btnStop.addEventListener("click", () => {
@@ -1369,16 +1373,7 @@
       showSpeedMode();
     });
 
-    // Zurück-Pfeil oben: exakt wie STOP
-    backBtn.addEventListener("click", () => {
-      cancelDemo();
-      cancelSetNumbers();
-      resetToW1Q0_Empty();
-      showSpeedMode();
-    });
-
-    // X neben DigiKIPP
-    exitBtnTop.addEventListener("click", () => {
+    exitBtn.addEventListener("click", () => {
       const ok = confirm("Spiel wirklich beenden?");
       if(ok){
         window.location.href = "about:blank";
