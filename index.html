@@ -44,8 +44,8 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* ✅ DEIN WUNSCH: 60% Größe */
-      --ui-scale: 0.6;
+      /* (nur falls du es später wieder willst) */
+      --ui-scale: 1;
     }
 
     html, body { height: 100%; }
@@ -98,6 +98,7 @@
       margin-bottom: 2px;
     }
 
+    /* ✅ invertiert (weiß) */
     .navBtn{
       width: 46px;
       height: 46px;
@@ -109,7 +110,7 @@
       cursor: pointer;
 
       background: transparent;
-      border: 2px solid rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.85);
       box-shadow: 0 10px 16px rgba(0,0,0,0.10);
       padding:0;
     }
@@ -117,10 +118,10 @@
       font-weight: 1000;
       font-size: 26px;
       line-height: 1;
-      color: rgba(0,0,0,0.88);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.30);
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       transform: translateY(-0.5px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* verhindert Emoji-Look */
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     .navBtn:active{
       transform: scale(0.98);
@@ -444,6 +445,7 @@
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
     /* ===== Konsole-Block ===== */
+    /* ✅ “schwarz durchgezogen”: kein padding/kein Rand */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -452,13 +454,13 @@
       display:flex;
       flex-direction: column;
       justify-content: center;
-      gap: 6px;
+      gap: 0;
       position: relative;
-      padding-top: 6px;
-      padding-bottom: 6px;
+      padding: 0;
+      margin: 0;
     }
 
-    .modeBlock{ width:100%; box-sizing:border-box; }
+    .modeBlock{ width:100%; height:100%; box-sizing:border-box; }
     .modeBlock.hidden{ display:none !important; }
 
     .kippspeedTop{
@@ -466,7 +468,7 @@
       align-items:center;
       justify-content:center;
       gap: 10px;
-      padding: 0 12px;
+      padding: 10px 12px;
     }
 
     .kippspeedLabel{
@@ -548,7 +550,7 @@
       display:flex;
       align-items:center;
       gap: 14px;
-      padding: 0 12px;
+      padding: 0 12px 12px 12px;
     }
 
     .speedIcon{
@@ -595,12 +597,13 @@
     .gameConsole{
       width:100%;
       height:100%;
-      padding: 8px 12px;
+      padding: 12px 12px 14px 12px;
       box-sizing:border-box;
       display:flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 8px;
+      gap: 10px;
+      background: #000; /* ✅ schwarz durch */
     }
 
     .gcTop{
@@ -639,18 +642,11 @@
     .gcBottom{
       display:flex;
       flex-direction: column;
-      gap: 8px;
-    }
-
-    .gcRow{
-      display:flex;
-      gap: 8px;
-      justify-content: space-between;
-      align-items:center;
+      gap: 10px;
     }
 
     .gcBtn{
-      flex: 1 1 0;
+      width: 100%;
       border: 1px solid rgba(0,0,0,0.35);
       background: var(--btn-bg);
       color: var(--btn-text);
@@ -671,50 +667,44 @@
       filter: brightness(0.97);
     }
 
-    /* ✅ SCALE-FIX: 0.6 ohne rauszuschieben (Breite kompensieren) */
-    .scaleBlockLeft{
-      --s: var(--ui-scale);
-      width: calc(100% / var(--s));
-      transform: scale(var(--s));
-      transform-origin: left top;
-    }
-    .scaleBlockRight{
-      --s: var(--ui-scale);
-      width: calc(100% / var(--s));
-      transform: scale(var(--s));
-      transform-origin: right top;
-      margin-left: auto;
-      display:flex;
-      justify-content:flex-end;
-    }
-
-    /* ===== KIPPANZAHL Label + Layout FIX ===== */
+    /* ===== Neues Keypad ===== */
     #decisionPanel{
-      padding: 0 12px;
+      width: 100%;
       box-sizing: border-box;
+      padding: 0;
     }
 
-    .kippCountTitle{
+    .tryHint{
       font-weight: 1000;
       letter-spacing: 0.10em;
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 34px;
-      line-height: 0.95;
+      font-size: 28px;
+      line-height: 1.0;
       text-align: left;
       user-select:none;
-      margin-top: 10px;
-      margin-bottom: 14px;
+      margin: 2px 0 10px 0;
     }
 
-    .miniBtn{
-      flex: 1 1 0;
+    .keypad{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto auto;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .keypad .spacer{
+      visibility: hidden;
+    }
+
+    .keyBtn{
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-      font-size: clamp(18px, 8vmin, 36px);
+      font-size: clamp(20px, 7vmin, 34px);
       line-height: 1;
       padding: 14px 0;
       border-radius: 10px;
@@ -725,37 +715,26 @@
         0 10px 18px rgba(0,0,0,0.20),
         0 0 0 1px rgba(255,255,255,0.12) inset;
     }
-    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
+    .keyBtn:active{ transform: translateY(1px) scale(0.99); }
 
-    .miniBtn.sel{
+    .keyBtn.sel{
       background: var(--ui-panel-bg);
       color: var(--ui-text);
-      border-color: rgba(0,0,0,0.55);
+      border-color: rgba(255,255,255,0.20);
     }
 
-    @keyframes blinkSoft{
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
+    .endText{
+      width: 100%;
+      padding: 18px 0 6px 0;
+      text-align: left;
+      font-weight: 1000;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ui-text);
+      font-size: 34px;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      user-select:none;
     }
-    @keyframes pulseSoft{
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.06); }
-    }
-
-    .attnSpeed .kippspeedLabel{ animation: blinkSoft 1.4s ease-in-out infinite; }
-    .attnSpeed .speedIcon{ animation: pulseSoft 1.0s ease-in-out infinite; }
-    .attnSpeed input[type="range"]::-webkit-slider-thumb{ animation: pulseSoft 1.0s ease-in-out infinite; }
-
-    .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
-    .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
-
-    #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(3){ animation-delay: 0.20s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(4){ animation-delay: 0.30s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(5){ animation-delay: 0.40s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(6){ animation-delay: 0.50s; }
   </style>
 </head>
 
@@ -815,7 +794,7 @@
       </div>
 
       <!-- Console-Block -->
-      <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
+      <div class="kippspeedBlock" id="kippspeedBlock" aria-label="Konsole">
 
         <!-- MODE 1: Speed -->
         <div id="speedMode" class="modeBlock">
@@ -841,31 +820,35 @@
         <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
+
             <div class="gcTop" aria-label="Punkteblock">
-              <!-- ✅ 00P + Highscore auf 0.6 skalieren, ohne rechts rauszurutschen -->
-              <div class="scaleBlockRight">
-                <div class="gcRight">
-                  <div id="gcPoints" class="gcPoints">00P</div>
-                  <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
-                </div>
+              <div class="gcRight">
+                <div id="gcPoints" class="gcPoints">00P</div>
+                <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
               </div>
             </div>
 
             <div class="gcBottom" aria-label="Aktionen">
               <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
 
-              <!-- ✅ KIPPANZAHL-Block auf 0.6 skalieren, ohne rechts rauszurutschen -->
-              <div id="decisionPanel" class="hidden scaleBlockLeft">
-                <div class="kippCountTitle">KIPPANZAHL?</div>
+              <div id="decisionPanel" class="hidden">
+                <div id="tryHint" class="tryHint">1. Versuch. Tippe auf 2 Tasten</div>
 
-                <div class="gcRow" aria-label="Kippanzahl">
-                  <button class="miniBtn" data-k="1" type="button">1</button>
-                  <button class="miniBtn" data-k="2" type="button">2</button>
-                  <button class="miniBtn" data-k="3" type="button">3</button>
-                  <button class="miniBtn" data-k="4" type="button">4</button>
-                  <button class="miniBtn" data-k="5" type="button">5</button>
-                  <button class="miniBtn" data-k="6" type="button">6</button>
+                <div class="keypad" aria-label="Keypad">
+                  <div class="spacer"></div>
+                  <button class="keyBtn" data-k="0" type="button">0</button>
+                  <div class="spacer"></div>
+
+                  <button class="keyBtn" data-k="1" type="button">1</button>
+                  <button class="keyBtn" data-k="2" type="button">2</button>
+                  <button class="keyBtn" data-k="3" type="button">3</button>
+
+                  <button class="keyBtn" data-k="4" type="button">4</button>
+                  <button class="keyBtn" data-k="5" type="button">5</button>
+                  <button class="keyBtn" data-k="6" type="button">6</button>
                 </div>
+
+                <div id="endBlock" class="hidden endText">ENDE</div>
               </div>
             </div>
 
@@ -884,7 +867,6 @@
     const kipGroup    = document.getElementById("kipGroup");
     const speedSlider = document.getElementById("speedSlider");
 
-    const kippspeedBlock = document.getElementById("kippspeedBlock");
     const speedMode   = document.getElementById("speedMode");
     const gameMode    = document.getElementById("gameMode");
 
@@ -900,6 +882,10 @@
 
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
+
+    const tryHintEl   = document.getElementById("tryHint");
+    const endBlock    = document.getElementById("endBlock");
+    const keyBtns     = Array.from(document.querySelectorAll(".keyBtn"));
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1067,34 +1053,6 @@
       renderWEmpty();
     }
 
-    let hasAdjustedOnce = false;
-
-    let runningDemo     = false;
-    let demoPaused      = false;
-    let demoToken       = 0;
-
-    let runningSet      = false;
-    let setToken        = 0;
-
-    function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
-    function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay", !!on); }
-    function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet", !!on); }
-
-    function enterSpeedAttention(){
-      setAttentionSet(false);
-      setAttentionPlay(false);
-      setAttentionSpeed(true);
-    }
-    function enterPlayAttention(){
-      setAttentionSpeed(false);
-      setAttentionPlay(true);
-    }
-    function enterSetAttention(){
-      setAttentionSpeed(false);
-      setAttentionPlay(false);
-      setAttentionSet(true);
-    }
-
     function setPlayGlyph(isPause){
       playGlyph.className = isPause ? "pauseIcon" : "playIcon";
     }
@@ -1102,7 +1060,6 @@
     function showSpeedMode(){
       speedMode.classList.remove("hidden");
       gameMode.classList.add("hidden");
-      enterSpeedAttention();
       setPlayGlyph(false);
     }
 
@@ -1111,10 +1068,14 @@
       gameMode.classList.remove("hidden");
       btnSetNumbers.classList.remove("hidden");
       decisionPanel.classList.add("hidden");
-      enterSetAttention();
       setPoints(0);
       gcHi.textContent = "80";
     }
+
+    /* ===== Demo ===== */
+    let runningDemo     = false;
+    let demoPaused      = false;
+    let demoToken       = 0;
 
     async function waitOrPause(ms, myToken){
       const slice = 40;
@@ -1171,6 +1132,21 @@
       demoPaused = false;
       setPlayGlyph(false);
     }
+
+    btnPlay.addEventListener("click", async () => {
+      if(!runningDemo){
+        setPlayGlyph(true);
+        await runDemoCycle();
+        setPlayGlyph(false);
+        return;
+      }
+      demoPaused = !demoPaused;
+      setPlayGlyph(demoPaused ? false : true);
+    });
+
+    /* ===== SET NUMBERS ===== */
+    let runningSet      = false;
+    let setToken        = 0;
 
     let planned = [
       [null,null,null,null],
@@ -1299,7 +1275,6 @@
       }
 
       runningSet = false;
-
       beginPlayerPhase();
     }
 
@@ -1308,6 +1283,34 @@
       runningSet = false;
     }
 
+    btnSetNumbers.addEventListener("click", async () => {
+      await runSetNumbersCycle();
+    });
+
+    btnOk.addEventListener("click", () => {
+      cancelDemo();
+      cancelSetNumbers();
+      resetToW1Q0_Empty();
+      showGameMode();
+    });
+
+    backBtn.addEventListener("click", () => {
+      cancelDemo();
+      cancelSetNumbers();
+      busyMove = false;
+      clearTargets();
+      resetToW1Q0_Empty();
+      showSpeedMode();
+    });
+
+    exitBtnTop.addEventListener("click", () => {
+      const ok = confirm("Spiel wirklich beenden?");
+      if(ok){
+        window.location.href = "about:blank";
+      }
+    });
+
+    /* ===== Targets / Spielregel ===== */
     function clearTargets(){
       Array.from(grid.querySelectorAll(".targetBadge")).forEach(el => el.remove());
     }
@@ -1333,13 +1336,13 @@
       });
     }
 
-    const MAX_ROUNDS = 10;
-    const MAX_TRIES  = 3;
+    const MAX_ROUNDS = 10;     // 10 Zielvorgaben
+    const MAX_TRIES  = 3;      // 3 Versuche
     const SCORE_BY_TRY = [8,5,3];
 
     let deckCount = Array(13).fill(0);
-    let roundIndex = 0;
-    let tryIndex   = 0;
+    let roundIndex = 0; // 0..9
+    let tryIndex   = 0; // 0..2
     let points     = 0;
 
     let currentTargetNumber = null;
@@ -1391,62 +1394,34 @@
       showTargetOnColor(colorClass, n);
     }
 
-    let selectedKippCount = null;
-
-    function startPulse(){
-      decisionPanel.classList.add("pulseSeq");
-    }
-    function stopPulse(){
-      decisionPanel.classList.remove("pulseSeq");
+    function tryText(){
+      if(tryIndex === 0) return "1. Versuch. Tippe auf 2 Tasten";
+      if(tryIndex === 1) return "2. Versuch. Tippe auf 2 Tasten";
+      return "3. Versuch. Tippe auf 2 Tasten";
     }
 
-    function selectKippCount(k){
-      selectedKippCount = (k == null) ? null : Number(k);
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-        btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
-      });
-      if(selectedKippCount != null) stopPulse();
+    function setTryHint(){
+      tryHintEl.textContent = tryText();
     }
 
-    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-      btn.addEventListener("click", () => {
-        if(busyMove) return;
-        selectKippCount(btn.dataset.k);
-        performKippCW(selectedKippCount);
-      });
-    });
-
-    function beginPlayerPhase(){
-      btnSetNumbers.classList.add("hidden");
-      decisionPanel.classList.remove("hidden");
-      enterSetAttention();
-
-      roundIndex = 0;
-      tryIndex = 0;
-      setPoints(points);
-      gcHi.textContent = "80";
-
-      deckCount = Array(13).fill(0);
-      pickNewTarget();
-
-      selectKippCount(null);
-      startPulse();
+    function setKeypadEnabled(on){
+      keyBtns.forEach(b => b.disabled = !on);
+      keyBtns.forEach(b => b.style.opacity = on ? "1" : "0.55");
+      keyBtns.forEach(b => b.style.pointerEvents = on ? "auto" : "none");
     }
 
-    function endGame(){
-      clearTargets();
-      alert("10 Runden vorbei! Punkte: " + points);
-      showSpeedMode();
+    function clearKeySelection(){
+      keyBtns.forEach(b => b.classList.remove("sel"));
     }
 
-    function nextRoundOrEnd(){
-      roundIndex++;
-      tryIndex = 0;
-      if(roundIndex >= MAX_ROUNDS){
-        endGame();
-        return;
-      }
-      pickNewTarget();
+    let firstKey = null; // Zahl 0..6
+    function resetKeyInput(){
+      firstKey = null;
+      clearKeySelection();
+    }
+
+    function selectKey(btn){
+      btn.classList.add("sel");
     }
 
     function awardForTry(){
@@ -1454,16 +1429,69 @@
       setPoints(points + add);
     }
 
+    function endGame(){
+      clearTargets();
+      setKeypadEnabled(false);
+      resetKeyInput();
+      tryHintEl.classList.add("hidden");
+      endBlock.classList.remove("hidden");
+    }
+
+    function nextRoundOrEnd(){
+      roundIndex++;
+      tryIndex = 0;
+      setTryHint();
+      resetKeyInput();
+
+      if(roundIndex >= MAX_ROUNDS){
+        endGame();
+        return;
+      }
+      pickNewTarget();
+    }
+
+    function missAdvanceTryOrRound(){
+      tryIndex++;
+      if(tryIndex >= MAX_TRIES){
+        // 3. Versuch auch daneben -> 0 Punkte, neue Zielvorgabe
+        nextRoundOrEnd();
+        return;
+      }
+      // nächste Versuchsstufe, selbe Zielvorgabe
+      setTryHint();
+      resetKeyInput();
+    }
+
+    function beginPlayerPhase(){
+      btnSetNumbers.classList.add("hidden");
+      decisionPanel.classList.remove("hidden");
+
+      // reset UI
+      tryHintEl.classList.remove("hidden");
+      endBlock.classList.add("hidden");
+      setKeypadEnabled(true);
+      resetKeyInput();
+
+      roundIndex = 0;
+      tryIndex = 0;
+      setTryHint();
+
+      deckCount = Array(13).fill(0);
+      pickNewTarget();
+
+      setPoints(points);
+      gcHi.textContent = "80";
+    }
+
     let busyMove = false;
 
     async function performKippCW(count){
       if(busyMove) return;
-      if(!count) return;
 
+      const c = Math.max(0, Math.min(12, Number(count))); // ✅ 0..12
       busyMove = true;
 
-      const c = Math.max(1, Math.min(6, Number(count)));
-
+      // bei 0 passiert nur die Auswertung (kein Kipp)
       for(let i=0; i<c; i++){
         showKip();
         renderKip();
@@ -1483,66 +1511,39 @@
         awardForTry();
         nextRoundOrEnd();
       }else{
-        tryIndex++;
-        if(tryIndex >= MAX_TRIES){
-          nextRoundOrEnd();
-        }
+        missAdvanceTryOrRound();
       }
-
-      selectKippCount(null);
-      startPulse();
 
       busyMove = false;
     }
 
-    speedSlider.addEventListener("input", () => {
-      hasAdjustedOnce = true;
-      if(!runningDemo) enterPlayAttention();
-    });
+    // ✅ Zwei-Tasten-Logik
+    keyBtns.forEach(btn=>{
+      btn.addEventListener("click", async () => {
+        if(busyMove) return;
+        if(btn.disabled) return;
 
-    btnPlay.addEventListener("click", async () => {
-      if(!hasAdjustedOnce) enterPlayAttention();
+        const val = Number(btn.dataset.k);
 
-      if(!runningDemo){
-        setAttentionPlay(false);
-        setPlayGlyph(true);
-        await runDemoCycle();
-        setPlayGlyph(false);
-        enterPlayAttention();
-        return;
-      }
+        if(firstKey === null){
+          resetKeyInput();
+          firstKey = val;
+          selectKey(btn);
+          return;
+        }
 
-      demoPaused = !demoPaused;
-      setPlayGlyph(demoPaused ? false : true);
-    });
+        // zweiter Tipp
+        const secondKey = val;
 
-    btnOk.addEventListener("click", () => {
-      cancelDemo();
-      cancelSetNumbers();
-      resetToW1Q0_Empty();
-      setAttentionPlay(false);
-      setAttentionSpeed(false);
-      showGameMode();
-    });
+        // Optik kurz zeigen
+        selectKey(btn);
+        await sleep(80);
 
-    btnSetNumbers.addEventListener("click", async () => {
-      await runSetNumbersCycle();
-    });
+        const sum = firstKey + secondKey; // ✅ 0..12
+        resetKeyInput();
 
-    backBtn.addEventListener("click", () => {
-      cancelDemo();
-      cancelSetNumbers();
-      busyMove = false;
-      clearTargets();
-      resetToW1Q0_Empty();
-      showSpeedMode();
-    });
-
-    exitBtnTop.addEventListener("click", () => {
-      const ok = confirm("Spiel wirklich beenden?");
-      if(ok){
-        window.location.href = "about:blank";
-      }
+        await performKippCW(sum);
+      });
     });
 
     window.addEventListener("load", () => {
