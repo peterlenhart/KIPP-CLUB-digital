@@ -43,6 +43,9 @@
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* ✅ NEU: UI-Skalierung für Punkte + Kippanzahl-Block */
+      --uiScale: 0.6; /* 60% Größe = 40% kleiner */
     }
 
     html, body { height: 100%; }
@@ -209,7 +212,6 @@
     }
 
     /* ===== Target Zahl auf farbigen Feldern ===== */
-    /* FIX: Rotation darf NICHT durch Animation überschrieben werden -> Rotation über CSS-Variable */
     @keyframes targetBreath{
       0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
       50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
@@ -219,7 +221,7 @@
       left:50%;
       top:50%;
       font-weight: 900;
-      font-size: clamp(18px, 8vmin, 36px); /* exakt wie Slot-Zahlen */
+      font-size: clamp(18px, 8vmin, 36px);
       color: rgba(0,0,0,0.92);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
@@ -234,11 +236,10 @@
       justify-content:center;
     }
 
-    /* ✅ Zahlenfuß IMMER Richtung Boxmitte */
-    .trot-top    { --trot: 0deg; }     /* oben: Fuß nach unten */
-    .trot-bottom { --trot: 180deg; }   /* unten: Fuß nach oben */
-    .trot-left   { --trot: -90deg; }   /* links: Fuß nach rechts (zur Mitte) */
-    .trot-right  { --trot: 90deg; }    /* rechts: Fuß nach links (zur Mitte) */
+    .trot-top    { --trot: 0deg; }
+    .trot-bottom { --trot: 180deg; }
+    .trot-left   { --trot: -90deg; }
+    .trot-right  { --trot: 90deg; }
 
     /* ===== FLOOR ===== */
     .floor{
@@ -602,6 +603,15 @@
       gap: 8px;
     }
 
+    /* ✅ NEU: Wrapper der alles gemeinsam auf 60% skaliert */
+    .gameUIScale{
+      transform: scale(var(--uiScale));
+      transform-origin: right top;             /* bleibt rechts oben „anliegend“ */
+      width: calc(100% / var(--uiScale));      /* verhindert Abschneiden durch Scale */
+      position: relative;
+      z-index: 50;                              /* falls Z-Reihenfolge Thema ist */
+    }
+
     .gcTop{
       display:flex;
       align-items:flex-end;
@@ -672,7 +682,7 @@
 
     /* ===== KIPPANZAHL Label + Layout FIX ===== */
     #decisionPanel{
-      padding: 0 12px; /* linksbündig mit erster Taste wie gewünscht */
+      padding: 0 12px;
       box-sizing: border-box;
     }
 
@@ -682,30 +692,22 @@
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-
-      /* so groß wie 00P */
       font-size: 34px;
       line-height: 0.95;
-
       text-align: left;
       user-select:none;
-
       margin-top: 10px;
-      margin-bottom: 14px; /* größerer Abstand zu den Buttons */
+      margin-bottom: 14px;
     }
 
-    /* ===== Kippanzahl Buttons ===== */
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-
-      /* ✅ Zahl exakt wie Slotzahlen */
       font-size: clamp(18px, 8vmin, 36px);
       line-height: 1;
-
       padding: 14px 0;
       border-radius: 10px;
       cursor: pointer;
@@ -739,7 +741,6 @@
     .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
     .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
 
-    /* Pulsieren versetzt */
     #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
@@ -755,7 +756,6 @@
 
     <!-- HEADER -->
     <div class="titleRow" aria-label="Titelzeile">
-      <!-- FIX 1: Back-Button gleicher Typus wie X (kein Emoji) -->
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <span>←</span>
       </button>
@@ -833,29 +833,35 @@
         <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-            <div class="gcTop" aria-label="Punkteblock">
-              <div class="gcRight">
-                <div id="gcPoints" class="gcPoints">00P</div>
-                <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
-              </div>
-            </div>
 
-            <div class="gcBottom" aria-label="Aktionen">
-              <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
+            <!-- ✅ NEU: Alles hier drinnen wird gemeinsam 60% klein -->
+            <div class="gameUIScale">
 
-              <div id="decisionPanel" class="hidden">
-                <div class="kippCountTitle">KIPPANZAHL?</div>
-
-                <div class="gcRow" aria-label="Kippanzahl">
-                  <button class="miniBtn" data-k="1" type="button">1</button>
-                  <button class="miniBtn" data-k="2" type="button">2</button>
-                  <button class="miniBtn" data-k="3" type="button">3</button>
-                  <button class="miniBtn" data-k="4" type="button">4</button>
-                  <button class="miniBtn" data-k="5" type="button">5</button>
-                  <button class="miniBtn" data-k="6" type="button">6</button>
+              <div class="gcTop" aria-label="Punkteblock">
+                <div class="gcRight">
+                  <div id="gcPoints" class="gcPoints">00P</div>
+                  <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
                 </div>
               </div>
-            </div>
+
+              <div class="gcBottom" aria-label="Aktionen">
+                <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
+
+                <div id="decisionPanel" class="hidden">
+                  <div class="kippCountTitle">KIPPANZAHL?</div>
+
+                  <div class="gcRow" aria-label="Kippanzahl">
+                    <button class="miniBtn" data-k="1" type="button">1</button>
+                    <button class="miniBtn" data-k="2" type="button">2</button>
+                    <button class="miniBtn" data-k="3" type="button">3</button>
+                    <button class="miniBtn" data-k="4" type="button">4</button>
+                    <button class="miniBtn" data-k="5" type="button">5</button>
+                    <button class="miniBtn" data-k="6" type="button">6</button>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /gameUIScale -->
 
           </div>
         </div>
@@ -1263,16 +1269,12 @@
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // ===== Bisheriges Ende (Q3, W1 oben) =====
       advanceFullCW();
       showW();
       renderW();
 
-      // ✅ NEU: 3 zusätzliche komplette Kipps ab dem bisherigen Ende
-      // Zweck: weitere vollbestückte Zwischenkipps sichtbar machen / rückwärts sauber abspielbar
       const EXTRA_KIPPS_AFTER_END = 3;
 
-      // kurzer Hold, damit man den bisherigen Endzustand kurz "stehen" sieht
       await sleep(Math.round(getTiming().holdMs * 0.60));
       if(myToken!==setToken){ runningSet=false; return; }
 
