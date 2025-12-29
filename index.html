@@ -84,49 +84,69 @@
       align-items:center;
     }
 
+    /* ===== HEADER (NEU) ===== */
     .titleRow{
       width: 100%;
       display:flex;
-      align-items: baseline;
+      align-items:center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       user-select:none;
       margin-bottom: 2px;
     }
 
-    .sideTitle{
-      flex: 1 1 0;
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      font-size: clamp(14px, 2.5vmin, 20px);
-      color: rgba(0,0,0,0.92);
-      text-shadow:
-        0 1px 0 rgba(255,255,255,0.35),
-        0 10px 18px rgba(0,0,0,0.10);
-      white-space: nowrap;
+    .navBtn{
+      width: 46px;
+      height: 46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+
+      background: transparent;
+      border: 2px solid rgba(0,0,0,0.20);
+      box-shadow:
+        0 10px 16px rgba(0,0,0,0.10);
     }
-    .sideTitle.left{ text-align: left; padding-left: 6px; }
-    .sideTitle.right{ text-align: right; padding-right: 6px; }
+    .navBtn span{
+      font-weight: 1000;
+      font-size: 26px;
+      line-height: 1;
+      color: rgba(0,0,0,0.80);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.30);
+      transform: translateY(-0.5px);
+    }
+    .navBtn:active{
+      transform: scale(0.98);
+      filter: brightness(1.03);
+    }
 
     .titleMain{
-      flex: 0 0 auto;
+      flex: 1 1 auto;
       display:flex;
       justify-content:center;
-      align-items: baseline;
+      align-items:center;
+      min-width: 0;
     }
     .titleMain h1{
       margin: 0;
       padding: 0;
       font-weight: 1000;
-      letter-spacing: 0.06em;
-      font-size: clamp(26px, 6.4vmin, 46px);
+      letter-spacing: 0.08em;
+      font-size: clamp(22px, 6.0vmin, 44px);
       color: rgba(0,0,0,0.92);
       text-shadow:
         0 1px 0 rgba(255,255,255,0.35),
         0 10px 18px rgba(0,0,0,0.25);
       line-height: 1;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
     }
 
+    /* ===== BOX SHELL ===== */
     .boxShell{
       width: 100%;
       box-sizing: border-box;
@@ -173,6 +193,7 @@
       border-radius: var(--cell-radius);
       box-sizing: border-box;
       box-shadow: none;
+      position: relative; /* für Target-Overlay */
     }
 
     .c-orange{ background: var(--orange); }
@@ -186,7 +207,35 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== FLOOR: ersetzt durch Box.png, exakt im 6×6 Innenraum (NW an Raster 2B) ===== */
+    /* ===== Target Zahl auf farbigen Feldern ===== */
+    @keyframes targetBreath{
+      0%,100%{ transform: translate(-50%, -50%) scale(1); opacity: 0.95; }
+      50%    { transform: translate(-50%, -50%) scale(1.10); opacity: 1; }
+    }
+    .targetBadge{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      font-weight: 1000;
+      font-size: clamp(14px, 4.6vmin, 22px);
+      color: rgba(0,0,0,0.92);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      pointer-events:none;
+      z-index: 3;
+      animation: targetBreath 1.25s ease-in-out infinite;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    /* Rotation so, dass Zahlenkopf nach innen zeigt (= von außen lesbar) */
+    .trot-top    { transform: translate(-50%, -50%) rotate(180deg); }
+    .trot-bottom { transform: translate(-50%, -50%) rotate(0deg); }
+    .trot-left   { transform: translate(-50%, -50%) rotate(90deg); }
+    .trot-right  { transform: translate(-50%, -50%) rotate(-90deg); }
+
+    /* ===== FLOOR ===== */
     .floor{
       position:absolute;
       left: var(--step);
@@ -197,13 +246,11 @@
       z-index: 2;
       pointer-events: none;
 
-      /* Bild */
       background-image: url("Box.png");
       background-repeat: no-repeat;
       background-position: center;
       background-size: 100% 100%;
 
-      /* optional: leichter “Einbettungslook” wie vorher */
       box-shadow:
         inset 18px 18px 34px rgba(255,255,255,0.10),
         inset -22px -22px 44px rgba(0,0,0,0.28),
@@ -390,42 +437,6 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== EXIT (Raster 1H) ===== */
-    .exitBtn{
-      position:absolute;
-      left: calc(7 * var(--step));
-      top:  0;
-      width: var(--cell);
-      height: var(--cell);
-      z-index: 9500;
-      pointer-events:auto;
-      user-select:none;
-
-      display:flex;
-      align-items:center;
-      justify-content:center;
-
-      background: transparent;
-      border: 2px solid rgba(190,190,190,0.85);
-      box-sizing: border-box;
-      outline: none;
-
-      box-shadow:
-        0 10px 16px rgba(0,0,0,0.30);
-    }
-    .exitBtn span{
-      font-weight: 1000;
-      font-size: clamp(14px, 3.4vmin, 22px);
-      color: rgba(210,210,210,0.95);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.45);
-      line-height: 1;
-      transform: translateY(-0.5px);
-    }
-    .exitBtn:active{
-      transform: scale(0.98);
-      filter: brightness(1.05);
-    }
-
     /* ===== Konsole-Block ===== */
     .kippspeedBlock{
       width: 100%;
@@ -489,7 +500,6 @@
       filter: brightness(0.98);
     }
 
-    /* Play Icon (Dreieck nach Osten) */
     .playIcon{
       width: 0;
       height: 0;
@@ -500,7 +510,6 @@
       transform: translateX(1px);
     }
 
-    /* Pause Icon (||) */
     .pauseIcon{
       width: 18px;
       height: 22px;
@@ -576,7 +585,6 @@
       cursor: pointer;
     }
 
-    /* 1–10 Skala unter Slider */
     .speedScale{
       width: 100%;
       padding: 0 12px 2px;
@@ -600,7 +608,7 @@
     .speedScale .padL{ grid-column: 1; }
     .speedScale .padR{ grid-column: 12; }
 
-    /* ===== Game Console (nach OK) ===== */
+    /* ===== Game Console (NEU) ===== */
     .gameConsole{
       width:100%;
       height:100%;
@@ -615,66 +623,9 @@
     .gcTop{
       display:flex;
       align-items:flex-end;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 10px;
       min-height: 48px;
-    }
-
-    .gcLeft{
-      display:flex;
-      align-items:flex-end;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .gcLabel{
-      font-weight: 1000;
-      letter-spacing: 0.06em;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 18px;
-      line-height: 1.05;
-      white-space: nowrap;
-    }
-
-    .gcTarget{
-      display:flex;
-      align-items:flex-end;
-      gap: 8px;
-    }
-
-    .gcSquare{
-      width: 42px;
-      height: 42px;
-      border-radius: 0;
-      background: var(--blau);
-      box-shadow:
-        inset 0 0 0 2px var(--btn-bg),
-        0 6px 12px rgba(0,0,0,0.18),
-        0 0 0 1px rgba(255,255,255,0.18) inset;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-      flex: 0 0 auto;
-    }
-    .gcSquare span{
-      font-weight: 1000;
-      color: #111;
-      font-size: 26px;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      line-height: 1;
-    }
-
-    .gcProgress{
-      color: var(--ui-text);
-      font-weight: 900;
-      font-size: 14px;
-      letter-spacing: 0.02em;
-      font-variant-numeric: tabular-nums;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      opacity: 0.95;
-      white-space: nowrap;
     }
 
     .gcRight{
@@ -692,6 +643,7 @@
       font-size: 34px;
       line-height: 0.95;
       letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
     }
     .gcHi{
       color: var(--ui-text);
@@ -701,13 +653,17 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
     }
 
-    .gcTop.hiddenInfo{ display:none; }
-
     .gcBottom{
       display:flex;
-      align-items:flex-end;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .gcRow{
+      display:flex;
+      gap: 8px;
       justify-content: space-between;
-      gap: 10px;
+      align-items:center;
     }
 
     .gcBtn{
@@ -732,13 +688,46 @@
       filter: brightness(0.97);
     }
 
-    .gcBtn.stop{
+    .miniBtn{
+      flex: 1 1 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(234,215,190,0.95);
+      color: #2a160c;
+      font-weight: 1000;
+      padding: 10px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
+    }
+    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
+    .miniBtn.sel{
       background: var(--ui-panel-bg);
       color: var(--ui-text);
       border-color: rgba(0,0,0,0.55);
     }
 
-    /* ===== Attention States ===== */
+    .dirBtn{
+      flex: 1 1 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: var(--ui-panel-bg);
+      color: var(--ui-text);
+      font-weight: 1000;
+      padding: 12px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.10) inset;
+    }
+    .dirBtn:active{ transform: translateY(1px) scale(0.99); }
+
+    /* ===== Attention States (bestehend) ===== */
     @keyframes blinkSoft{
       0%, 100% { opacity: 1; }
       50% { opacity: 0.35; }
@@ -748,33 +737,29 @@
       50% { transform: scale(1.06); }
     }
 
-    .attnSpeed .kippspeedLabel{
-      animation: blinkSoft 1.4s ease-in-out infinite;
-    }
-    .attnSpeed .speedIcon{
-      animation: pulseSoft 1.0s ease-in-out infinite;
-    }
-    .attnSpeed input[type="range"]::-webkit-slider-thumb{
-      animation: pulseSoft 1.0s ease-in-out infinite;
-    }
+    .attnSpeed .kippspeedLabel{ animation: blinkSoft 1.4s ease-in-out infinite; }
+    .attnSpeed .speedIcon{ animation: pulseSoft 1.0s ease-in-out infinite; }
+    .attnSpeed input[type="range"]::-webkit-slider-thumb{ animation: pulseSoft 1.0s ease-in-out infinite; }
 
-    .attnPlay #btnPlay{
-      animation: blinkSoft 0.9s ease-in-out infinite;
-    }
-
-    .attnSet .gcBtn.set{
-      animation: blinkSoft 0.85s ease-in-out infinite;
-    }
+    .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
+    .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
   </style>
 </head>
 
 <body>
   <div class="stage">
 
+    <!-- HEADER: ↩︎ | KIPP COLOR | X -->
     <div class="titleRow" aria-label="Titelzeile">
-      <div class="sideTitle left">KIPP COLOR</div>
-      <div class="titleMain"><h1>DigiKIPP</h1></div>
-      <div class="sideTitle right">KIPP COLOR</div>
+      <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
+        <span>↩︎</span>
+      </button>
+
+      <div class="titleMain"><h1>KIPP COLOR</h1></div>
+
+      <button id="exitBtnTop" class="navBtn" aria-label="Spiel beenden" type="button">
+        <span>X</span>
+      </button>
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
@@ -814,14 +799,9 @@
         </div>
 
         <div class="ball" aria-label="Kugel"></div>
-
-        <!-- EXIT Button auf Raster 1H -->
-        <button id="exitBtn" class="exitBtn" aria-label="Spiel beenden">
-          <span>X</span>
-        </button>
       </div>
 
-      <!-- Console-Block (bleibt gleich groß; Inhalte wechseln) -->
+      <!-- Console-Block -->
       <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
 
         <!-- MODE 1: Speed -->
@@ -829,12 +809,11 @@
           <div class="kippspeedTop">
             <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
 
-            <!-- Play/Pause Dual -->
-            <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren">
+            <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
               <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
             </button>
 
-            <button id="btnOk" class="squareBtn" aria-label="Geschwindigkeit bestätigen">
+            <button id="btnOk" class="squareBtn" aria-label="Geschwindigkeit bestätigen" type="button">
               <span class="okText">OK</span>
             </button>
           </div>
@@ -861,28 +840,38 @@
           </div>
         </div>
 
-        <!-- MODE 2: Game Console -->
+        <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-            <div id="gcTop" class="gcTop hiddenInfo" aria-label="KIP Ziel Anzeige">
-              <div class="gcLeft">
-                <div class="gcLabel">KIPP ZIEL</div>
-                <div class="gcTarget">
-                  <div id="gcSquare" class="gcSquare"><span id="gcNum">7</span></div>
-                  <div id="gcProgress" class="gcProgress">(00/11)</div>
-                </div>
-              </div>
-
+            <div class="gcTop" aria-label="Punkteblock">
               <div class="gcRight">
-                <div id="gcPoints" class="gcPoints">0P</div>
-                <div class="gcHi">Highscore: <span id="gcHi">66</span></div>
+                <div id="gcPoints" class="gcPoints">00P</div>
+                <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
               </div>
             </div>
 
             <div class="gcBottom" aria-label="Aktionen">
+              <!-- Phase A: Zahlen setzen -->
               <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
-              <button id="btnStop" class="gcBtn stop" type="button">STOP</button>
+
+              <!-- Phase B: Kipp-Entscheidung -->
+              <div id="decisionPanel" class="hidden">
+                <div class="gcRow" aria-label="Kippanzahl">
+                  <button class="miniBtn" data-k="1" type="button">1</button>
+                  <button class="miniBtn" data-k="2" type="button">2</button>
+                  <button class="miniBtn" data-k="3" type="button">3</button>
+                  <button class="miniBtn" data-k="4" type="button">4</button>
+                  <button class="miniBtn" data-k="5" type="button">5</button>
+                  <button class="miniBtn" data-k="6" type="button">6</button>
+                </div>
+
+                <div class="gcRow" aria-label="Richtung">
+                  <button id="btnDirCCW" class="dirBtn" type="button">⟲</button>
+                  <button id="btnDirCW"  class="dirBtn" type="button">⟳</button>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -905,15 +894,15 @@
     const btnPlay     = document.getElementById("btnPlay");
     const playGlyph   = document.getElementById("playGlyph");
     const btnOk       = document.getElementById("btnOk");
-    const exitBtn     = document.getElementById("exitBtn");
+
+    const backBtn     = document.getElementById("backBtn");
+    const exitBtnTop  = document.getElementById("exitBtnTop");
 
     const btnSetNumbers = document.getElementById("btnSetNumbers");
-    const btnStop       = document.getElementById("btnStop");
+    const decisionPanel = document.getElementById("decisionPanel");
+    const btnDirCW      = document.getElementById("btnDirCW");
+    const btnDirCCW     = document.getElementById("btnDirCCW");
 
-    const gcTop       = document.getElementById("gcTop");
-    const gcSquare    = document.getElementById("gcSquare");
-    const gcNum       = document.getElementById("gcNum");
-    const gcProgress  = document.getElementById("gcProgress");
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
 
@@ -931,7 +920,6 @@
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
-    // gleiche Zeit für Vollansicht und Zwischenkipp
     function getTiming(){
       const v = Number(speedSlider.value || 3);
       const hold = Math.max(520, Math.round(2200 - v * 186));
@@ -963,6 +951,14 @@
       [key(1,"C"), "c-violett"],
     ]);
 
+    // für Target: Koordinaten je Farbe (genau die 4 Felder)
+    const targetCellsByColorClass = {
+      "c-blau":    [],
+      "c-orange":  [],
+      "c-gruen":   [],
+      "c-violett": []
+    };
+
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
       for(let r=1; r<=8; r++){
@@ -970,14 +966,25 @@
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
+          cell.dataset.coord = coord;
           if(colorMap.has(coord)){
-            cell.classList.add(colorMap.get(coord));
+            const cls = colorMap.get(coord);
+            cell.classList.add(cls);
             cell.classList.add("colorCell");
           }
           grid.appendChild(cell);
         }
       }
       grid.dataset.built = "1";
+
+      // farbige Zellen sammeln (für Target-Anzeige)
+      Array.from(grid.children).forEach(el=>{
+        if(el.classList.contains("colorCell")){
+          for(const k of Object.keys(targetCellsByColorClass)){
+            if(el.classList.contains(k)) targetCellsByColorClass[k].push(el);
+          }
+        }
+      });
     }
 
     function renderNumber(span, n){
@@ -1004,6 +1011,17 @@
       const deg = rotDeg[rotIndex];
       wFace.style.setProperty("--rot", deg + "deg");
       kipGroup.style.setProperty("--rot", deg + "deg");
+    }
+
+    function advanceFullCW(){
+      rotIndex  = (rotIndex + 1) % 4;
+      faceIndex = (faceIndex + 1) % 3;
+      setRotationSnap();
+    }
+    function advanceFullCCW(){
+      rotIndex  = (rotIndex + 3) % 4;
+      faceIndex = (faceIndex + 2) % 3;
+      setRotationSnap();
     }
 
     const slotTargetsW = [
@@ -1044,18 +1062,13 @@
       setRotationSnap();
       for(let i=0;i<4;i++) renderNumber(slotTargetsW[i], null);
     }
+
     function renderKipEmpty(){
       setRotationSnap();
       for(let i=0;i<4;i++){
         renderNumber(slotTargetsKipRight[i], null);
         renderNumber(slotTargetsKipLeft[i], null);
       }
-    }
-
-    function advanceFullCW(){
-      rotIndex  = (rotIndex + 1) % 4;
-      faceIndex = (faceIndex + 1) % 3;
-      setRotationSnap();
     }
 
     function resetToW1Q0_Empty(){
@@ -1067,7 +1080,7 @@
       renderWEmpty();
     }
 
-    // ===== Attention Logic =====
+    // ===== Attention Logic (bestehend) =====
     let hasAdjustedOnce = false;
 
     let runningDemo     = false;
@@ -1077,15 +1090,9 @@
     let runningSet      = false;
     let setToken        = 0;
 
-    function setAttentionSpeed(on){
-      kippspeedBlock.classList.toggle("attnSpeed", !!on);
-    }
-    function setAttentionPlay(on){
-      kippspeedBlock.classList.toggle("attnPlay", !!on);
-    }
-    function setAttentionSet(on){
-      kippspeedBlock.classList.toggle("attnSet", !!on);
-    }
+    function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
+    function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay", !!on); }
+    function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet", !!on); }
 
     function enterSpeedAttention(){
       setAttentionSet(false);
@@ -1110,7 +1117,6 @@
     function showSpeedMode(){
       speedMode.classList.remove("hidden");
       gameMode.classList.add("hidden");
-      gcTop.classList.add("hiddenInfo");
       enterSpeedAttention();
       setPlayGlyph(false);
     }
@@ -1118,13 +1124,18 @@
     function showGameMode(){
       speedMode.classList.add("hidden");
       gameMode.classList.remove("hidden");
-      gcTop.classList.add("hiddenInfo"); // erst NACH Zahlensetzen anzeigen
-      enterSetAttention();               // Zahlen setzen blinkt als erste Aktion
+      // Startphase: Zahlen setzen sichtbar, Decision Panel versteckt
+      btnSetNumbers.classList.remove("hidden");
+      decisionPanel.classList.add("hidden");
+      enterSetAttention();
+      // Punkteanzeige clean
+      setPoints(0);
+      gcHi.textContent = "80";
     }
 
-    // ===== Demo Ablauf (Play/Pause) – ohne Pfeil/HUD/Zahlen =====
+    // ===== Demo Ablauf (bestehend) =====
     async function waitOrPause(ms, myToken){
-      const slice = 40; // fein genug für Pause
+      const slice = 40;
       let elapsed = 0;
       while(elapsed < ms){
         if(myToken !== demoToken) return false;
@@ -1145,36 +1156,28 @@
       demoPaused = false;
       const myToken = ++demoToken;
 
-      // sofort „was passiert“: direkt mit Zwischenkipp starten
-      showKip();
-      renderKipEmpty();
+      showKip(); renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
-      advanceFullCW();
-      showW();
-      renderWEmpty();
+      advanceFullCW(); showW(); renderWEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       showKip(); renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
-      advanceFullCW();
-      showW(); renderWEmpty();
+      advanceFullCW(); showW(); renderWEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       showKip(); renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
-      advanceFullCW();
-      showW(); renderWEmpty();
+      advanceFullCW(); showW(); renderWEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
-      // Erweiterung: Q3 -> Zwischenkipp -> W2 auf Q0
       showKip(); renderKipEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
-      advanceFullCW();
-      showW(); renderWEmpty();
+      advanceFullCW(); showW(); renderWEmpty();
       if(!await waitOrPause(getTiming().holdMs, myToken)) { runningDemo=false; return; }
 
       runningDemo = false;
@@ -1187,7 +1190,7 @@
       setPlayGlyph(false);
     }
 
-    // ===== Zahlensetzen-Logik (bekannter Ablauf, ohne Pfeil/HUD) =====
+    // ===== Zahlensetzen (bestehend) =====
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -1216,15 +1219,28 @@
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
     }
+    function mapHiddenToVisible_CCW(face){
+      const [f1,f2,f3,f4] = face;
+      return [f2, f1, f4, f3];
+    }
 
-    function renderKip(){
+    function renderKip(dir){
       setRotationSnap();
       const curr = sets[faceIndex];
+
+      if(dir === "CCW"){
+        const nextFaceIndex = (faceIndex + 2) % 3;
+        const next = sets[nextFaceIndex];
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
+        const nextPreview = mapHiddenToVisible_CCW(next);
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+        return;
+      }
+
+      // CW default
       const nextFaceIndex = (faceIndex + 1) % 3;
       const next = sets[nextFaceIndex];
-
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
-
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
     }
@@ -1256,43 +1272,31 @@
 
       reroll12_keepEmpty();
 
-      // 1) erst leer (kurz), dann Zahlen
-      showW();
-      renderWEmpty();
+      showW(); renderWEmpty();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      ensureAssigned(0);
-      renderW();
+      ensureAssigned(0); renderW();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      showKip();
-      renderKip();
+      showKip(); renderKip("CW");
       if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      advanceFullCW();
-      showW();
-      renderWEmpty();
+      advanceFullCW(); showW(); renderWEmpty();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      ensureAssigned(1);
-      renderW();
+      ensureAssigned(1); renderW();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      showKip();
-      renderKip();
+      showKip(); renderKip("CW");
       if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      advanceFullCW();
-      showW();
-      renderWEmpty();
+      advanceFullCW(); showW(); renderWEmpty();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      ensureAssigned(2);
-      renderW();
+      ensureAssigned(2); renderW();
       if(!(await (async()=>{ await sleep(Math.round(getTiming().holdMs * 0.5)); return (myToken===setToken); })())) { runningSet=false; return; }
 
-      showKip();
-      renderKip();
+      showKip(); renderKip("CW");
       if(!(await (async()=>{ await sleep(getTiming().holdMs); return (myToken===setToken); })())) { runningSet=false; return; }
 
       // Ende: wieder Vollansicht
@@ -1300,10 +1304,10 @@
       showW();
       renderW();
 
-      // Nach Abschluss: Ziel-Info auf der schwarzen Konsole anzeigen
-      showTargetInfoAfterSet();
-
       runningSet = false;
+
+      // Jetzt beginnt die Spielerphase
+      beginPlayerPhase();
     }
 
     function cancelSetNumbers(){
@@ -1311,49 +1315,224 @@
       runningSet = false;
     }
 
-    // ===== Ziel-Info (vorerst: random Farbe + Zahl; Deck-System später) =====
-    const targetColors = ["--blau","--orange","--gruen","--violett"];
-    function showTargetInfoAfterSet(){
-      const n = Math.floor(Math.random() * 12) + 1;
-      const cVar = targetColors[Math.floor(Math.random() * targetColors.length)];
-      gcSquare.style.background = getComputedStyle(document.documentElement).getPropertyValue(cVar).trim();
-      gcNum.textContent = String(n);
-      gcProgress.textContent = "(00/11)";
-      gcPoints.textContent = "0P";
-      gcHi.textContent = "66";
-      gcTop.classList.remove("hiddenInfo");
-      setAttentionSet(false);
+    // ===== Target Anzeige auf 4 Feldern einer Farbe =====
+    function clearTargets(){
+      Array.from(grid.querySelectorAll(".targetBadge")).forEach(el => el.remove());
     }
 
-    // ===== Events =====
+    function sideClassForCoord(coord){
+      // coord wie "3A"
+      const r = parseInt(coord, 10);
+      const c = coord.replace(String(r), "");
+      if(r === 1) return "trot-top";
+      if(r === 8) return "trot-bottom";
+      if(c === "A") return "trot-left";
+      if(c === "H") return "trot-right";
+      // sollte bei unseren farbigen Rahmenfeldern nicht passieren
+      return "trot-bottom";
+    }
+
+    function showTargetOnColor(colorClass, n){
+      clearTargets();
+      const list = targetCellsByColorClass[colorClass] || [];
+      list.forEach(cell=>{
+        const badge = document.createElement("div");
+        badge.className = "targetBadge " + sideClassForCoord(cell.dataset.coord || "");
+        badge.textContent = String(n);
+        cell.appendChild(badge);
+      });
+    }
+
+    // ===== 48er Deck / Runden / Versuche / Punkte =====
+    const MAX_ROUNDS = 10;
+    const MAX_TRIES  = 3;
+    const SCORE_BY_TRY = [8,5,3]; // try 1..3
+
+    let deckCount = Array(13).fill(0); // 1..12, max 4
+    let roundIndex = 0;   // 0..9
+    let tryIndex   = 0;   // 0..2
+    let points     = 0;
+
+    let currentTargetNumber = null;
+    let currentTargetColorClass = null;
+
+    function setPoints(p){
+      points = Math.max(0, p|0);
+      const s = String(points).padStart(2, "0");
+      gcPoints.textContent = s + "P";
+    }
+
+    function visibleNumbersSet(){
+      const v = new Set();
+      const curr = sets[faceIndex] || [];
+      curr.forEach(x => { if(x != null) v.add(x); });
+      return v;
+    }
+
+    const TARGET_COLOR_CLASSES = ["c-blau","c-orange","c-gruen","c-violett"];
+
+    function pickNewTarget(){
+      const visible = visibleNumbersSet();
+
+      // eligible numbers: not visible + count < 4
+      const eligible = [];
+      for(let n=1; n<=12; n++){
+        if(deckCount[n] >= 4) continue;
+        if(visible.has(n)) continue;
+        eligible.push(n);
+      }
+
+      if(eligible.length === 0){
+        // Sicherheitsfall: wenn "nicht sichtbar" nichts mehr hergibt, dann Deck resetten
+        // (du hast "Ausnahmesituation" erwähnt – hier ist die stabile Sicherheitslösung)
+        deckCount = Array(13).fill(0);
+        for(let n=1; n<=12; n++){
+          if(!visible.has(n)) eligible.push(n);
+        }
+        if(eligible.length === 0){
+          // wirklich alles sichtbar? dann nehmen wir irgendwas (sollte praktisch nicht passieren)
+          for(let n=1; n<=12; n++) eligible.push(n);
+        }
+      }
+
+      const n = eligible[Math.floor(Math.random() * eligible.length)];
+      deckCount[n]++;
+
+      const colorClass = TARGET_COLOR_CLASSES[Math.floor(Math.random() * TARGET_COLOR_CLASSES.length)];
+
+      currentTargetNumber = n;
+      currentTargetColorClass = colorClass;
+
+      showTargetOnColor(colorClass, n);
+    }
+
+    function beginPlayerPhase(){
+      // UI umschalten
+      btnSetNumbers.classList.add("hidden");
+      decisionPanel.classList.remove("hidden");
+      enterSetAttention(false);
+
+      // Spielzustand
+      roundIndex = 0;
+      tryIndex = 0;
+      setPoints(points); // bleibt
+      gcHi.textContent = "80";
+
+      deckCount = Array(13).fill(0);
+      pickNewTarget();
+      selectKippCount(null);
+    }
+
+    function endGame(){
+      clearTargets();
+      alert("10 Runden vorbei! Punkte: " + points);
+      // zurück zur Speed-Ansicht
+      showSpeedMode();
+    }
+
+    function nextRoundOrEnd(){
+      roundIndex++;
+      tryIndex = 0;
+      if(roundIndex >= MAX_ROUNDS){
+        endGame();
+        return;
+      }
+      pickNewTarget();
+    }
+
+    function awardForTry(){
+      const add = SCORE_BY_TRY[Math.min(tryIndex, SCORE_BY_TRY.length-1)] || 0;
+      setPoints(points + add);
+    }
+
+    // ===== Kipp-Entscheidung UI =====
+    let selectedKippCount = null;
+    function selectKippCount(k){
+      selectedKippCount = (k == null) ? null : Number(k);
+      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+        btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
+      });
+    }
+
+    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+      btn.addEventListener("click", () => selectKippCount(btn.dataset.k));
+    });
+
+    // ===== Kipp-Ausführung (CW/CCW) =====
+    let busyMove = false;
+
+    async function performKipp(dir, count){
+      if(busyMove) return;
+      if(!selectedKippCount) return;
+      busyMove = true;
+
+      const c = Math.max(1, Math.min(6, Number(count)));
+      for(let i=0; i<c; i++){
+        showKip();
+        renderKip(dir);
+        await sleep(getTiming().holdMs);
+
+        if(dir === "CCW") advanceFullCCW();
+        else advanceFullCW();
+
+        showW();
+        renderW();
+        await sleep(Math.round(getTiming().holdMs * 0.60));
+      }
+
+      // Trefferprüfung (Minimalregel): Zielzahl sichtbar?
+      const vis = visibleNumbersSet();
+      const hit = vis.has(currentTargetNumber);
+
+      if(hit){
+        awardForTry();
+        // neues Ziel, nächste Runde
+        nextRoundOrEnd();
+      }else{
+        tryIndex++;
+        if(tryIndex >= MAX_TRIES){
+          // neues Ziel (Runde zählt trotzdem weiter)
+          nextRoundOrEnd();
+        }else{
+          // gleiches Ziel bleibt – nur nächste Chance
+          // (Zielzahl bleibt stehen)
+        }
+      }
+
+      busyMove = false;
+    }
+
+    btnDirCW.addEventListener("click", () => {
+      if(!selectedKippCount) return;
+      performKipp("CW", selectedKippCount);
+    });
+    btnDirCCW.addEventListener("click", () => {
+      if(!selectedKippCount) return;
+      performKipp("CCW", selectedKippCount);
+    });
+
+    // ===== Events (bestehend + neu) =====
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
-      // während Demo-Pause darf man regeln; Demo läuft weiter mit aktueller Timing-Berechnung
       if(!runningDemo) enterPlayAttention();
     });
 
-    // Play/Pause Dual:
-    // - wenn Demo nicht läuft -> Start (Glyph: Pause)
-    // - wenn Demo läuft -> Toggle Pause/Resume (Glyph wechselt)
     btnPlay.addEventListener("click", async () => {
       if(!hasAdjustedOnce) enterPlayAttention();
 
       if(!runningDemo){
         setAttentionPlay(false);
-        setPlayGlyph(true);       // jetzt Pause anzeigen
+        setPlayGlyph(true);
         await runDemoCycle();
-        // nach Ende: wieder Play anzeigen + Blinkhinweis
         setPlayGlyph(false);
         enterPlayAttention();
         return;
       }
 
-      // Demo läuft -> Pause/Resume toggeln
       demoPaused = !demoPaused;
       setPlayGlyph(demoPaused ? false : true);
     });
 
-    // OK: Demo/Set abbrechen, W1Q0 anzeigen, Game-Mode rein
     btnOk.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
@@ -1363,20 +1542,21 @@
       showGameMode();
     });
 
-    // Zahlen setzen
     btnSetNumbers.addEventListener("click", async () => {
       await runSetNumbersCycle();
     });
 
-    // STOP: Abbruch + zurück zur Speed-Einstellung
-    btnStop.addEventListener("click", () => {
+    // ↩︎ Zurück: übernimmt STOP-Funktion (zur Speed-Ansicht)
+    backBtn.addEventListener("click", () => {
       cancelDemo();
       cancelSetNumbers();
+      busyMove = false;
+      clearTargets();
       resetToW1Q0_Empty();
       showSpeedMode();
     });
 
-    exitBtn.addEventListener("click", () => {
+    exitBtnTop.addEventListener("click", () => {
       const ok = confirm("Spiel wirklich beenden?");
       if(ok){
         window.location.href = "about:blank";
