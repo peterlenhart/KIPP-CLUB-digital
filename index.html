@@ -42,6 +42,9 @@
       --kippstrip-h: auto;
 
       --rot: 0deg;
+
+      /* ✅ 1,6x kleiner für die Auswahl-Konsole */
+      --decision-scale: 0.625; /* 1 / 1.6 */
     }
 
     html, body { height: 100%; }
@@ -403,7 +406,6 @@
       line-height: 1;
     }
 
-    /* Zahlen-Orientierung der Slot-Tiles bleibt wie gehabt */
     .read-south { --num-rot: 0deg; }
     .read-west  { --num-rot: 90deg; }
     .read-east  { --num-rot: -90deg; }
@@ -640,7 +642,6 @@
       user-select:none;
     }
 
-    /* ✅ 00P immer “oben” (nicht verdeckt) */
     .gcPoints{
       font-weight: 1000;
       color: var(--ui-text);
@@ -701,6 +702,14 @@
     #decisionPanel{
       padding: 0 12px;
       box-sizing: border-box;
+      overflow: visible;
+    }
+
+    /* ✅ Skalierung: innen kleiner, außen volle Breite behalten */
+    .decisionScale{
+      transform: scale(var(--decision-scale));
+      transform-origin: top left;
+      width: calc(100% / var(--decision-scale));
     }
 
     .kippCountTitle{
@@ -821,12 +830,9 @@
 
     <!-- HEADER -->
     <div class="titleRow" aria-label="Titelzeile">
-      <!-- ✅ Back: U-Pfeil + 9/6 -->
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <svg class="backIcon" viewBox="0 0 24 24" aria-hidden="true">
-          <!-- liegendes U -->
           <path d="M18 7v6a6 6 0 0 1-6 6H8" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Pfeil nach links -->
           <path d="M10 17l-3 2.5L10 22" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <div class="backDots" aria-hidden="true"><span>9</span><span>6</span></div>
@@ -916,35 +922,39 @@
               <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
 
               <div id="decisionPanel" class="hidden">
-                <div class="kippCountTitle">KIPPANZAHL?</div>
+                <!-- ✅ Alles was “klein” sein soll, ist hier drin -->
+                <div class="decisionScale">
 
-                <div class="gcRow" aria-label="Kippanzahl">
-                  <button class="miniBtn" data-k="1" type="button">1</button>
-                  <button class="miniBtn" data-k="2" type="button">2</button>
-                  <button class="miniBtn" data-k="3" type="button">3</button>
-                  <button class="miniBtn" data-k="4" type="button">4</button>
-                  <button class="miniBtn" data-k="5" type="button">5</button>
-                  <button class="miniBtn" data-k="6" type="button">6</button>
+                  <div class="kippCountTitle">KIPPANZAHL?</div>
+
+                  <div class="gcRow" aria-label="Kippanzahl">
+                    <button class="miniBtn" data-k="1" type="button">1</button>
+                    <button class="miniBtn" data-k="2" type="button">2</button>
+                    <button class="miniBtn" data-k="3" type="button">3</button>
+                    <button class="miniBtn" data-k="4" type="button">4</button>
+                    <button class="miniBtn" data-k="5" type="button">5</button>
+                    <button class="miniBtn" data-k="6" type="button">6</button>
+                  </div>
+
+                  <div class="kippDirTitle">KIPPRICHTUNG?</div>
+                  <div class="gcRow" aria-label="Kipprichtung">
+                    <button id="btnCCW" class="dirBtn" type="button" disabled>
+                      <svg class="dirIcon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5a7 7 0 1 1-6.3 4" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M6 9V5H2" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      CCW
+                    </button>
+                    <button id="btnCW" class="dirBtn" type="button" disabled>
+                      <svg class="dirIcon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 5a7 7 0 1 0 6.3 4" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M18 9V5h4" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      CW
+                    </button>
+                  </div>
+
                 </div>
-
-                <div class="kippDirTitle">KIPPRICHTUNG?</div>
-                <div class="gcRow" aria-label="Kipprichtung">
-                  <button id="btnCCW" class="dirBtn" type="button" disabled>
-                    <svg class="dirIcon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 5a7 7 0 1 1-6.3 4" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round"/>
-                      <path d="M6 9V5H2" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    CCW
-                  </button>
-                  <button id="btnCW" class="dirBtn" type="button" disabled>
-                    <svg class="dirIcon" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 5a7 7 0 1 0 6.3 4" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round"/>
-                      <path d="M18 9V5h4" fill="none" stroke="rgba(0,0,0,0.88)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    CW
-                  </button>
-                </div>
-
               </div>
             </div>
 
@@ -1367,12 +1377,10 @@
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // Ende (wie gehabt): noch einmal weiter, W sichtbar
       advanceFull(+1);
       showW();
       renderW();
 
-      // 3 Extra-Kipps (voll bestückt) – bleiben drin, dienen als “Foto”-Zwischenstates
       const EXTRA_KIPPS_AFTER_END = 3;
 
       await sleep(Math.round(getTiming().holdMs * 0.60));
