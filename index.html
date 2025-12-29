@@ -1233,32 +1233,28 @@
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
     }
-    function mapHiddenToVisible_CCW(face){
-      const [f1,f2,f3,f4] = face;
-      return [f2, f1, f4, f3];
-    }
 
-    // WICHTIG: CCW-Zwischenkipp rückwärtszyklisch:
-    // - Bei CCW ist "next" = (faceIndex + 2) % 3 korrekt.
-    // - Aber die Zwischenansicht muss auch spiegeln: der "laufende" Würfel wandert bei CCW von rechts nach links.
+    /* ===== WICHTIG: renderKip(dir) – FIX für CCW rückwärts-zyklisch ===== */
     function renderKip(dir){
       setRotationSnap();
       const curr = sets[faceIndex];
 
       if(dir === "CCW"){
-        const nextFaceIndex = (faceIndex + 2) % 3;
-        const next = sets[nextFaceIndex];
+        // Ziel-Lage bei CCW ist die "vorherige" Seite:
+        const prevFaceIndex = (faceIndex + 2) % 3;
+        const prev = sets[prevFaceIndex];
 
-        // NEU: Bei CCW kommt der "curr" auf die linke Hälfte (W2_*),
-        // und das Preview der nächsten Lage auf die rechte Hälfte (W1_*)
+        // CCW: curr links (W2_*), Preview der vorherigen Lage rechts (W1_*)
         for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], curr[i]);
 
-        const nextPreview = mapHiddenToVisible_CCW(next);
-        for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], nextPreview[i]);
+        // Der entscheidende Fix: Preview-Mapping muss die "Kipp-Vorschau" korrekt spiegeln.
+        // Wir verwenden dieselbe Hidden->Visible-Spiegelung wie bei CW (nur Zielseite ist prev).
+        const prevPreview = mapHiddenToVisible_CW(prev);
+        for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], prevPreview[i]);
         return;
       }
 
-      // CW default (wie gehabt): curr rechts (W1_*), preview links (W2_*)
+      // CW: curr rechts (W1_*), Preview der nächsten Lage links (W2_*)
       const nextFaceIndex = (faceIndex + 1) % 3;
       const next = sets[nextFaceIndex];
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
@@ -1426,7 +1422,6 @@
     function beginPlayerPhase(){
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
-      enterSetAttention(false);
 
       roundIndex = 0;
       tryIndex = 0;
@@ -1508,7 +1503,7 @@
         }
       }
 
-      // NEU: nach ausgeführtem Kipp wieder "beige" (Auswahl löschen)
+      // nach ausgeführtem Kipp wieder "beige" (Auswahl löschen)
       selectKippCount(null);
 
       busyMove = false;
