@@ -833,7 +833,7 @@
             <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
             <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
             <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
-            <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
+            <div class="slot k-2c read-north"  data-slot="W2_D"><div class="num"><span></span></div></div>
 
             <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
             <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
@@ -1056,8 +1056,8 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
-    function setKipRotationByIndex(idx){
-      kipGroup.style.setProperty("--rot", rotDeg[(idx+4)%4] + "deg");
+    function setKipRotationDeg(deg){
+      kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
     function advanceFullCW(){
@@ -1260,90 +1260,74 @@
     }
 
     // ===== Snapshot-System (DIA-Show) =====
-    // kipSnapshots: key "01", "12", "20" => { right:[4], left:[4] }
+    // Key = "rot|face"  (12 Zustände: 4*3)
     let kipSnapshots = new Map();
+    function stateKey(r,f){ return String(r) + "|" + String(f); }
 
-    function snapshotKey(a,b){ return String(a) + String(b); }
-
-    function captureCurrentKipSnapshot_CW(){
-      const a = faceIndex;
-      const b = (faceIndex + 1) % 3;
-      const key = snapshotKey(a,b);
-      if(kipSnapshots.has(key)) return;
-
-      const right = slotTargetsKipRight.map(s => s.textContent || "");
-      const left  = slotTargetsKipLeft.map(s => s.textContent || "");
-      // nur speichern, wenn wirklich vollbestückt (keine leeren)
-      if(right.some(x=>x==="") || left.some(x=>x==="")) return;
-
-      kipSnapshots.set(key, { right, left });
-    }
-
-    function renderKipFromSnapshot_CW(){
-      const a = faceIndex;
-      const b = (faceIndex + 1) % 3;
-      const key = snapshotKey(a,b);
-      const snap = kipSnapshots.get(key);
-      if(!snap){
-        // Fallback: falls aus irgendeinem Grund nicht vorhanden, trotzdem rechnen
-        renderKipComputed_CW();
-        return;
-      }
-      setRotationSnap();
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], snap.right[i]);
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i],  snap.left[i]);
-    }
-
-    // Counter-Clock: benutze Snapshot vom "vorigen CW-Paar" und tausche links/rechts
-    function renderKipFromSnapshot_CCW(){
-      const curr = faceIndex;
-      const prev = (faceIndex + 2) % 3; // rückwärts
-      const key = snapshotKey(prev, curr); // Snapshot existiert als CW von prev -> curr
-      const snap = kipSnapshots.get(key);
-      if(!snap){
-        renderKipComputed_CCW_Fallback();
-        return;
-      }
-      // ✅ erster Zwischenkipp bei CCW sitzt 90° CCW "vor" dem Vollbild:
-      // kipGroup dreht schon vor dem Vollflächen-Sprung um -90°
-      setKipRotationByIndex(rotIndex + 3);
-
-      // Swap: rechts soll CURRENT sein, links PREV
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], snap.left[i]);
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i],  snap.right[i]);
-    }
-
-    // ===== Computed Fallbacks (sollten nach Snapshots nicht mehr gebraucht werden) =====
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
     }
 
-    function renderKipComputed_CW(){
-      setRotationSnap();
-      const curr = sets[faceIndex];
-      const nextFaceIndex = (faceIndex + 1) % 3;
-      const next = sets[nextFaceIndex];
+    function buildAllSnapshots(){
+      kipSnapshots = new Map();
 
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
-      const nextPreview = mapHiddenToVisible_CW(next);
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+      // lokale Simulation (ohne echten State zu verändern)
+      let r = rotIndex;
+      let f = faceIndex;
 
-      captureCurrentKipSnapshot_CW();
+      for(let t=0; t<12; t++){
+        const curr = sets[f];
+        const next = sets[(f + 1) % 3];
+
+        const right = curr.map(x => String(x));
+        const left  = mapHiddenToVisible_CW(next).map(x => String(x));
+
+        kipSnapshots.set(stateKey(r,f), {
+          rotDeg: rotDeg[r],
+          right,
+          left
+        });
+
+        // advance CW in simulation
+        r = (r + 1) % 4;
+        f = (f + 1) % 3;
+      }
     }
 
-    // Minimal-Fallback: nutze CW-Snapshot-Logik, falls möglich, sonst leer
-    function renderKipComputed_CCW_Fallback(){
-      // kipGroup rot vorziehen
-      setKipRotationByIndex(rotIndex + 3);
-      const curr = sets[faceIndex];
-      const prevIdx = (faceIndex + 2) % 3;
-      const prev = sets[prevIdx];
+    function renderKipFromSnapshot_CW(){
+      const snap = kipSnapshots.get(stateKey(rotIndex, faceIndex));
+      if(!snap){
+        // sollte nicht passieren, aber falls doch: neu bauen
+        buildAllSnapshots();
+      }
+      const s = kipSnapshots.get(stateKey(rotIndex, faceIndex));
+      if(!s) return;
 
-      // sehr grober Fallback: zeige curr rechts und prev links "reverse" wie CW-Preview
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
-      const prevPreview = mapHiddenToVisible_CW(prev);
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], prevPreview[i]);
+      // kip rotation = exakt wie dieser Zustand
+      setKipRotationDeg(s.rotDeg);
+
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], s.right[i]);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i],  s.left[i]);
+    }
+
+    function renderKipFromSnapshot_CCW(){
+      // CCW-Zwischenbild ist das CW-Zwischenbild des "vorigen Zustands"
+      const prevRot  = (rotIndex + 3) % 4;
+      const prevFace = (faceIndex + 2) % 3;
+
+      let snap = kipSnapshots.get(stateKey(prevRot, prevFace));
+      if(!snap){
+        buildAllSnapshots();
+        snap = kipSnapshots.get(stateKey(prevRot, prevFace));
+      }
+      if(!snap) return;
+
+      // ✅ 90° CCW vorlaufend entsteht automatisch, weil prevRot = rotIndex-1
+      setKipRotationDeg(snap.rotDeg);
+
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], snap.right[i]);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i],  snap.left[i]);
     }
 
     function reroll12_keepEmpty(){
@@ -1359,7 +1343,7 @@
       ];
       assigned = [false,false,false];
 
-      kipSnapshots = new Map(); // ✅ neue Runde = neues DIA-Magazin
+      kipSnapshots = new Map();
 
       rotIndex  = 0;
       faceIndex = 0;
@@ -1383,7 +1367,8 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      showKip(); renderKipComputed_CW();
+      // Zwischenbild (nur Anzeige)
+      showKip(); renderKipEmpty();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1395,7 +1380,7 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      showKip(); renderKipComputed_CW();
+      showKip(); renderKipEmpty();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1407,48 +1392,17 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      showKip(); renderKipComputed_CW();
+      showKip(); renderKipEmpty();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // ===== Bisheriges Ende (Q3, W1 oben) =====
+      // ===== Ende: wieder Vollfläche =====
       advanceFullCW();
       showW();
       renderW();
 
-      // ✅ 3 zusätzliche komplette Kipps
-      const EXTRA_KIPPS_AFTER_END = 3;
-
-      await sleep(Math.round(getTiming().holdMs * 0.60));
-      if(myToken!==setToken){ runningSet=false; return; }
-
-      for(let j=0; j<EXTRA_KIPPS_AFTER_END; j++){
-        showKip();
-        renderKipComputed_CW(); // ✅ sammelt Snapshots automatisch
-        await sleep(getTiming().holdMs);
-        if(myToken!==setToken){ runningSet=false; return; }
-
-        advanceFullCW();
-
-        showW();
-        renderW();
-        await sleep(Math.round(getTiming().holdMs * 0.60));
-        if(myToken!==setToken){ runningSet=false; return; }
-      }
-
-      // ✅ Sicherstellen: alle 3 Snapshots vorhanden (01,12,20)
-      // (falls Timing/Erst-Fill knapp war)
-      // kurzer "sicherer" Durchlauf (ohne Anzeigeänderung): 3× kip rendern & advance
-      const wanted = ["01","12","20"];
-      let safety = 0;
-      while(safety < 6 && wanted.some(k => !kipSnapshots.has(k))){
-        showKip(); renderKipComputed_CW();
-        await sleep(Math.round(getTiming().holdMs * 0.10));
-        advanceFullCW();
-        showW(); renderW();
-        await sleep(Math.round(getTiming().holdMs * 0.10));
-        safety++;
-      }
+      // ✅ NACHDEM alle 3 Flächen gesetzt sind: Snapshot-Magazin (12 Zustände) bauen
+      buildAllSnapshots();
 
       runningSet = false;
       beginPlayerPhase();
@@ -1662,22 +1616,19 @@
 
       for(let i=0; i<c; i++){
         showKip();
+
         if(dir === "CW"){
-          // CW: Snapshot direkt
           renderKipFromSnapshot_CW();
           await sleep(getTiming().holdMs);
 
-          // dann Vollfläche weiter
           advanceFullCW();
           showW();
           renderW();
           await sleep(Math.round(getTiming().holdMs * 0.60));
         }else{
-          // CCW: Snapshot swap + kip 90° vorziehen
           renderKipFromSnapshot_CCW();
           await sleep(getTiming().holdMs);
 
-          // danach Vollfläche rückwärts
           advanceFullCCW();
           showW();
           renderW();
@@ -1685,7 +1636,7 @@
         }
       }
 
-      // nach jedem Move: KipGroup-Rotation wieder sauber an Vollfläche binden
+      // nach jedem Move: kip rotation wieder an Vollfläche binden
       setRotationSnap();
 
       const vis = visibleNumbersSet();
@@ -1701,7 +1652,6 @@
         }
       }
 
-      // UI zurück
       selectKippCount(null);
       startPulseCount();
 
