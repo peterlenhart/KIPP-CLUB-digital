@@ -1263,9 +1263,32 @@
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
+      // ===== Bisheriges Ende (Q3, W1 oben) =====
       advanceFullCW();
       showW();
       renderW();
+
+      // ✅ NEU: 3 zusätzliche komplette Kipps ab dem bisherigen Ende
+      // Zweck: weitere vollbestückte Zwischenkipps sichtbar machen / rückwärts sauber abspielbar
+      const EXTRA_KIPPS_AFTER_END = 3;
+
+      // kurzer Hold, damit man den bisherigen Endzustand kurz "stehen" sieht
+      await sleep(Math.round(getTiming().holdMs * 0.60));
+      if(myToken!==setToken){ runningSet=false; return; }
+
+      for(let j=0; j<EXTRA_KIPPS_AFTER_END; j++){
+        showKip();
+        renderKip();
+        await sleep(getTiming().holdMs);
+        if(myToken!==setToken){ runningSet=false; return; }
+
+        advanceFullCW();
+
+        showW();
+        renderW();
+        await sleep(Math.round(getTiming().holdMs * 0.60));
+        if(myToken!==setToken){ runningSet=false; return; }
+      }
 
       runningSet = false;
 
