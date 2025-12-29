@@ -44,8 +44,8 @@
       --rotSign: 1;
       --rot: 0deg;
 
-      /* ✅ NEU: UI-Skalierung für Punkte + Kippanzahl-Block */
-      --uiScale: 0.6; /* 60% Größe = 40% kleiner */
+      /* ✅ DEIN WUNSCH: 60% Größe */
+      --ui-scale: 0.6;
     }
 
     html, body { height: 100%; }
@@ -603,15 +603,6 @@
       gap: 8px;
     }
 
-    /* ✅ NEU: Wrapper der alles gemeinsam auf 60% skaliert */
-    .gameUIScale{
-      transform: scale(var(--uiScale));
-      transform-origin: right top;             /* bleibt rechts oben „anliegend“ */
-      width: calc(100% / var(--uiScale));      /* verhindert Abschneiden durch Scale */
-      position: relative;
-      z-index: 50;                              /* falls Z-Reihenfolge Thema ist */
-    }
-
     .gcTop{
       display:flex;
       align-items:flex-end;
@@ -678,6 +669,23 @@
     .gcBtn:active{
       transform: translateY(1px) scale(0.99);
       filter: brightness(0.97);
+    }
+
+    /* ✅ SCALE-FIX: 0.6 ohne rauszuschieben (Breite kompensieren) */
+    .scaleBlockLeft{
+      --s: var(--ui-scale);
+      width: calc(100% / var(--s));
+      transform: scale(var(--s));
+      transform-origin: left top;
+    }
+    .scaleBlockRight{
+      --s: var(--ui-scale);
+      width: calc(100% / var(--s));
+      transform: scale(var(--s));
+      transform-origin: right top;
+      margin-left: auto;
+      display:flex;
+      justify-content:flex-end;
     }
 
     /* ===== KIPPANZAHL Label + Layout FIX ===== */
@@ -833,35 +841,33 @@
         <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-
-            <!-- ✅ NEU: Alles hier drinnen wird gemeinsam 60% klein -->
-            <div class="gameUIScale">
-
-              <div class="gcTop" aria-label="Punkteblock">
+            <div class="gcTop" aria-label="Punkteblock">
+              <!-- ✅ 00P + Highscore auf 0.6 skalieren, ohne rechts rauszurutschen -->
+              <div class="scaleBlockRight">
                 <div class="gcRight">
                   <div id="gcPoints" class="gcPoints">00P</div>
                   <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
                 </div>
               </div>
+            </div>
 
-              <div class="gcBottom" aria-label="Aktionen">
-                <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
+            <div class="gcBottom" aria-label="Aktionen">
+              <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
 
-                <div id="decisionPanel" class="hidden">
-                  <div class="kippCountTitle">KIPPANZAHL?</div>
+              <!-- ✅ KIPPANZAHL-Block auf 0.6 skalieren, ohne rechts rauszurutschen -->
+              <div id="decisionPanel" class="hidden scaleBlockLeft">
+                <div class="kippCountTitle">KIPPANZAHL?</div>
 
-                  <div class="gcRow" aria-label="Kippanzahl">
-                    <button class="miniBtn" data-k="1" type="button">1</button>
-                    <button class="miniBtn" data-k="2" type="button">2</button>
-                    <button class="miniBtn" data-k="3" type="button">3</button>
-                    <button class="miniBtn" data-k="4" type="button">4</button>
-                    <button class="miniBtn" data-k="5" type="button">5</button>
-                    <button class="miniBtn" data-k="6" type="button">6</button>
-                  </div>
+                <div class="gcRow" aria-label="Kippanzahl">
+                  <button class="miniBtn" data-k="1" type="button">1</button>
+                  <button class="miniBtn" data-k="2" type="button">2</button>
+                  <button class="miniBtn" data-k="3" type="button">3</button>
+                  <button class="miniBtn" data-k="4" type="button">4</button>
+                  <button class="miniBtn" data-k="5" type="button">5</button>
+                  <button class="miniBtn" data-k="6" type="button">6</button>
                 </div>
               </div>
-
-            </div><!-- /gameUIScale -->
+            </div>
 
           </div>
         </div>
