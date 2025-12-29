@@ -49,8 +49,10 @@
 
     body{
       margin:0;
+      min-height:100vh;
       display:flex;
       justify-content:center;
+      align-items:flex-start;
       background:
         radial-gradient(ellipse at center, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.38) 100%),
         linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.00) 18%, rgba(0,0,0,0.00) 82%, rgba(0,0,0,0.22)),
@@ -75,13 +77,15 @@
 
     .stage{
       width: min(94vw, 680px);
-      margin-top: 4vh;
-      padding-bottom: 2vh;
+      min-height: 100vh;
+      padding-top: 4vh;
+      padding-bottom: 0;
       display:flex;
       flex-direction: column;
       gap: 12px;
       justify-content:flex-start;
       align-items:center;
+      box-sizing: border-box;
     }
 
     /* ===== HEADER ===== */
@@ -117,7 +121,7 @@
       color: rgba(0,0,0,0.88);
       text-shadow: 0 1px 0 rgba(255,255,255,0.30);
       transform: translateY(-0.5px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* verhindert Emoji-Look */
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     .navBtn:active{
       transform: scale(0.98);
@@ -161,6 +165,7 @@
       display:flex;
       flex-direction: column;
       gap: 0;
+      flex: 1 1 auto;  /* ✅ “abfallend”: Box + Konsole können bis unten wachsen */
     }
 
     .board{
@@ -176,6 +181,7 @@
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
+      flex: 0 0 auto;
     }
 
     .grid{
@@ -280,7 +286,6 @@
       pointer-events: none;
     }
 
-    /* Pivot ist Raster-Mitte (4*step). Rotation erfolgt um Box-Mittelpunkt. */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
@@ -444,16 +449,18 @@
     /* ===== Konsole-Block ===== */
     .kippspeedBlock{
       width: 100%;
-      height: var(--kippstrip-h);
+      flex: 1 1 auto;         /* ✅ Konsole kann nach unten “abfallen” */
       background: var(--box-black);
       user-select:none;
       display:flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 6px;
       position: relative;
       padding-top: 6px;
-      padding-bottom: 6px;
+      padding-bottom: 12px;   /* etwas Luft, aber kein “Rand” */
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .modeBlock{ width:100%; box-sizing:border-box; }
@@ -607,6 +614,8 @@
       justify-content: flex-end;
       gap: 10px;
       min-height: 48px;
+      position: relative;
+      z-index: 50; /* ✅ 00P immer ganz oben */
     }
 
     .gcRight{
@@ -637,7 +646,7 @@
     .gcBottom{
       display:flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .gcRow{
@@ -669,7 +678,7 @@
       filter: brightness(0.97);
     }
 
-    /* ===== KIPPANZAHL Label + Layout FIX ===== */
+    /* ===== Entscheidung: Kippanzahl + Richtung ===== */
     #decisionPanel{
       padding: 0 12px;
       box-sizing: border-box;
@@ -681,29 +690,35 @@
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-
-      font-size: 34px;
-      line-height: 0.95;
-
+      font-size: 28px;
+      line-height: 1.05;
       text-align: left;
       user-select:none;
-
-      margin-top: 10px;
-      margin-bottom: 10px;
+      margin: 0 0 8px 0;
     }
 
-    /* ===== Kippanzahl Buttons ===== */
+    .kippDirTitle{
+      font-weight: 1000;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: 28px;
+      line-height: 1.05;
+      text-align: left;
+      user-select:none;
+      margin: 8px 0 8px 0;
+    }
+
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
-
       font-weight: 1000;
       font-size: clamp(18px, 8vmin, 36px);
       line-height: 1;
-
-      padding: 14px 0;
+      padding: 12px 0;
       border-radius: 10px;
       cursor: pointer;
       user-select:none;
@@ -720,59 +735,36 @@
       border-color: rgba(0,0,0,0.55);
     }
 
-    /* ===== Richtungszeile ===== */
-    .dirRow{
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .dirLabel{
-      flex: 1 1 auto;
-      font-weight: 1000;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 20px;
-      line-height: 1;
-      user-select:none;
-      white-space: nowrap;
-    }
-    .dirBtns{
-      display:flex;
-      gap: 8px;
-      flex: 0 0 auto;
-    }
     .dirBtn{
-      width: 56px;
-      height: 56px;
-      border-radius: 10px;
+      flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
+      font-weight: 1000;
+      font-size: 22px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      padding: 12px 0;
+      border-radius: 10px;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
       box-shadow:
         0 10px 18px rgba(0,0,0,0.20),
         0 0 0 1px rgba(255,255,255,0.12) inset;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select:none;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      font-weight: 1000;
-      font-size: 34px;
-      line-height: 1;
-      padding: 0;
+      gap: 10px;
     }
     .dirBtn:active{ transform: translateY(1px) scale(0.99); }
 
-    .dirBtn.sel{
-      background: var(--ui-panel-bg);
-      color: var(--ui-text);
-      border-color: rgba(0,0,0,0.55);
+    .dirGlyph{
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 1000;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      transform: translateY(-1px);
     }
 
     @keyframes blinkSoft{
@@ -800,14 +792,10 @@
     #decisionPanel.pulseSeq .miniBtn:nth-child(5){ animation-delay: 0.40s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(6){ animation-delay: 0.50s; }
 
-    /* Richtungsbuttons pulsieren abwechselnd, wenn dran */
-    #decisionPanel.pulseDir .dirBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
-    #decisionPanel.pulseDir .dirBtn[data-dir="ccw"]{ animation-delay: 0.00s; }
-    #decisionPanel.pulseDir .dirBtn[data-dir="cw"] { animation-delay: 0.35s; }
-
-    /* wenn Richtung noch nicht freigegeben: ausgegraut */
-    .dirRow.locked{ opacity: 0.50; }
-    .dirRow.locked .dirBtn{ pointer-events: none; }
+    /* Pulsieren Richtung */
+    #decisionPanel.pulseDir .dirBtn{ animation: blinkSoft 0.95s ease-in-out infinite; }
+    #decisionPanel.pulseDir .dirBtn:nth-child(1){ animation-delay: 0.00s; }
+    #decisionPanel.pulseDir .dirBtn:nth-child(2){ animation-delay: 0.20s; }
   </style>
 </head>
 
@@ -906,7 +894,6 @@
               <div id="decisionPanel" class="hidden">
                 <div class="kippCountTitle">KIPPANZAHL?</div>
 
-                <!-- Zeile 2: 1–6 -->
                 <div class="gcRow" aria-label="Kippanzahl">
                   <button class="miniBtn" data-k="1" type="button">1</button>
                   <button class="miniBtn" data-k="2" type="button">2</button>
@@ -916,15 +903,16 @@
                   <button class="miniBtn" data-k="6" type="button">6</button>
                 </div>
 
-                <!-- Zeile 3: Richtung -->
-                <div id="dirRow" class="dirRow locked" aria-label="Kipprichtung">
-                  <div class="dirLabel">KIPPRICHTUNG?</div>
-                  <div class="dirBtns">
-                    <button id="btnDirCCW" class="dirBtn" data-dir="ccw" type="button" aria-label="gegen Uhrzeigersinn">↺</button>
-                    <button id="btnDirCW"  class="dirBtn" data-dir="cw"  type="button" aria-label="im Uhrzeigersinn">↻</button>
-                  </div>
-                </div>
+                <div class="kippDirTitle">KIPPRICHTUNG?</div>
 
+                <div class="gcRow" aria-label="Kipprichtung">
+                  <button id="btnDirCCW" class="dirBtn" type="button" aria-label="Gegen den Uhrzeigersinn">
+                    <span class="dirGlyph">↶</span><span>CCW</span>
+                  </button>
+                  <button id="btnDirCW" class="dirBtn" type="button" aria-label="Im Uhrzeigersinn">
+                    <span class="dirGlyph">↷</span><span>CW</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -956,10 +944,8 @@
 
     const btnSetNumbers = document.getElementById("btnSetNumbers");
     const decisionPanel = document.getElementById("decisionPanel");
-
-    const dirRow     = document.getElementById("dirRow");
-    const btnDirCCW  = document.getElementById("btnDirCCW");
     const btnDirCW   = document.getElementById("btnDirCW");
+    const btnDirCCW  = document.getElementById("btnDirCCW");
 
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
@@ -969,13 +955,6 @@
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
-    }
-
-    function setKippspeedStripHeight(){
-      const w = Math.round(boardEl.getBoundingClientRect().width);
-      const cell = w / 8;
-      const h = Math.round(cell * 3);
-      document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
     function getTiming(){
@@ -1068,17 +1047,15 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
-    // Vorwärts: 90° CW, Face zyklisch 0->1->2->0
     function advanceFullCW(){
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
       setRotationSnap();
     }
 
-    // Rückwärts: 90° CCW, Face zyklisch 0->2->1->0
     function advanceFullCCW(){
-      rotIndex  = (rotIndex + 3) % 4; // -1 mod 4
-      faceIndex = (faceIndex + 2) % 3; // -1 mod 3
+      rotIndex  = (rotIndex + 3) % 4;     // -90°
+      faceIndex = (faceIndex + 2) % 3;     // -1 modulo 3
       setRotationSnap();
     }
 
@@ -1267,35 +1244,33 @@
       for(let i=0;i<4;i++) renderNumber(slotTargetsW[i], curr[i]);
     }
 
-    // Mapping: wird als "Foto" der Zwischenkippansicht behandelt (self-inverse)
     function mapHiddenToVisible_CW(face){
       const [f1,f2,f3,f4] = face;
       return [f4, f3, f2, f1];
     }
-    function mapHiddenToVisible_CCW(face){
-      // Inverse von reverse ist reverse -> gleiches Mapping, aber andere Face-Auswahl (prev statt next)
-      const [f1,f2,f3,f4] = face;
-      return [f4, f3, f2, f1];
-    }
 
-    function renderKipDir(dir){
+    function renderKipCW(){
       setRotationSnap();
       const curr = sets[faceIndex];
+      const nextFaceIndex = (faceIndex + 1) % 3;
+      const next = sets[nextFaceIndex];
 
-      // curr ist immer rechte Fläche (vorne)
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
+      const nextPreview = mapHiddenToVisible_CW(next);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
+    }
+
+    function renderKipCCW(){
+      setRotationSnap();
+      const curr = sets[faceIndex];
+      const prevFaceIndex = (faceIndex + 2) % 3;   // -1
+      const prev = sets[prevFaceIndex];
+
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
 
-      if(dir === "ccw"){
-        const prevFaceIndex = (faceIndex + 2) % 3;
-        const prev = sets[prevFaceIndex];
-        const prevPreview = mapHiddenToVisible_CCW(prev);
-        for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], prevPreview[i]);
-      }else{
-        const nextFaceIndex = (faceIndex + 1) % 3;
-        const next = sets[nextFaceIndex];
-        const nextPreview = mapHiddenToVisible_CW(next);
-        for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
-      }
+      // ✅ Wichtig: bei CCW muss die “auftauchende” Fläche die vorige sein (rückwärtszyklisch)
+      const prevPreview = mapHiddenToVisible_CW(prev);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], prevPreview[i]);
     }
 
     function reroll12_keepEmpty(){
@@ -1333,8 +1308,7 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // Vorschau 1
-      showKip(); renderKipDir("cw");
+      showKip(); renderKipCW();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1346,8 +1320,7 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // Vorschau 2
-      showKip(); renderKipDir("cw");
+      showKip(); renderKipCW();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1359,18 +1332,36 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // Vorschau 3
-      showKip(); renderKipDir("cw");
+      showKip(); renderKipCW();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
-      // Ende: wieder W, voll
+      // ===== Bisheriges Ende (Q3, W1 oben) =====
       advanceFullCW();
       showW();
       renderW();
 
-      runningSet = false;
+      // ✅ 3 zusätzliche komplette Kipps ab dem bisherigen Ende
+      const EXTRA_KIPPS_AFTER_END = 3;
 
+      await sleep(Math.round(getTiming().holdMs * 0.60));
+      if(myToken!==setToken){ runningSet=false; return; }
+
+      for(let j=0; j<EXTRA_KIPPS_AFTER_END; j++){
+        showKip();
+        renderKipCW();
+        await sleep(getTiming().holdMs);
+        if(myToken!==setToken){ runningSet=false; return; }
+
+        advanceFullCW();
+
+        showW();
+        renderW();
+        await sleep(Math.round(getTiming().holdMs * 0.60));
+        if(myToken!==setToken){ runningSet=false; return; }
+      }
+
+      runningSet = false;
       beginPlayerPhase();
     }
 
@@ -1463,16 +1454,20 @@
     }
 
     let selectedKippCount = null;
-    let selectedDir = null;
+    let selectedDir = null; // "CW" | "CCW"
 
-    function startPulseCount(){ decisionPanel.classList.add("pulseSeq"); }
-    function stopPulseCount(){ decisionPanel.classList.remove("pulseSeq"); }
-
-    function startPulseDir(){ decisionPanel.classList.add("pulseDir"); }
-    function stopPulseDir(){ decisionPanel.classList.remove("pulseDir"); }
-
-    function lockDir(on){
-      dirRow.classList.toggle("locked", !!on);
+    function startPulseCount(){
+      decisionPanel.classList.add("pulseSeq");
+      decisionPanel.classList.remove("pulseDir");
+    }
+    function stopPulseCount(){
+      decisionPanel.classList.remove("pulseSeq");
+    }
+    function startPulseDir(){
+      decisionPanel.classList.add("pulseDir");
+    }
+    function stopPulseDir(){
+      decisionPanel.classList.remove("pulseDir");
     }
 
     function selectKippCount(k){
@@ -1480,37 +1475,17 @@
       document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
         btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
       });
-      if(selectedKippCount != null){
-        stopPulseCount();
-        lockDir(false);
-        startPulseDir();
-      }else{
-        lockDir(true);
+
+      if(selectedKippCount == null){
+        selectedDir = null;
         stopPulseDir();
         startPulseCount();
+        return;
       }
-    }
 
-    function selectDir(dir){
-      selectedDir = dir;
-      [btnDirCCW, btnDirCW].forEach(b=>{
-        b.classList.toggle("sel", b.dataset.dir === selectedDir);
-      });
-    }
-
-    function resetDecisionUI(){
-      selectDir(null);
-      [btnDirCCW, btnDirCW].forEach(b=> b.classList.remove("sel"));
+      stopPulseCount();
       selectedDir = null;
-
-      // Richtung erst nach Zahl
-      lockDir(true);
-      stopPulseDir();
-
-      // Zahl zurück
-      selectedKippCount = null;
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=> btn.classList.remove("sel"));
-      startPulseCount();
+      startPulseDir();
     }
 
     document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
@@ -1518,22 +1493,6 @@
         if(busyMove) return;
         selectKippCount(btn.dataset.k);
       });
-    });
-
-    btnDirCW.addEventListener("click", async () => {
-      if(busyMove) return;
-      if(selectedKippCount == null) return;
-      stopPulseDir();
-      selectDir("cw");
-      await performKippDir(selectedKippCount, "cw");
-    });
-
-    btnDirCCW.addEventListener("click", async () => {
-      if(busyMove) return;
-      if(selectedKippCount == null) return;
-      stopPulseDir();
-      selectDir("ccw");
-      await performKippDir(selectedKippCount, "ccw");
     });
 
     function beginPlayerPhase(){
@@ -1549,7 +1508,12 @@
       deckCount = Array(13).fill(0);
       pickNewTarget();
 
-      resetDecisionUI();
+      selectedKippCount = null;
+      selectedDir = null;
+
+      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=> btn.classList.remove("sel"));
+      startPulseCount();
+      stopPulseDir();
     }
 
     function endGame(){
@@ -1575,9 +1539,10 @@
 
     let busyMove = false;
 
-    async function performKippDir(count, dir){
+    async function performKipp(dir, count){
       if(busyMove) return;
       if(!count) return;
+      if(dir !== "CW" && dir !== "CCW") return;
 
       busyMove = true;
 
@@ -1585,11 +1550,12 @@
 
       for(let i=0; i<c; i++){
         showKip();
-        renderKipDir(dir);
+        if(dir === "CW") renderKipCW();
+        else renderKipCCW();
         await sleep(getTiming().holdMs);
 
-        if(dir === "ccw") advanceFullCCW();
-        else advanceFullCW();
+        if(dir === "CW") advanceFullCW();
+        else advanceFullCCW();
 
         showW();
         renderW();
@@ -1609,9 +1575,31 @@
         }
       }
 
-      resetDecisionUI();
+      // Reset Auswahl & Aufmerksamkeit
+      selectedKippCount = null;
+      selectedDir = null;
+      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=> btn.classList.remove("sel"));
+      startPulseCount();
+      stopPulseDir();
+
       busyMove = false;
     }
+
+    btnDirCW.addEventListener("click", () => {
+      if(busyMove) return;
+      if(selectedKippCount == null) return;
+      selectedDir = "CW";
+      stopPulseDir();
+      performKipp("CW", selectedKippCount);
+    });
+
+    btnDirCCW.addEventListener("click", () => {
+      if(busyMove) return;
+      if(selectedKippCount == null) return;
+      selectedDir = "CCW";
+      stopPulseDir();
+      performKipp("CCW", selectedKippCount);
+    });
 
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
@@ -1670,10 +1658,6 @@
 
       buildGridOnce();
 
-      setKippspeedStripHeight();
-      requestAnimationFrame(setKippspeedStripHeight);
-      setTimeout(setKippspeedStripHeight, 80);
-
       resetToW1Q0_Empty();
       showSpeedMode();
     });
@@ -1681,9 +1665,6 @@
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
-
-      setKippspeedStripHeight();
-      requestAnimationFrame(setKippspeedStripHeight);
     });
   </script>
 </body>
