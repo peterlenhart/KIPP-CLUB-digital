@@ -49,7 +49,6 @@
 
     body{
       margin:0;
-      min-height:100vh;
       display:flex;
       justify-content:center;
       align-items:flex-start;
@@ -78,6 +77,7 @@
     .stage{
       width: min(94vw, 680px);
       min-height: 100vh;
+      margin-top: 0;
       padding-top: 4vh;
       padding-bottom: 0;
       display:flex;
@@ -165,7 +165,6 @@
       display:flex;
       flex-direction: column;
       gap: 0;
-      flex: 1 1 auto;  /* ✅ “abfallend”: Box + Konsole können bis unten wachsen */
     }
 
     .board{
@@ -181,7 +180,6 @@
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
-      flex: 0 0 auto;
     }
 
     .grid{
@@ -214,7 +212,6 @@
         0 0 0 1px rgba(0,0,0,0.25);
     }
 
-    /* ===== Target Zahl auf farbigen Feldern ===== */
     @keyframes targetBreath{
       0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
       50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
@@ -449,18 +446,16 @@
     /* ===== Konsole-Block ===== */
     .kippspeedBlock{
       width: 100%;
-      flex: 1 1 auto;         /* ✅ Konsole kann nach unten “abfallen” */
+      height: var(--kippstrip-h);
       background: var(--box-black);
       user-select:none;
       display:flex;
       flex-direction: column;
-      justify-content: flex-start;
+      justify-content: center;
       gap: 6px;
       position: relative;
       padding-top: 6px;
-      padding-bottom: 12px;   /* etwas Luft, aber kein “Rand” */
-      box-sizing: border-box;
-      overflow: hidden;
+      padding-bottom: 10px;
     }
 
     .modeBlock{ width:100%; box-sizing:border-box; }
@@ -606,6 +601,8 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 8px;
+      position: relative;
+      z-index: 20; /* 00P immer oben */
     }
 
     .gcTop{
@@ -615,7 +612,7 @@
       gap: 10px;
       min-height: 48px;
       position: relative;
-      z-index: 50; /* ✅ 00P immer ganz oben */
+      z-index: 25;
     }
 
     .gcRight{
@@ -646,7 +643,7 @@
     .gcBottom{
       display:flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .gcRow{
@@ -678,7 +675,7 @@
       filter: brightness(0.97);
     }
 
-    /* ===== Entscheidung: Kippanzahl + Richtung ===== */
+    /* ===== KIPPANZAHL Label + Layout ===== */
     #decisionPanel{
       padding: 0 12px;
       box-sizing: border-box;
@@ -690,11 +687,12 @@
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 28px;
-      line-height: 1.05;
+      font-size: 34px;
+      line-height: 0.95;
       text-align: left;
       user-select:none;
-      margin: 0 0 8px 0;
+      margin-top: 10px;
+      margin-bottom: 14px;
     }
 
     .kippDirTitle{
@@ -703,13 +701,15 @@
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 28px;
-      line-height: 1.05;
+      font-size: 34px;
+      line-height: 0.95;
       text-align: left;
       user-select:none;
-      margin: 8px 0 8px 0;
+      margin-top: 8px;
+      margin-bottom: 10px;
     }
 
+    /* ===== Kippanzahl Buttons ===== */
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
@@ -718,7 +718,7 @@
       font-weight: 1000;
       font-size: clamp(18px, 8vmin, 36px);
       line-height: 1;
-      padding: 12px 0;
+      padding: 14px 0;
       border-radius: 10px;
       cursor: pointer;
       user-select:none;
@@ -735,18 +735,18 @@
       border-color: rgba(0,0,0,0.55);
     }
 
+    /* ===== Richtung Buttons ===== */
     .dirBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-      font-size: 22px;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      padding: 12px 0;
+      font-size: clamp(16px, 5.8vmin, 28px);
+      line-height: 1;
+      padding: 14px 0;
       border-radius: 10px;
-      cursor:pointer;
+      cursor: pointer;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
       box-shadow:
@@ -759,11 +759,17 @@
     }
     .dirBtn:active{ transform: translateY(1px) scale(0.99); }
 
-    .dirGlyph{
-      font-size: 26px;
-      line-height: 1;
-      font-weight: 1000;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    .dirBtn.sel{
+      background: var(--ui-panel-bg);
+      color: var(--ui-text);
+      border-color: rgba(0,0,0,0.55);
+    }
+
+    .dirIcon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 1.1em;
       transform: translateY(-1px);
     }
 
@@ -783,7 +789,7 @@
     .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
     .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
 
-    /* Pulsieren versetzt (Kippanzahl) */
+    /* Pulsieren versetzt */
     #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
@@ -792,10 +798,9 @@
     #decisionPanel.pulseSeq .miniBtn:nth-child(5){ animation-delay: 0.40s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(6){ animation-delay: 0.50s; }
 
-    /* Pulsieren Richtung */
     #decisionPanel.pulseDir .dirBtn{ animation: blinkSoft 0.95s ease-in-out infinite; }
     #decisionPanel.pulseDir .dirBtn:nth-child(1){ animation-delay: 0.00s; }
-    #decisionPanel.pulseDir .dirBtn:nth-child(2){ animation-delay: 0.20s; }
+    #decisionPanel.pulseDir .dirBtn:nth-child(2){ animation-delay: 0.25s; }
   </style>
 </head>
 
@@ -906,12 +911,8 @@
                 <div class="kippDirTitle">KIPPRICHTUNG?</div>
 
                 <div class="gcRow" aria-label="Kipprichtung">
-                  <button id="btnDirCCW" class="dirBtn" type="button" aria-label="Gegen den Uhrzeigersinn">
-                    <span class="dirGlyph">↶</span><span>CCW</span>
-                  </button>
-                  <button id="btnDirCW" class="dirBtn" type="button" aria-label="Im Uhrzeigersinn">
-                    <span class="dirGlyph">↷</span><span>CW</span>
-                  </button>
+                  <button class="dirBtn" data-dir="CCW" type="button"><span class="dirIcon">↶</span>CCW</button>
+                  <button class="dirBtn" data-dir="CW"  type="button"><span class="dirIcon">↷</span>CW</button>
                 </div>
               </div>
             </div>
@@ -944,8 +945,6 @@
 
     const btnSetNumbers = document.getElementById("btnSetNumbers");
     const decisionPanel = document.getElementById("decisionPanel");
-    const btnDirCW   = document.getElementById("btnDirCW");
-    const btnDirCCW  = document.getElementById("btnDirCCW");
 
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
@@ -955,6 +954,13 @@
     function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       boardEl.style.height = w + "px";
+    }
+
+    function setKippspeedStripHeight(){
+      const w = Math.round(boardEl.getBoundingClientRect().width);
+      const cell = w / 8;
+      const h = Math.round(cell * 3);
+      document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
     function getTiming(){
@@ -1047,6 +1053,13 @@
       kipGroup.style.setProperty("--rot", deg + "deg");
     }
 
+    function setRotationSnapWithOffset(offsetQuarter){
+      const idx = (rotIndex + offsetQuarter + 4) % 4;
+      const deg = rotDeg[idx];
+      wFace.style.setProperty("--rot", rotDeg[rotIndex] + "deg"); // W bleibt normal
+      kipGroup.style.setProperty("--rot", deg + "deg");           // nur KIP mit Offset
+    }
+
     function advanceFullCW(){
       rotIndex  = (rotIndex + 1) % 4;
       faceIndex = (faceIndex + 1) % 3;
@@ -1054,8 +1067,8 @@
     }
 
     function advanceFullCCW(){
-      rotIndex  = (rotIndex + 3) % 4;     // -90°
-      faceIndex = (faceIndex + 2) % 3;     // -1 modulo 3
+      rotIndex  = (rotIndex + 3) % 4;
+      faceIndex = (faceIndex + 2) % 3;
       setRotationSnap();
     }
 
@@ -1249,7 +1262,34 @@
       return [f4, f3, f2, f1];
     }
 
-    function renderKipCW(){
+    // ===== "Fotografierte" Zwischenkipps (als Daten-Snapshots) =====
+    // snapshot[i] beschreibt die Zwischenkippdarstellung, die beim CW-Übergang i -> (i+1) erscheint
+    // und wird danach NIE mehr berechnet, sondern nur noch gedreht/abgerufen.
+    let kipSnapshots = [
+      { right:[null,null,null,null], left:[null,null,null,null] },
+      { right:[null,null,null,null], left:[null,null,null,null] },
+      { right:[null,null,null,null], left:[null,null,null,null] },
+    ];
+    let haveSnapshots = false;
+
+    function buildKipSnapshots(){
+      for(let i=0;i<3;i++){
+        const curr = sets[i];
+        const next = sets[(i+1)%3];
+        kipSnapshots[i] = {
+          right: curr.slice(),
+          left:  mapHiddenToVisible_CW(next).slice()
+        };
+      }
+      haveSnapshots = true;
+    }
+
+    function renderKipFromSnapshot(snap){
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], snap.right[i]);
+      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i],  snap.left[i]);
+    }
+
+    function renderKip_CW_Live(){
       setRotationSnap();
       const curr = sets[faceIndex];
       const nextFaceIndex = (faceIndex + 1) % 3;
@@ -1258,19 +1298,6 @@
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
       const nextPreview = mapHiddenToVisible_CW(next);
       for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], nextPreview[i]);
-    }
-
-    function renderKipCCW(){
-      setRotationSnap();
-      const curr = sets[faceIndex];
-      const prevFaceIndex = (faceIndex + 2) % 3;   // -1
-      const prev = sets[prevFaceIndex];
-
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipRight[i], curr[i]);
-
-      // ✅ Wichtig: bei CCW muss die “auftauchende” Fläche die vorige sein (rückwärtszyklisch)
-      const prevPreview = mapHiddenToVisible_CW(prev);
-      for(let i=0;i<4;i++) renderNumber(slotTargetsKipLeft[i], prevPreview[i]);
     }
 
     function reroll12_keepEmpty(){
@@ -1285,6 +1312,8 @@
         [null,null,null,null],
       ];
       assigned = [false,false,false];
+
+      haveSnapshots = false;
 
       rotIndex  = 0;
       faceIndex = 0;
@@ -1308,7 +1337,7 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      showKip(); renderKipCW();
+      showKip(); renderKip_CW_Live();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1320,7 +1349,7 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      showKip(); renderKipCW();
+      showKip(); renderKip_CW_Live();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1332,7 +1361,7 @@
       await sleep(Math.round(getTiming().holdMs * 0.5));
       if(myToken!==setToken){ runningSet=false; return; }
 
-      showKip(); renderKipCW();
+      showKip(); renderKip_CW_Live();
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1341,7 +1370,7 @@
       showW();
       renderW();
 
-      // ✅ 3 zusätzliche komplette Kipps ab dem bisherigen Ende
+      // ✅ NEU: 3 zusätzliche komplette Kipps ab dem bisherigen Ende
       const EXTRA_KIPPS_AFTER_END = 3;
 
       await sleep(Math.round(getTiming().holdMs * 0.60));
@@ -1349,17 +1378,19 @@
 
       for(let j=0; j<EXTRA_KIPPS_AFTER_END; j++){
         showKip();
-        renderKipCW();
+        renderKip_CW_Live();
         await sleep(getTiming().holdMs);
         if(myToken!==setToken){ runningSet=false; return; }
 
         advanceFullCW();
-
         showW();
         renderW();
         await sleep(Math.round(getTiming().holdMs * 0.60));
         if(myToken!==setToken){ runningSet=false; return; }
       }
+
+      // ✅ HIER: "Fotografieren" als Daten-Snapshots (fix, unverrückbar)
+      buildKipSnapshots();
 
       runningSet = false;
       beginPlayerPhase();
@@ -1454,11 +1485,10 @@
     }
 
     let selectedKippCount = null;
-    let selectedDir = null; // "CW" | "CCW"
+    let selectedDir = null;
 
     function startPulseCount(){
       decisionPanel.classList.add("pulseSeq");
-      decisionPanel.classList.remove("pulseDir");
     }
     function stopPulseCount(){
       decisionPanel.classList.remove("pulseSeq");
@@ -1475,25 +1505,28 @@
       document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
         btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
       });
-
-      if(selectedKippCount == null){
-        selectedDir = null;
+      if(selectedKippCount != null){
+        stopPulseCount();
+        startPulseDir();
+      }else{
         stopPulseDir();
         startPulseCount();
-        return;
       }
-
-      stopPulseCount();
-      selectedDir = null;
-      startPulseDir();
     }
 
-    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-      btn.addEventListener("click", () => {
-        if(busyMove) return;
-        selectKippCount(btn.dataset.k);
+    function selectDir(d){
+      selectedDir = d || null;
+      document.querySelectorAll('.dirBtn[data-dir]').forEach(btn=>{
+        btn.classList.toggle("sel", String(btn.dataset.dir) === String(selectedDir));
       });
-    });
+      if(selectedDir) stopPulseDir();
+    }
+
+    function resetDecision(){
+      selectKippCount(null);
+      selectDir(null);
+      startPulseCount();
+    }
 
     function beginPlayerPhase(){
       btnSetNumbers.classList.add("hidden");
@@ -1508,12 +1541,7 @@
       deckCount = Array(13).fill(0);
       pickNewTarget();
 
-      selectedKippCount = null;
-      selectedDir = null;
-
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=> btn.classList.remove("sel"));
-      startPulseCount();
-      stopPulseDir();
+      resetDecision();
     }
 
     function endGame(){
@@ -1539,10 +1567,9 @@
 
     let busyMove = false;
 
-    async function performKipp(dir, count){
+    async function performKippCW(count){
       if(busyMove) return;
       if(!count) return;
-      if(dir !== "CW" && dir !== "CCW") return;
 
       busyMove = true;
 
@@ -1550,12 +1577,11 @@
 
       for(let i=0; i<c; i++){
         showKip();
-        if(dir === "CW") renderKipCW();
-        else renderKipCCW();
+        setRotationSnap();            // normal
+        renderKip_CW_Live();          // CW live (passt bereits)
         await sleep(getTiming().holdMs);
 
-        if(dir === "CW") advanceFullCW();
-        else advanceFullCCW();
+        advanceFullCW();
 
         showW();
         renderW();
@@ -1575,30 +1601,85 @@
         }
       }
 
-      // Reset Auswahl & Aufmerksamkeit
-      selectedKippCount = null;
-      selectedDir = null;
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=> btn.classList.remove("sel"));
-      startPulseCount();
-      stopPulseDir();
-
+      resetDecision();
       busyMove = false;
     }
 
-    btnDirCW.addEventListener("click", () => {
+    // ✅ CCW: Zwischenkipp MUSS vorlaufen und darf nicht neu "zusammengesetzt" werden.
+    // Wir verwenden die fixen Snapshots.
+    async function performKippCCW(count){
       if(busyMove) return;
-      if(selectedKippCount == null) return;
-      selectedDir = "CW";
-      stopPulseDir();
-      performKipp("CW", selectedKippCount);
+      if(!count) return;
+
+      if(!haveSnapshots){
+        // Sollte nach "Zahlen setzen" immer true sein
+        buildKipSnapshots();
+      }
+
+      busyMove = true;
+
+      const c = Math.max(1, Math.min(6, Number(count)));
+
+      for(let i=0; i<c; i++){
+        // CCW: zuerst die "vorherige" Zwischenkippdarstellung (Snapshot des CW-Übergangs prev -> curr)
+        const prevFace = (faceIndex + 2) % 3;
+        const snap = kipSnapshots[prevFace];
+
+        showKip();
+
+        // WICHTIG: erste CCW-Zwischenkipp muss um 90° CCW "vorlaufen"
+        // -> kipGroup mit Offset -90°, Vollfläche bleibt unverändert.
+        setRotationSnapWithOffset(-1);
+        renderKipFromSnapshot(snap);
+
+        await sleep(getTiming().holdMs);
+
+        // dann Vollfläche CCW weiter
+        advanceFullCCW();
+
+        showW();
+        renderW();
+        await sleep(Math.round(getTiming().holdMs * 0.60));
+      }
+
+      const vis = visibleNumbersSet();
+      const hit = vis.has(currentTargetNumber);
+
+      if(hit){
+        awardForTry();
+        nextRoundOrEnd();
+      }else{
+        tryIndex++;
+        if(tryIndex >= MAX_TRIES){
+          nextRoundOrEnd();
+        }
+      }
+
+      resetDecision();
+      busyMove = false;
+    }
+
+    // UI: zuerst Kippanzahl wählen, dann Richtung, dann ausführen
+    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+      btn.addEventListener("click", () => {
+        if(busyMove) return;
+        selectKippCount(btn.dataset.k);
+      });
     });
 
-    btnDirCCW.addEventListener("click", () => {
-      if(busyMove) return;
-      if(selectedKippCount == null) return;
-      selectedDir = "CCW";
-      stopPulseDir();
-      performKipp("CCW", selectedKippCount);
+    document.querySelectorAll('.dirBtn[data-dir]').forEach(btn=>{
+      btn.addEventListener("click", async () => {
+        if(busyMove) return;
+        if(selectedKippCount == null) return;
+
+        selectDir(btn.dataset.dir);
+
+        if(String(selectedDir) === "CW"){
+          await performKippCW(selectedKippCount);
+        }else{
+          await performKippCCW(selectedKippCount);
+        }
+      });
     });
 
     speedSlider.addEventListener("input", () => {
@@ -1658,6 +1739,10 @@
 
       buildGridOnce();
 
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
+      setTimeout(setKippspeedStripHeight, 80);
+
       resetToW1Q0_Empty();
       showSpeedMode();
     });
@@ -1665,6 +1750,9 @@
     window.addEventListener("resize", () => {
       setBoardSquare();
       requestAnimationFrame(setBoardSquare);
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
     });
   </script>
 </body>
