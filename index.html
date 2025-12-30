@@ -916,9 +916,9 @@
               <div id="levelPanel" class="hidden" aria-label="Level wählen">
                 <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
                 <div class="levelRow" aria-label="Level Buttons">
-                  <button id="btnLevelBrainee" class="levelBtn" type="button">Brainee</button>
+                  <button id="btnLevelTrainee" class="levelBtn" type="button">Trainee</button>
+                  <button id="btnLevelBrainy" class="levelBtn" type="button">Brainy</button>
                   <button id="btnLevelBrain" class="levelBtn" type="button">Brain</button>
-                  <button id="btnLevelBrainstorm" class="levelBtn" type="button">Brainstorm</button>
                 </div>
               </div>
 
@@ -971,9 +971,9 @@
     /* ✅ NEU: Level Panel refs */
     const levelPanel = document.getElementById("levelPanel");
     const levelTitle = document.getElementById("levelTitle");
-    const btnLevelBrainee = document.getElementById("btnLevelBrainee");
+    const btnLevelTrainee = document.getElementById("btnLevelTrainee");
+    const btnLevelBrainy = document.getElementById("btnLevelBrainy");
     const btnLevelBrain = document.getElementById("btnLevelBrain");
-    const btnLevelBrainstorm = document.getElementById("btnLevelBrainstorm");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1654,14 +1654,14 @@
     let selectedLevel = null;
 
     function chooseLevel(name){
-      selectedLevel = name; // "Brainee" | "Brain" | "Brainstorm"
+      selectedLevel = name; // "Trainee" | "Brainy" | "Brain"
       // aktuell: direkt ins Spiel starten
       beginPlayerPhase();
     }
 
-    btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
+    btnLevelTrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Trainee"); });
+    btnLevelBrainy.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainy"); });
     btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
-    btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainstorm"); });
 
     window.addEventListener("load", () => {
       setBoardSquare();
