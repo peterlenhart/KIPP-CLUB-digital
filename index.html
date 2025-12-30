@@ -36,8 +36,10 @@
       --btn-text: #2a160c;
       --btn-border: rgba(0,0,0,0.35);
 
-      --ui-panel-bg: #4a2418;   /* dunkel rotbraun */
+      --ui-panel-bg: #4a2418;   /* dunkel-rotbraun */
       --ui-text: #ead7be;       /* hellbeige */
+
+      --ui-top-h: 138px;        /* ✅ gewünschter oberer Rand */
 
       --kippstrip-h: auto;
 
@@ -46,9 +48,6 @@
 
       --rotSign: 1;
       --rot: 0deg;
-
-      /* ✅ NEU: Höhe der oberen braunen Fläche */
-      --topbar-h: 138px;
     }
 
     html, body { height: 100%; }
@@ -88,28 +87,6 @@
       gap: 12px;
       justify-content:flex-start;
       align-items:center;
-
-      /* ✅ wichtig: Layering für Overlay-Bar */
-      position: relative;
-    }
-
-    /* ✅ NEU: obere dunkelbraune Fläche als OVERLAY (nimmt keinen Platz, schiebt nichts) */
-    .stage::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      width:100%;
-      height: var(--topbar-h);
-      background: var(--ui-panel-bg);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* ✅ alles darüber bleibt normal (und wird NICHT verschoben) */
-    .stage > *{
-      position: relative;
-      z-index: 1;
     }
 
     /* ===== HEADER ===== */
@@ -123,6 +100,7 @@
       margin-bottom: 2px;
     }
 
+    /* ✅ Zurück & Schließen: einheitlich, beige */
     .navBtn{
       width: 46px;
       height: 46px;
@@ -134,24 +112,18 @@
       cursor: pointer;
 
       background: transparent;
-
-      /* ✅ Beige-Rahmen statt schwarz */
       border: 2px solid var(--ui-text);
-
-      box-shadow: 0 10px 16px rgba(0,0,0,0.10);
+      box-shadow: none;
       padding:0;
     }
-    .navBtn span{
-      font-weight: 1000;
-      font-size: 26px;
-      line-height: 1;
-
-      /* ✅ Beige statt schwarz */
-      color: var(--ui-text);
-
-      text-shadow: none;
-      transform: translateY(-0.5px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    .navBtn svg{
+      width: 28px;
+      height: 28px;
+      stroke: var(--ui-text);
+      stroke-width: 5;
+      fill: none;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
     }
     .navBtn:active{
       transform: scale(0.98);
@@ -165,37 +137,44 @@
       align-items:center;
       min-width: 0;
     }
+    /* ✅ NUR Farbe ändern (Text bleibt exakt) */
     .titleMain h1{
       margin: 0;
       padding: 0;
       font-weight: 1000;
       letter-spacing: 0.08em;
       font-size: clamp(22px, 6.0vmin, 44px);
-
-      /* ✅ nur FARBE ändern (Text bleibt "KIPP COLOR") */
-      color: var(--ui-text);
-
-      text-shadow: none;
+      color: var(--ui-text); /* ✅ beige */
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.28),
+        0 10px 18px rgba(0,0,0,0.18);
       line-height: 1;
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
     }
 
-    /* ===== BOX SHELL (ohne Rand) ===== */
+    /* ===== BOX SHELL (ohne Rand, ohne Schatten nach Süden) ===== */
     .boxShell{
       width: 100%;
       box-sizing: border-box;
       background: transparent;
       border: 0;
       border-radius: var(--box-radius);
-      box-shadow:
-        10px 18px 42px rgba(0,0,0,0.55),
-        3px 6px 16px rgba(0,0,0,0.35);
+      box-shadow: none;        /* ✅ Schatten unter rotbraunem Panel weg */
       overflow: hidden;
       display:flex;
       flex-direction: column;
       gap: 0;
+    }
+
+    /* ✅ Oberer Rand: 138px, volle Breite, dunkelbraun, ohne Rahmen */
+    .topStrip{
+      width: 100%;
+      height: var(--ui-top-h);
+      background: var(--ui-panel-bg);
+      border: 0;
+      box-shadow: none;
     }
 
     .board{
@@ -212,6 +191,11 @@
       /* ✅ schwarzer Rahmen NUR ums Board (ändert keine Layout-Breite) */
       outline: var(--box-border) solid var(--box-black);
       outline-offset: 0;
+
+      /* ✅ Board darf Schatten haben – Panel unten NICHT */
+      box-shadow:
+        10px 18px 42px rgba(0,0,0,0.55),
+        3px 6px 16px rgba(0,0,0,0.35);
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
@@ -640,7 +624,7 @@
       position: relative;
     }
 
-    /* ✅ Score-Panel: rotbraun, volle Breite, ohne Rand */
+    /* ✅ Score-Panel: rotbraun, volle Breite, ohne Rand, ohne Schatten */
     .scorePanel{
       width: 100%;
       height: calc(var(--ui-cell) * 2);
@@ -650,24 +634,24 @@
       overflow: hidden;
       border: 0;
       box-sizing: border-box;
-
-      /* ✅ sicher: kein Schatten nach Süden */
       box-shadow: none;
     }
     .scorePanel.underConsole{ margin-top: 0; }
 
+    /* ✅ rechtsbündig wie "Brain" (gleiche Innen-Padding-Linie) */
     .scoreAnchor{
       position:absolute;
-      left: calc(var(--ui-cell) * 7);
-      top:  calc(var(--ui-cell) * 1);
-      transform: translate(-50%, -50%);
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
       display:flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
       gap: 2px;
       pointer-events: none;
       z-index: 5;
+      text-align: right;
     }
     .gcPoints{
       font-weight: 1000;
@@ -677,22 +661,17 @@
       line-height: 0.95;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
-    .gcHi{
-      color: var(--ui-text);
-      font-weight: 800;
-      font-size: 12px;
-      opacity: 0.92;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      line-height: 1.0;
-    }
+    .gcHi{ display:none; } /* ✅ derzeit nicht anzeigen */
 
+    /* ✅ linksbündig wie "Trainee" (gleiche Innen-Padding-Linie) */
     .kippBilanzBtn{
       position:absolute;
-      left: calc(var(--ui-cell) * 1);
-      top:  calc(var(--ui-cell) * 1);
+      left: 12px;
+      top: 50%;
       transform: translateY(-50%);
-      width: calc(var(--ui-cell) * 3.5);
+      width: calc(33.333% - 8px);
       height: calc(var(--ui-cell) * 0.85);
       border-radius: 12px;
       border: 1px solid rgba(0,0,0,0.35);
@@ -907,19 +886,27 @@
 
     <div class="titleRow" aria-label="Titelzeile">
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
-        <span>←</span>
+        <!-- ✅ genormtes Icon, beige -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 5L8 12l7 7"></path>
+        </svg>
       </button>
 
       <div class="titleMain"><h1>KIPP COLOR</h1></div>
 
       <button id="exitBtnTop" class="navBtn" aria-label="Spiel beenden" type="button">
-        <span>X</span>
+        <!-- ✅ genormtes X, beige -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
       </button>
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
-      <div class="board" id="board">
+      <!-- ✅ oberer 138px Rand -->
+      <div class="topStrip" aria-hidden="true"></div>
 
+      <div class="board" id="board">
         <div class="floor" aria-hidden="true"></div>
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
@@ -1016,7 +1003,7 @@
         </button>
 
         <div class="scoreAnchor">
-          <div id="gcPoints" class="gcPoints">00P</div>
+          <div id="gcPoints" class="gcPoints">P00/80</div>
           <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
         </div>
       </div>
@@ -1520,10 +1507,11 @@
     let currentTargetNumber = null;
     let currentTargetColorClass = null;
 
+    /* ✅ Punkteformat: P00/80 */
     function setPoints(p){
       points = Math.max(0, p|0);
       const s = String(points).padStart(2, "0");
-      gcPoints.textContent = s + "P";
+      gcPoints.textContent = "P" + s + "/80";
     }
 
     function visibleNumbersSet(){
@@ -1656,7 +1644,6 @@
       roundIndex = 0;
       tryIndex = 0;
       setPoints(points);
-      gcHi.textContent = "80";
 
       deckCount = Array(13).fill(0);
       pickNewTarget();
