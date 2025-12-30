@@ -44,9 +44,6 @@
       /* ✅ UI-Cell (= Boardbreite/8) wird per JS gesetzt */
       --ui-cell: 60px;
 
-      /* ✅ Fixe Wunschhöhe für das rotbraune Panel */
-      --ui-panel-h: 168px;
-
       --rotSign: 1;
       --rot: 0deg;
     }
@@ -153,12 +150,12 @@
       text-overflow: ellipsis;
     }
 
-    /* ===== BOX SHELL ===== */
+    /* ===== BOX SHELL (ohne Rand) ===== */
     .boxShell{
       width: 100%;
       box-sizing: border-box;
-      background: var(--box-black);
-      border: var(--box-border) solid var(--box-black);
+      background: transparent;
+      border: 0;
       border-radius: var(--box-radius);
       box-shadow:
         10px 18px 42px rgba(0,0,0,0.55),
@@ -167,7 +164,6 @@
       display:flex;
       flex-direction: column;
       gap: 0;
-      position: relative;
     }
 
     .board{
@@ -180,6 +176,10 @@
       border: 0;
       border-radius: 0;
       overflow: visible;
+
+      /* ✅ schwarzer Rahmen NUR ums Board (ändert keine Layout-Breite) */
+      outline: var(--box-border) solid var(--box-black);
+      outline-offset: 0;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
@@ -447,7 +447,7 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Konsole-Block ===== */
+    /* ===== Konsole-Block (schwarz, volle Breite) ===== */
     .kippspeedBlock{
       width: 100%;
       height: var(--kippstrip-h);
@@ -608,30 +608,19 @@
       position: relative;
     }
 
-    /* ✅ Score-Panel: exakt 688×168 (innerhalb der BoxShell-Breite),
-       und überdeckt links/rechts/unten die schwarze BoxShell-Border (4px). */
+    /* ✅ Score-Panel: rotbraun, volle Breite, ohne Rand */
     .scorePanel{
+      width: 100%;
+      height: calc(var(--ui-cell) * 2);
+      background: var(--ui-panel-bg);
       position: relative;
       user-select:none;
       overflow: hidden;
-
-      background: var(--ui-panel-bg);
-
-      /* Wunsch-Höhe fix */
-      height: var(--ui-panel-h);
-
-      /* Full-bleed über die 4px BoxShell-Border drüber */
-      margin-left:  calc(-1 * var(--box-border));
-      margin-right: calc(-1 * var(--box-border));
-      margin-bottom:calc(-1 * var(--box-border));
-      width: calc(100% + (2 * var(--box-border)));
-
+      border: 0;
       box-sizing: border-box;
-      z-index: 50;
     }
     .scorePanel.underConsole{ margin-top: 0; }
 
-    /* Anchor: Mitte zwischen G/H (= 7*cell) und Mitte zwischen Zeile 1/2 (= 1*cell) */
     .scoreAnchor{
       position:absolute;
       left: calc(var(--ui-cell) * 7);
@@ -663,13 +652,12 @@
       line-height: 1.0;
     }
 
-    /* ✅ Button "KIPP Bilanz" im Panel: Reihe B bis halbe E, Zeile 1/2 mittig */
     .kippBilanzBtn{
       position:absolute;
-      left: calc(var(--ui-cell) * 1);      /* Spalte B Start */
-      top:  calc(var(--ui-cell) * 1);      /* Mitte zwischen Zeile 1 und 2 */
+      left: calc(var(--ui-cell) * 1);
+      top:  calc(var(--ui-cell) * 1);
       transform: translateY(-50%);
-      width: calc(var(--ui-cell) * 3.5);   /* B -> halbe E */
+      width: calc(var(--ui-cell) * 3.5);
       height: calc(var(--ui-cell) * 0.85);
       border-radius: 12px;
       border: 1px solid rgba(0,0,0,0.35);
@@ -733,7 +721,6 @@
       filter: brightness(0.97);
     }
 
-    /* ===== KIPPANZAHL Label + Layout FIX ===== */
     #decisionPanel{
       padding: 0 12px;
       box-sizing: border-box;
@@ -753,7 +740,6 @@
       margin-bottom: 14px;
     }
 
-    /* ===== Kippanzahl Buttons ===== */
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
@@ -795,7 +781,6 @@
     .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
     .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
 
-    /* Pulsieren versetzt */
     #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
@@ -804,9 +789,6 @@
     #decisionPanel.pulseSeq .miniBtn:nth-child(5){ animation-delay: 0.40s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(6){ animation-delay: 0.50s; }
 
-    /* =========================================================
-       ✅ Level-Wahl Panel
-       ========================================================= */
     #levelPanel{
       width: 100%;
       box-sizing: border-box;
@@ -818,7 +800,6 @@
       align-items: center;
       gap: 10px;
 
-      /* 6px nach Norden (wie vorher) */
       transform: translateY(-6px);
 
       position: relative;
@@ -889,7 +870,6 @@
 <body>
   <div class="stage">
 
-    <!-- HEADER -->
     <div class="titleRow" aria-label="Titelzeile">
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <span>←</span>
@@ -941,10 +921,8 @@
         <div class="ball" aria-label="Kugel"></div>
       </div>
 
-      <!-- Console-Block -->
       <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
 
-        <!-- MODE 1: Speed -->
         <div id="speedMode" class="modeBlock">
           <div class="kippspeedTop">
             <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
@@ -965,20 +943,17 @@
           </div>
         </div>
 
-        <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-
             <div class="gcBottom" aria-label="Aktionen">
               <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
 
-              <!-- Level Auswahl nach Zahlensetz-Zyklus -->
               <div id="levelPanel" class="hidden" aria-label="Level wählen">
                 <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
                 <div class="levelRow" aria-label="Level Buttons">
-                  <button id="btnLevelBrainee" class="levelBtn" type="button">Trainee</button>
-                  <button id="btnLevelBrain" class="levelBtn" type="button">Brainee</button>
-                  <button id="btnLevelBrainstorm" class="levelBtn" type="button">Brain</button>
+                  <button id="btnLevelTrainee" class="levelBtn" type="button">Trainee</button>
+                  <button id="btnLevelBrainy" class="levelBtn" type="button">Brainy</button>
+                  <button id="btnLevelBrain" class="levelBtn" type="button">Brain</button>
                 </div>
               </div>
 
@@ -995,13 +970,11 @@
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
       </div>
 
-      <!-- ✅ ScorePanel sitzt unter der schwarzen Konsole und hat KEINEN schwarzen Rand links/rechts/unten -->
       <div id="scorePanel" class="scorePanel underConsole hidden" aria-label="Score Panel">
         <button id="btnKippBilanz" class="kippBilanzBtn" type="button" aria-label="KIPP Bilanz">
           KIPP Bilanz
@@ -1044,12 +1017,11 @@
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
 
-    /* Level Panel refs */
     const levelPanel = document.getElementById("levelPanel");
     const levelTitle = document.getElementById("levelTitle");
-    const btnLevelBrainee = document.getElementById("btnLevelBrainee");
-    const btnLevelBrain = document.getElementById("btnLevelBrain");
-    const btnLevelBrainstorm = document.getElementById("btnLevelBrainstorm");
+    const btnLevelTrainee = document.getElementById("btnLevelTrainee");
+    const btnLevelBrainy  = document.getElementById("btnLevelBrainy");
+    const btnLevelBrain   = document.getElementById("btnLevelBrain");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1065,7 +1037,6 @@
       const h = Math.round(cell * 3);
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
 
-      /* ✅ UI-Cell für Positionierungen im Panel */
       document.documentElement.style.setProperty("--ui-cell", Math.round(cell) + "px");
     }
 
@@ -1232,7 +1203,6 @@
 
     function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
     function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay", !!on); }
-    function setAttentionSet: (on)=>{}; // placeholder to avoid errors if any minifier; real function below
     function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet", !!on); }
 
     function enterSpeedAttention(){
@@ -1563,12 +1533,8 @@
 
     let selectedKippCount = null;
 
-    function startPulse(){
-      decisionPanel.classList.add("pulseSeq");
-    }
-    function stopPulse(){
-      decisionPanel.classList.remove("pulseSeq");
-    }
+    function startPulse(){ decisionPanel.classList.add("pulseSeq"); }
+    function stopPulse(){ decisionPanel.classList.remove("pulseSeq"); }
 
     function selectKippCount(k){
       selectedKippCount = (k == null) ? null : Number(k);
@@ -1606,7 +1572,6 @@
       if(hit){
         const add = SCORE_BY_TRY[Math.min(tryIndex, SCORE_BY_TRY.length-1)] || 0;
         setPoints(points + add);
-
         roundIndex++;
         tryIndex = 0;
         if(roundIndex >= MAX_ROUNDS){
@@ -1719,13 +1684,9 @@
       }
     });
 
-    function chooseLevel(name){
-      beginPlayerPhase();
-    }
-
-    btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Trainee"); });
-    btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
-    btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
+    btnLevelTrainee.addEventListener("click", () => { if(busyMove) return; beginPlayerPhase(); });
+    btnLevelBrainy.addEventListener("click", () => { if(busyMove) return; beginPlayerPhase(); });
+    btnLevelBrain.addEventListener("click", () => { if(busyMove) return; beginPlayerPhase(); });
 
     if(btnKippBilanz){
       btnKippBilanz.addEventListener("click", () => {
