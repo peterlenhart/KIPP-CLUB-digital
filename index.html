@@ -85,8 +85,7 @@
   margin-top: 0;
 
   /* ✅ kleiner “sicherer” Abstand oben (optional, aber sinnvoll am Handy) */
-  padding-top: 8px;
-
+  padding-top: calc(var(--ui-top-h) + 8px);
   padding-bottom: 2vh;
   display:flex;
   flex-direction: column;
@@ -176,12 +175,17 @@
 
     /* ✅ Oberer Rand: 138px, volle Breite, dunkelbraun, ohne Rahmen */
     .topStrip{
-      width: 100%;
-      height: var(--ui-top-h);
-      background: var(--ui-panel-bg);
-      border: 0;
-      box-shadow: none;
-    }
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--ui-top-h);
+  background: var(--ui-panel-bg);
+  border: 0;
+  box-shadow: none;
+  z-index: 9999;
+  pointer-events: none;
+}
 
     .board{
       position:relative;
