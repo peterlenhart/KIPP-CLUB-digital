@@ -41,11 +41,11 @@
 
       --kippstrip-h: auto;
 
+      /* ✅ NEU: UI-Cell (= Boardbreite/8) wird per JS gesetzt */
+      --ui-cell: 60px;
+
       --rotSign: 1;
       --rot: 0deg;
-
-      /* ✅ NEU: Fix-Höhe für den Punkteblock, damit unten nix “schiebt” */
-      --gcTop-reserve: 56px;
     }
 
     html, body { height: 100%; }
@@ -595,42 +595,38 @@
     .gameConsole{
       width:100%;
       height:100%;
-      /* ✅ WICHTIG: oben 0, damit 00P exakt “auf der Zeilenlinie” sitzt */
-      padding: 0 12px 8px 12px;
+      padding: 8px 12px;
       box-sizing:border-box;
       display:flex;
       flex-direction: column;
       justify-content: space-between;
       gap: 8px;
-
       position: relative;
-      z-index: 9999;
     }
 
-    /* ✅ FIX: 00P/Highscore absolut oben, unabhängig von unteren Texten */
-    .gcTop{
-      position: absolute;
-      top: 0;                 /* = untere Linie Zeile 8 / Kante Board->Konsole */
-      right: 12px;
-      left: 12px;
-      height: var(--gcTop-reserve);
-      display:flex;
-      align-items: flex-end;  /* Zahlenfuß “auf Linie” */
-      justify-content: flex-end;
-      pointer-events: none;
-      z-index: 99999;
+    /* ✅ NEU: Score-Panel (rotbraun, 8 Spalten breit, 2 Zeilen hoch) */
+    .scorePanel{
+      width: 100%;
+      height: calc(var(--ui-cell) * 2);
+      background: var(--ui-panel-bg);
+      position: relative;
+      user-select:none;
+      overflow: hidden;
     }
-
-    .gcRight{
+    /* Anchor: Mitte zwischen G/H (= 7*cell) und Mitte zwischen Zeile 1/2 (= 1*cell) */
+    .scoreAnchor{
+      position:absolute;
+      left: calc(var(--ui-cell) * 7);
+      top:  calc(var(--ui-cell) * 1);
+      transform: translate(-50%, -50%);
       display:flex;
       flex-direction: column;
-      align-items:flex-end;
+      align-items: center;
+      justify-content: center;
       gap: 2px;
-      user-select:none;
-      position: relative;
+      pointer-events: none;
       z-index: 999999;
     }
-
     .gcPoints{
       font-weight: 1000;
       color: var(--ui-text);
@@ -639,8 +635,6 @@
       line-height: 0.95;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
-      /* ✅ Baseline-Feintuning (falls du wirklich ~35px wolltest: hier ändern) */
-      /* transform: translateY(0px); */
     }
     .gcHi{
       color: var(--ui-text);
@@ -648,14 +642,13 @@
       font-size: 12px;
       opacity: 0.92;
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      line-height: 1.0;
     }
 
     .gcBottom{
       display:flex;
       flex-direction: column;
       gap: 8px;
-      /* ✅ Platz reservieren, damit Buttons nie den Punkteblock “schieben” */
-      padding-top: var(--gcTop-reserve);
     }
 
     .gcRow{
@@ -772,6 +765,7 @@
       align-items: center;
       gap: 10px;
 
+      /* 6px nach Norden (wie vorher) */
       transform: translateY(-6px);
 
       position: relative;
@@ -921,8 +915,10 @@
         <!-- MODE 2: Game -->
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-            <div class="gcTop" aria-label="Punkteblock">
-              <div class="gcRight">
+
+            <!-- ✅ Punkt 1: Panel 1A–2H rotbraun + 00P/Highscore mittig (G/H & Zeile1/2) -->
+            <div class="scorePanel" aria-label="Score Panel">
+              <div class="scoreAnchor">
                 <div id="gcPoints" class="gcPoints">00P</div>
                 <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
               </div>
@@ -935,7 +931,6 @@
               <div id="levelPanel" class="hidden" aria-label="Level wählen">
                 <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
                 <div class="levelRow" aria-label="Level Buttons">
-                  <!-- ✅ FIX: Brain/Brainstorm raus -> Trainee/Brainee/Brain -->
                   <button id="btnLevelBrainee" class="levelBtn" type="button">Trainee</button>
                   <button id="btnLevelBrain" class="levelBtn" type="button">Brainee</button>
                   <button id="btnLevelBrainstorm" class="levelBtn" type="button">Brain</button>
@@ -1005,8 +1000,12 @@
     function setKippspeedStripHeight(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
       const cell = w / 8;
+
       const h = Math.round(cell * 3);
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
+
+      /* ✅ NEU: UI-Cell für ScorePanel */
+      document.documentElement.style.setProperty("--ui-cell", Math.round(cell) + "px");
     }
 
     function getTiming(){
@@ -1663,7 +1662,7 @@
       beginPlayerPhase();
     }
 
-    /* ✅ FIX: Level-Namen passend zu Trainee/Brainee/Brain */
+    /* ✅ Level-Namen passend zu Buttons */
     btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Trainee"); });
     btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
     btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
