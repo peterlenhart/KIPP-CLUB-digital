@@ -1618,6 +1618,32 @@
 
     let busyMove = false;
 
+    /* =========================
+       ✅ FIX: Trefferprüfung robust (inkl. Punktsymmetrie)
+       - Wir prüfen nicht nur die direkte Adjacent-Zelle,
+         sondern auch die punktsymmetrische (180°) dazu.
+       - Damit wird dein Beispiel erkannt, wenn die Zielzahl
+         "punktsymmetrisch" korrekt liegt.
+       ========================= */
+
+    function isHitForTarget(inner, targetColor, targetNumber){
+      for(const tc of TARGET_COORDS){
+        const col = colorMap.get(tc);
+        if(col !== targetColor) continue;
+
+        const adj = adjacentInnerCoordForTarget(tc);
+        if(!adj) continue;
+
+        // direkt daneben
+        if(inner.get(adj) === targetNumber) return true;
+
+        // punktsymmetrisch (180°)
+        const adj180 = rotateCoordCW(adj, 2);
+        if(inner.get(adj180) === targetNumber) return true;
+      }
+      return false;
+    }
+
     function pickNewTarget(){
       const inner = currentInnerMap();
       const visibleNums = Array.from(new Set(Array.from(inner.values())));
@@ -1633,10 +1659,9 @@
       // Kandidaten: Zielfelder, die aktuell im colorMap sind UND deren Adjacent im inner-map existiert
       const candidates = TARGET_COORDS
         .map(tc => ({ tc, adj: adjacentInnerCoordForTarget(tc), col: colorMap.get(tc) }))
-        .filter(o => o.col && o.adj && inner.has(o.adj));
+        .filter(o => o.col && o.adj); // ✅ nicht mehr auf inner.has(adj) filtern, weil wir auch 180° prüfen
 
       if(candidates.length === 0){
-        // fallback: nimm irgendeine Farbe aus den vorhandenen Ziel-Farben
         const any = Array.from(new Set(TARGET_COORDS.map(tc=>colorMap.get(tc)).filter(Boolean)));
         currentTargetColor = any[Math.floor(Math.random()*any.length)] || "c-orange";
         currentTargetNumber = visibleNums[Math.floor(Math.random()*visibleNums.length)];
@@ -1644,12 +1669,12 @@
         return;
       }
 
-      // Wähle so, dass NICHT sofort Treffer ist
+      // Wähle so, dass NICHT sofort Treffer ist (mit neuer Hit-Logik)
       let tries = 0;
-      while(tries < 80){
+      while(tries < 120){
         const n = visibleNums[Math.floor(Math.random() * visibleNums.length)];
         const c = candidates[Math.floor(Math.random() * candidates.length)];
-        const hitNow = (inner.get(c.adj) === n);
+        const hitNow = isHitForTarget(inner, c.col, n);
         if(!hitNow){
           currentTargetColor = c.col;
           currentTargetNumber = n;
@@ -1670,17 +1695,7 @@
     function evaluateHit(){
       if(!currentTargetColor || currentTargetNumber == null) return false;
       const inner = currentInnerMap();
-
-      // Treffer, wenn an irgendeinem der 4 gleichfärbigen Zielfelder
-      // die adjacent-inner Zahl exakt die Zielzahl ist.
-      for(const tc of TARGET_COORDS){
-        const col = colorMap.get(tc);
-        if(col !== currentTargetColor) continue;
-        const adj = adjacentInnerCoordForTarget(tc);
-        if(!adj) continue;
-        if(inner.get(adj) === currentTargetNumber) return true;
-      }
-      return false;
+      return isHitForTarget(inner, currentTargetColor, currentTargetNumber);
     }
 
     async function performKippCW(count){
