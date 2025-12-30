@@ -43,9 +43,6 @@
 
       --rotSign: 1;
       --rot: 0deg;
-
-      /* ✅ NEU: Gesamtraster-Höhe (8 + 5) */
-      --rows: 13;
     }
 
     html, body { height: 100%; }
@@ -109,7 +106,7 @@
       cursor: pointer;
 
       background: transparent;
-      border: 2px solid rgba(255,255,255,0.85);
+      border: 2px solid rgba(0,0,0,0.55);
       box-shadow: 0 10px 16px rgba(0,0,0,0.10);
       padding:0;
     }
@@ -117,10 +114,10 @@
       font-weight: 1000;
       font-size: 26px;
       line-height: 1;
-      color: rgba(255,255,255,0.92);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.40);
+      color: rgba(0,0,0,0.88);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.30);
       transform: translateY(-0.5px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* verhindert Emoji-Look */
     }
     .navBtn:active{
       transform: scale(0.98);
@@ -140,10 +137,10 @@
       font-weight: 1000;
       letter-spacing: 0.08em;
       font-size: clamp(22px, 6.0vmin, 44px);
-      color: rgba(255,255,255,0.92);
+      color: rgba(0,0,0,0.92);
       text-shadow:
-        0 1px 0 rgba(0,0,0,0.45),
-        0 10px 18px rgba(0,0,0,0.35);
+        0 1px 0 rgba(255,255,255,0.35),
+        0 10px 18px rgba(0,0,0,0.25);
       line-height: 1;
       white-space: nowrap;
       overflow:hidden;
@@ -169,12 +166,13 @@
     .board{
       position:relative;
       width: 100%;
-      height: auto;     /* ✅ Höhe wird per JS gesetzt (ROWS/8) */
+      height: auto;
+      aspect-ratio: 1 / 1;
       box-sizing: border-box;
       background: var(--box-black);
       border: 0;
       border-radius: 0;
-      overflow: hidden;
+      overflow: visible;
 
       --cell: calc((100% - 7 * var(--cell-gap)) / 8);
       --step: calc(var(--cell) + var(--cell-gap));
@@ -185,7 +183,7 @@
       inset:0;
       display:grid;
       grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(var(--rows), 1fr); /* ✅ 13 Reihen */
+      grid-template-rows: repeat(8, 1fr);
       gap: var(--cell-gap);
       pointer-events: none;
       z-index: 1;
@@ -211,6 +209,7 @@
     }
 
     /* ===== Target Zahl auf farbigen Feldern ===== */
+    /* FIX: Rotation darf NICHT durch Animation überschrieben werden -> Rotation über CSS-Variable */
     @keyframes targetBreath{
       0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
       50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
@@ -220,7 +219,7 @@
       left:50%;
       top:50%;
       font-weight: 900;
-      font-size: clamp(18px, 8vmin, 36px);
+      font-size: clamp(18px, 8vmin, 36px); /* exakt wie Slot-Zahlen */
       color: rgba(0,0,0,0.92);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
@@ -235,12 +234,13 @@
       justify-content:center;
     }
 
-    .trot-top    { --trot: 0deg; }
-    .trot-bottom { --trot: 180deg; }
-    .trot-left   { --trot: -90deg; }
-    .trot-right  { --trot: 90deg; }
+    /* ✅ Zahlenfuß IMMER Richtung Boxmitte */
+    .trot-top    { --trot: 0deg; }     /* oben: Fuß nach unten */
+    .trot-bottom { --trot: 180deg; }   /* unten: Fuß nach oben */
+    .trot-left   { --trot: -90deg; }   /* links: Fuß nach rechts (zur Mitte) */
+    .trot-right  { --trot: 90deg; }    /* rechts: Fuß nach links (zur Mitte) */
 
-    /* ===== FLOOR (liegt in den oberen 8 Reihen) ===== */
+    /* ===== FLOOR ===== */
     .floor{
       position:absolute;
       left: var(--step);
@@ -442,12 +442,9 @@
     .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
     .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
 
-    /* ===== Konsole-Block (liegt jetzt im Board, in den unteren 5 Reihen) ===== */
+    /* ===== Konsole-Block ===== */
     .kippspeedBlock{
-      position:absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      width: 100%;
       height: var(--kippstrip-h);
       background: var(--box-black);
       user-select:none;
@@ -455,10 +452,9 @@
       flex-direction: column;
       justify-content: center;
       gap: 6px;
-      z-index: 20; /* über Grid */
+      position: relative;
       padding-top: 6px;
       padding-bottom: 6px;
-      box-sizing: border-box;
     }
 
     .modeBlock{ width:100%; box-sizing:border-box; }
@@ -676,7 +672,7 @@
 
     /* ===== KIPPANZAHL Label + Layout FIX ===== */
     #decisionPanel{
-      padding: 0 12px;
+      padding: 0 12px; /* linksbündig mit erster Taste wie gewünscht */
       box-sizing: border-box;
     }
 
@@ -686,22 +682,30 @@
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+
+      /* so groß wie 00P */
       font-size: 34px;
       line-height: 0.95;
+
       text-align: left;
       user-select:none;
+
       margin-top: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 14px; /* größerer Abstand zu den Buttons */
     }
 
+    /* ===== Kippanzahl Buttons ===== */
     .miniBtn{
       flex: 1 1 0;
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
+
+      /* ✅ Zahl exakt wie Slotzahlen */
       font-size: clamp(18px, 8vmin, 36px);
       line-height: 1;
+
       padding: 14px 0;
       border-radius: 10px;
       cursor: pointer;
@@ -735,6 +739,7 @@
     .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
     .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
 
+    /* Pulsieren versetzt */
     #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
@@ -750,6 +755,7 @@
 
     <!-- HEADER -->
     <div class="titleRow" aria-label="Titelzeile">
+      <!-- FIX 1: Back-Button gleicher Typus wie X (kein Emoji) -->
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <span>←</span>
       </button>
@@ -762,10 +768,10 @@
     </div>
 
     <div class="boxShell" id="boxShell" aria-label="BoxShell">
-
       <div class="board" id="board">
+
         <div class="floor" aria-hidden="true"></div>
-        <div id="grid" class="grid" aria-label="Raster"></div>
+        <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
         <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
           <div class="cubeShadow" aria-hidden="true"></div>
@@ -798,73 +804,68 @@
         </div>
 
         <div class="ball" aria-label="Kugel"></div>
+      </div>
 
-        <!-- ✅ Konsole im Board (untere 5 Reihen) -->
-        <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
+      <!-- Console-Block -->
+      <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
 
-          <!-- MODE 1: Speed -->
-          <div id="speedMode" class="modeBlock">
-            <div class="kippspeedTop">
-              <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
+        <!-- MODE 1: Speed -->
+        <div id="speedMode" class="modeBlock">
+          <div class="kippspeedTop">
+            <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
 
-              <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
-                <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
-              </button>
+            <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
+              <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
+            </button>
 
-              <button id="btnOk" class="squareBtn" aria-label="Geschwindigkeit bestätigen" type="button">
-                <span class="okText">OK</span>
-              </button>
-            </div>
-
-            <div class="sliderRow">
-              <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
-              <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
-              <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
-            </div>
+            <button id="btnOk" class="squareBtn" aria-label="Geschwindigkeit bestätigen" type="button">
+              <span class="okText">OK</span>
+            </button>
           </div>
 
-          <!-- MODE 2: Game -->
-          <div id="gameMode" class="modeBlock hidden">
-            <div class="gameConsole">
-              <div class="gcTop" aria-label="Punkteblock">
-                <div class="gcRight">
-                  <div id="gcPoints" class="gcPoints">00P</div>
-                  <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
-                </div>
-              </div>
-
-              <div class="gcBottom" aria-label="Aktionen">
-                <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
-
-                <div id="decisionPanel" class="hidden">
-                  <div class="kippCountTitle">KIPPANZAHL?</div>
-
-                  <div class="gcRow" aria-label="Kippanzahl">
-                    <button class="miniBtn" data-k="1" type="button">1</button>
-                    <button class="miniBtn" data-k="2" type="button">2</button>
-                    <button class="miniBtn" data-k="3" type="button">3</button>
-                    <button class="miniBtn" data-k="4" type="button">4</button>
-                    <button class="miniBtn" data-k="5" type="button">5</button>
-                    <button class="miniBtn" data-k="6" type="button">6</button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+          <div class="sliderRow">
+            <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
+            <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
+            <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
           </div>
-
         </div>
 
-      </div><!-- /board -->
+        <!-- MODE 2: Game -->
+        <div id="gameMode" class="modeBlock hidden">
+          <div class="gameConsole">
+            <div class="gcTop" aria-label="Punkteblock">
+              <div class="gcRight">
+                <div id="gcPoints" class="gcPoints">00P</div>
+                <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
+              </div>
+            </div>
 
-    </div><!-- /boxShell -->
+            <div class="gcBottom" aria-label="Aktionen">
+              <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
+
+              <div id="decisionPanel" class="hidden">
+                <div class="kippCountTitle">KIPPANZAHL?</div>
+
+                <div class="gcRow" aria-label="Kippanzahl">
+                  <button class="miniBtn" data-k="1" type="button">1</button>
+                  <button class="miniBtn" data-k="2" type="button">2</button>
+                  <button class="miniBtn" data-k="3" type="button">3</button>
+                  <button class="miniBtn" data-k="4" type="button">4</button>
+                  <button class="miniBtn" data-k="5" type="button">5</button>
+                  <button class="miniBtn" data-k="6" type="button">6</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
 
   </div>
 
   <script>
-    const GRID_COLS = 8;
-    const GRID_ROWS = 13; // ✅ 8 + 5
-
     const boardEl     = document.getElementById("board");
     const grid        = document.getElementById("grid");
     const wFace       = document.getElementById("wFaceGroup");
@@ -890,19 +891,15 @@
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-    /* ✅ Board-Höhe aus Raster rechnen: height = width * (ROWS/8) */
-    function setBoardRasterSize(){
+    function setBoardSquare(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
-      const h = Math.round(w * (GRID_ROWS / GRID_COLS));
-      boardEl.style.height = h + "px";
-      document.documentElement.style.setProperty("--rows", String(GRID_ROWS));
+      boardEl.style.height = w + "px";
     }
 
-    /* ✅ Konsole ist genau 5 Rasterzeilen hoch */
-    function setConsoleHeight(){
+    function setKippspeedStripHeight(){
       const w = Math.round(boardEl.getBoundingClientRect().width);
-      const cell = w / GRID_COLS;
-      const h = Math.round(cell * 5); // 5 Reihen
+      const cell = w / 8;
+      const h = Math.round(cell * 3);
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
     }
 
@@ -946,21 +943,17 @@
 
     function buildGridOnce(){
       if (grid.dataset.built === "1") return;
-
-      for(let r=1; r<=GRID_ROWS; r++){
-        for(let c=0; c<GRID_COLS; c++){
+      for(let r=1; r<=8; r++){
+        for(let c=0; c<8; c++){
           const cell = document.createElement("div");
           cell.className = "cell";
           const coord = key(r, cols[c]);
           cell.dataset.coord = coord;
-
-          /* Farben nur im 8×8 Bereich */
-          if(r <= 8 && colorMap.has(coord)){
+          if(colorMap.has(coord)){
             const cls = colorMap.get(coord);
             cell.classList.add(cls);
             cell.classList.add("colorCell");
           }
-
           grid.appendChild(cell);
         }
       }
@@ -1270,12 +1263,16 @@
       await sleep(getTiming().holdMs);
       if(myToken!==setToken){ runningSet=false; return; }
 
+      // ===== Bisheriges Ende (Q3, W1 oben) =====
       advanceFullCW();
       showW();
       renderW();
 
+      // ✅ NEU: 3 zusätzliche komplette Kipps ab dem bisherigen Ende
+      // Zweck: weitere vollbestückte Zwischenkipps sichtbar machen / rückwärts sauber abspielbar
       const EXTRA_KIPPS_AFTER_END = 3;
 
+      // kurzer Hold, damit man den bisherigen Endzustand kurz "stehen" sieht
       await sleep(Math.round(getTiming().holdMs * 0.60));
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1388,8 +1385,12 @@
 
     let selectedKippCount = null;
 
-    function startPulse(){ decisionPanel.classList.add("pulseSeq"); }
-    function stopPulse(){ decisionPanel.classList.remove("pulseSeq"); }
+    function startPulse(){
+      decisionPanel.classList.add("pulseSeq");
+    }
+    function stopPulse(){
+      decisionPanel.classList.remove("pulseSeq");
+    }
 
     function selectKippCount(k){
       selectedKippCount = (k == null) ? null : Number(k);
@@ -1398,8 +1399,6 @@
       });
       if(selectedKippCount != null) stopPulse();
     }
-
-    let busyMove = false;
 
     document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
       btn.addEventListener("click", () => {
@@ -1446,6 +1445,8 @@
       const add = SCORE_BY_TRY[Math.min(tryIndex, SCORE_BY_TRY.length-1)] || 0;
       setPoints(points + add);
     }
+
+    let busyMove = false;
 
     async function performKippCW(count){
       if(busyMove) return;
@@ -1536,24 +1537,27 @@
       }
     });
 
-    function relayout(){
-      setBoardRasterSize();
-      setConsoleHeight();
-    }
-
     window.addEventListener("load", () => {
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+      setTimeout(setBoardSquare, 80);
+
       buildGridOnce();
-      relayout();
-      requestAnimationFrame(relayout);
-      setTimeout(relayout, 80);
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
+      setTimeout(setKippspeedStripHeight, 80);
 
       resetToW1Q0_Empty();
       showSpeedMode();
     });
 
     window.addEventListener("resize", () => {
-      relayout();
-      requestAnimationFrame(relayout);
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
     });
   </script>
 </body>
