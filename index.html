@@ -117,7 +117,7 @@
       color: rgba(0,0,0,0.88);
       text-shadow: 0 1px 0 rgba(255,255,255,0.30);
       transform: translateY(-0.5px);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* verhindert Emoji-Look */
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     .navBtn:active{
       transform: scale(0.98);
@@ -209,7 +209,6 @@
     }
 
     /* ===== Target Zahl auf farbigen Feldern ===== */
-    /* FIX: Rotation darf NICHT durch Animation überschrieben werden -> Rotation über CSS-Variable */
     @keyframes targetBreath{
       0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
       50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
@@ -219,7 +218,7 @@
       left:50%;
       top:50%;
       font-weight: 900;
-      font-size: clamp(18px, 8vmin, 36px); /* exakt wie Slot-Zahlen */
+      font-size: clamp(18px, 8vmin, 36px);
       color: rgba(0,0,0,0.92);
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       line-height: 1;
@@ -234,11 +233,10 @@
       justify-content:center;
     }
 
-    /* ✅ Zahlenfuß IMMER Richtung Boxmitte */
-    .trot-top    { --trot: 0deg; }     /* oben: Fuß nach unten */
-    .trot-bottom { --trot: 180deg; }   /* unten: Fuß nach oben */
-    .trot-left   { --trot: -90deg; }   /* links: Fuß nach rechts (zur Mitte) */
-    .trot-right  { --trot: 90deg; }    /* rechts: Fuß nach links (zur Mitte) */
+    .trot-top    { --trot: 0deg; }
+    .trot-bottom { --trot: 180deg; }
+    .trot-left   { --trot: -90deg; }
+    .trot-right  { --trot: 90deg; }
 
     /* ===== FLOOR ===== */
     .floor{
@@ -672,7 +670,7 @@
 
     /* ===== KIPPANZAHL Label + Layout FIX ===== */
     #decisionPanel{
-      padding: 0 12px; /* linksbündig mit erster Taste wie gewünscht */
+      padding: 0 12px;
       box-sizing: border-box;
     }
 
@@ -682,16 +680,12 @@
       text-transform: uppercase;
       color: var(--ui-text);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-
-      /* so groß wie 00P */
       font-size: 34px;
       line-height: 0.95;
-
       text-align: left;
       user-select:none;
-
       margin-top: 10px;
-      margin-bottom: 14px; /* größerer Abstand zu den Buttons */
+      margin-bottom: 14px;
     }
 
     /* ===== Kippanzahl Buttons ===== */
@@ -701,11 +695,8 @@
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-
-      /* ✅ Zahl exakt wie Slotzahlen */
       font-size: clamp(18px, 8vmin, 36px);
       line-height: 1;
-
       padding: 14px 0;
       border-radius: 10px;
       cursor: pointer;
@@ -747,6 +738,85 @@
     #decisionPanel.pulseSeq .miniBtn:nth-child(4){ animation-delay: 0.30s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(5){ animation-delay: 0.40s; }
     #decisionPanel.pulseSeq .miniBtn:nth-child(6){ animation-delay: 0.50s; }
+
+    /* =========================================================
+       ✅ NEU: Level-Wahl Panel (3 Gridzeilen hoch, 8 Spalten breit)
+       - erscheint NACH dem Zahlensetz-Zyklus
+       - mittig zentriert
+       - Schriftgröße passt sich an, damit nix über 8 Rasterspalten geht
+       ========================================================= */
+    #levelPanel{
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 12px;
+      height: 100%;
+      display:flex;
+      flex-direction: column;
+      justify-content: center; /* vertikal mittig in den 3 Grid-Zeilen */
+      align-items: center;     /* horizontal mittig */
+      gap: 10px;
+    }
+    #levelPanel.hidden{ display:none !important; }
+
+    .levelTitle{
+      font-weight: 1000;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      text-align:center;
+      line-height: 1.05;
+
+      /* responsive, aber sicher innerhalb 8 Spalten */
+      font-size: clamp(14px, 3.2vmin, 22px);
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select:none;
+    }
+
+    .levelRow{
+      width: 100%;
+      display:flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    .levelBtn{
+      flex: 1 1 0;
+      max-width: 33.33%;
+      min-width: 0;
+
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(234,215,190,0.95);
+      color: #2a160c;
+      font-weight: 1000;
+
+      /* Schrift so wählen, dass 3 Buttons nebeneinander in 8 Spalten passen */
+      font-size: clamp(12px, 2.6vmin, 18px);
+      letter-spacing: 0.04em;
+      line-height: 1.05;
+
+      padding: 12px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .levelBtn:active{
+      transform: translateY(1px) scale(0.99);
+      filter: brightness(0.97);
+    }
   </style>
 </head>
 
@@ -755,7 +825,6 @@
 
     <!-- HEADER -->
     <div class="titleRow" aria-label="Titelzeile">
-      <!-- FIX 1: Back-Button gleicher Typus wie X (kein Emoji) -->
       <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <span>←</span>
       </button>
@@ -843,6 +912,16 @@
             <div class="gcBottom" aria-label="Aktionen">
               <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
 
+              <!-- ✅ NEU: Level Auswahl nach Zahlensetz-Zyklus -->
+              <div id="levelPanel" class="hidden" aria-label="Level wählen">
+                <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
+                <div class="levelRow" aria-label="Level Buttons">
+                  <button id="btnLevelBrainee" class="levelBtn" type="button">Brainee</button>
+                  <button id="btnLevelBrain" class="levelBtn" type="button">Brain</button>
+                  <button id="btnLevelBrainstorm" class="levelBtn" type="button">Brainstorm</button>
+                </div>
+              </div>
+
               <div id="decisionPanel" class="hidden">
                 <div class="kippCountTitle">KIPPANZAHL?</div>
 
@@ -888,6 +967,13 @@
 
     const gcPoints    = document.getElementById("gcPoints");
     const gcHi        = document.getElementById("gcHi");
+
+    /* ✅ NEU: Level Panel refs */
+    const levelPanel = document.getElementById("levelPanel");
+    const levelTitle = document.getElementById("levelTitle");
+    const btnLevelBrainee = document.getElementById("btnLevelBrainee");
+    const btnLevelBrain = document.getElementById("btnLevelBrain");
+    const btnLevelBrainstorm = document.getElementById("btnLevelBrainstorm");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1099,6 +1185,7 @@
       gameMode.classList.remove("hidden");
       btnSetNumbers.classList.remove("hidden");
       decisionPanel.classList.add("hidden");
+      levelPanel.classList.add("hidden");   /* ✅ NEU */
       enterSetAttention();
       setPoints(0);
       gcHi.textContent = "80";
@@ -1220,6 +1307,24 @@
       setRotationSnap();
     }
 
+    /* =========================================================
+       ✅ NEU: Levelwahl anzeigen (statt direkt Spielerphase)
+       ========================================================= */
+    function beginLevelChoice(){
+      // Nach Zahlensetz-Zyklus: SetNumbers Button weg, Levelpanel rein
+      btnSetNumbers.classList.add("hidden");
+      decisionPanel.classList.add("hidden");
+      levelPanel.classList.remove("hidden");
+
+      // keine Blink-Attention auf "Set" mehr (weil es den Button nicht gibt)
+      setAttentionSet(false);
+      setAttentionPlay(false);
+      setAttentionSpeed(false);
+
+      // Title exakt wie gewünscht
+      levelTitle.textContent = "LEVEL WÄHLEN";
+    }
+
     async function runSetNumbersCycle(){
       if(runningSet) return;
       runningSet = true;
@@ -1269,10 +1374,8 @@
       renderW();
 
       // ✅ NEU: 3 zusätzliche komplette Kipps ab dem bisherigen Ende
-      // Zweck: weitere vollbestückte Zwischenkipps sichtbar machen / rückwärts sauber abspielbar
       const EXTRA_KIPPS_AFTER_END = 3;
 
-      // kurzer Hold, damit man den bisherigen Endzustand kurz "stehen" sieht
       await sleep(Math.round(getTiming().holdMs * 0.60));
       if(myToken!==setToken){ runningSet=false; return; }
 
@@ -1292,7 +1395,8 @@
 
       runningSet = false;
 
-      beginPlayerPhase();
+      // ✅ Statt beginPlayerPhase() jetzt Levelwahl
+      beginLevelChoice();
     }
 
     function cancelSetNumbers(){
@@ -1409,6 +1513,7 @@
     });
 
     function beginPlayerPhase(){
+      levelPanel.classList.add("hidden");     // ✅ NEU
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
       enterSetAttention();
@@ -1526,6 +1631,11 @@
       cancelSetNumbers();
       busyMove = false;
       clearTargets();
+
+      // ✅ NEU: Panels sauber zurücksetzen
+      levelPanel.classList.add("hidden");
+      decisionPanel.classList.add("hidden");
+
       resetToW1Q0_Empty();
       showSpeedMode();
     });
@@ -1536,6 +1646,22 @@
         window.location.href = "about:blank";
       }
     });
+
+    /* =========================================================
+       ✅ NEU: Level-Buttons -> aktuell nur Auswahl, dann Start
+       (du kannst später pro Level Regeln/Parameter umhängen)
+       ========================================================= */
+    let selectedLevel = null;
+
+    function chooseLevel(name){
+      selectedLevel = name; // "Brainee" | "Brain" | "Brainstorm"
+      // aktuell: direkt ins Spiel starten
+      beginPlayerPhase();
+    }
+
+    btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
+    btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
+    btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainstorm"); });
 
     window.addEventListener("load", () => {
       setBoardSquare();
