@@ -604,7 +604,9 @@
       position: relative;
     }
 
-    /* ✅ Score-Panel: unter der Konsole, 8 Spalten breit, 2 Zeilen hoch */
+    /* ✅ Score-Panel: unter der Konsole, 8 Spalten breit, 2 Zeilen hoch
+       FIX: rotbrauner 4px Außenrahmen (überdeckt BoxShell-Schwarz),
+       und KEIN schwarzer Rahmen sichtbar. */
     .scorePanel{
       width: 100%;
       height: calc(var(--ui-cell) * 2);
@@ -612,8 +614,28 @@
       position: relative;
       user-select:none;
       overflow: hidden;
+
+      /* ✅ der "rahmenlose" Look: wir ziehen das Panel 4px in den schwarzen Rand rein */
+      margin-left:  calc(-1 * var(--box-border));
+      margin-right: calc(-1 * var(--box-border));
+
+      /* ✅ und geben links/rechts 4px rotbraun dazu, damit es exakt bündig wirkt */
+      padding-left:  var(--box-border);
+      padding-right: var(--box-border);
+      box-sizing: border-box;
     }
     .scorePanel.underConsole{ margin-top: 0; }
+
+    /* ✅ Rotbrauner 4px Außenrahmen oben/unten/links/rechts, der "oben drüber" liegt */
+    .scorePanel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index: 50;
+      /* 4px Rahmen in exakt derselben Farbe */
+      box-shadow: inset 0 0 0 var(--box-border) var(--ui-panel-bg);
+    }
 
     /* Anchor: Mitte zwischen G/H (= 7*cell) und Mitte zwischen Zeile 1/2 (= 1*cell) */
     .scoreAnchor{
@@ -675,7 +697,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      z-index: 6;
+      z-index: 60; /* über dem Rahmen-Pseudo-Element */
     }
     .kippBilanzBtn:active{
       transform: translateY(-50%) translateY(1px) scale(0.99);
@@ -985,7 +1007,7 @@
 
       </div>
 
-      <!-- ✅ NEU: ScorePanel sitzt JETZT wirklich unter der schwarzen Konsole -->
+      <!-- ✅ ScorePanel sitzt JETZT wirklich unter der schwarzen Konsole -->
       <div id="scorePanel" class="scorePanel underConsole hidden" aria-label="Score Panel">
         <button id="btnKippBilanz" class="kippBilanzBtn" type="button" aria-label="KIPP Bilanz">
           KIPP Bilanz
