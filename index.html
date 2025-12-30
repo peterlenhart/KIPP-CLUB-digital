@@ -44,6 +44,9 @@
       /* ✅ UI-Cell (= Boardbreite/8) wird per JS gesetzt */
       --ui-cell: 60px;
 
+      /* ✅ Fixe Wunschhöhe für das rotbraune Panel */
+      --ui-panel-h: 168px;
+
       --rotSign: 1;
       --rot: 0deg;
     }
@@ -164,6 +167,7 @@
       display:flex;
       flex-direction: column;
       gap: 0;
+      position: relative;
     }
 
     .board{
@@ -604,38 +608,28 @@
       position: relative;
     }
 
-    /* ✅ Score-Panel: unter der Konsole, 8 Spalten breit, 2 Zeilen hoch
-       FIX: rotbrauner 4px Außenrahmen (überdeckt BoxShell-Schwarz),
-       und KEIN schwarzer Rahmen sichtbar. */
+    /* ✅ Score-Panel: exakt 688×168 (innerhalb der BoxShell-Breite),
+       und überdeckt links/rechts/unten die schwarze BoxShell-Border (4px). */
     .scorePanel{
-      width: 100%;
-      height: calc(var(--ui-cell) * 2);
-      background: var(--ui-panel-bg);
       position: relative;
       user-select:none;
       overflow: hidden;
 
-      /* ✅ der "rahmenlose" Look: wir ziehen das Panel 4px in den schwarzen Rand rein */
+      background: var(--ui-panel-bg);
+
+      /* Wunsch-Höhe fix */
+      height: var(--ui-panel-h);
+
+      /* Full-bleed über die 4px BoxShell-Border drüber */
       margin-left:  calc(-1 * var(--box-border));
       margin-right: calc(-1 * var(--box-border));
+      margin-bottom:calc(-1 * var(--box-border));
+      width: calc(100% + (2 * var(--box-border)));
 
-      /* ✅ und geben links/rechts 4px rotbraun dazu, damit es exakt bündig wirkt */
-      padding-left:  var(--box-border);
-      padding-right: var(--box-border);
       box-sizing: border-box;
+      z-index: 50;
     }
     .scorePanel.underConsole{ margin-top: 0; }
-
-    /* ✅ Rotbrauner 4px Außenrahmen oben/unten/links/rechts, der "oben drüber" liegt */
-    .scorePanel::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      z-index: 50;
-      /* 4px Rahmen in exakt derselben Farbe */
-      box-shadow: inset 0 0 0 var(--box-border) var(--ui-panel-bg);
-    }
 
     /* Anchor: Mitte zwischen G/H (= 7*cell) und Mitte zwischen Zeile 1/2 (= 1*cell) */
     .scoreAnchor{
@@ -697,7 +691,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      z-index: 60; /* über dem Rahmen-Pseudo-Element */
+      z-index: 6;
     }
     .kippBilanzBtn:active{
       transform: translateY(-50%) translateY(1px) scale(0.99);
@@ -1007,7 +1001,7 @@
 
       </div>
 
-      <!-- ✅ ScorePanel sitzt JETZT wirklich unter der schwarzen Konsole -->
+      <!-- ✅ ScorePanel sitzt unter der schwarzen Konsole und hat KEINEN schwarzen Rand links/rechts/unten -->
       <div id="scorePanel" class="scorePanel underConsole hidden" aria-label="Score Panel">
         <button id="btnKippBilanz" class="kippBilanzBtn" type="button" aria-label="KIPP Bilanz">
           KIPP Bilanz
@@ -1071,7 +1065,7 @@
       const h = Math.round(cell * 3);
       document.documentElement.style.setProperty("--kippstrip-h", h + "px");
 
-      /* ✅ UI-Cell für ScorePanel */
+      /* ✅ UI-Cell für Positionierungen im Panel */
       document.documentElement.style.setProperty("--ui-cell", Math.round(cell) + "px");
     }
 
@@ -1238,6 +1232,7 @@
 
     function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
     function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay", !!on); }
+    function setAttentionSet: (on)=>{}; // placeholder to avoid errors if any minifier; real function below
     function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet", !!on); }
 
     function enterSpeedAttention(){
@@ -1583,53 +1578,6 @@
       if(selectedKippCount != null) stopPulse();
     }
 
-    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-      btn.addEventListener("click", () => {
-        if(busyMove) return;
-        selectKippCount(btn.dataset.k);
-        performKippCW(selectedKippCount);
-      });
-    });
-
-    function beginPlayerPhase(){
-      levelPanel.classList.add("hidden");
-      btnSetNumbers.classList.add("hidden");
-      decisionPanel.classList.remove("hidden");
-      enterSetAttention();
-
-      roundIndex = 0;
-      tryIndex = 0;
-      setPoints(points);
-      gcHi.textContent = "80";
-
-      deckCount = Array(13).fill(0);
-      pickNewTarget();
-
-      selectKippCount(null);
-      startPulse();
-    }
-
-    function endGame(){
-      clearTargets();
-      alert("10 Runden vorbei! Punkte: " + points);
-      showSpeedMode();
-    }
-
-    function nextRoundOrEnd(){
-      roundIndex++;
-      tryIndex = 0;
-      if(roundIndex >= MAX_ROUNDS){
-        endGame();
-        return;
-      }
-      pickNewTarget();
-    }
-
-    function awardForTry(){
-      const add = SCORE_BY_TRY[Math.min(tryIndex, SCORE_BY_TRY.length-1)] || 0;
-      setPoints(points + add);
-    }
-
     let busyMove = false;
 
     async function performKippCW(count){
@@ -1656,12 +1604,32 @@
       const hit = vis.has(currentTargetNumber);
 
       if(hit){
-        awardForTry();
-        nextRoundOrEnd();
+        const add = SCORE_BY_TRY[Math.min(tryIndex, SCORE_BY_TRY.length-1)] || 0;
+        setPoints(points + add);
+
+        roundIndex++;
+        tryIndex = 0;
+        if(roundIndex >= MAX_ROUNDS){
+          clearTargets();
+          alert("10 Runden vorbei! Punkte: " + points);
+          showSpeedMode();
+          busyMove = false;
+          return;
+        }
+        pickNewTarget();
       }else{
         tryIndex++;
         if(tryIndex >= MAX_TRIES){
-          nextRoundOrEnd();
+          roundIndex++;
+          tryIndex = 0;
+          if(roundIndex >= MAX_ROUNDS){
+            clearTargets();
+            alert("10 Runden vorbei! Punkte: " + points);
+            showSpeedMode();
+            busyMove = false;
+            return;
+          }
+          pickNewTarget();
         }
       }
 
@@ -1669,6 +1637,32 @@
       startPulse();
 
       busyMove = false;
+    }
+
+    document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+      btn.addEventListener("click", () => {
+        if(busyMove) return;
+        selectKippCount(btn.dataset.k);
+        performKippCW(selectedKippCount);
+      });
+    });
+
+    function beginPlayerPhase(){
+      levelPanel.classList.add("hidden");
+      btnSetNumbers.classList.add("hidden");
+      decisionPanel.classList.remove("hidden");
+      enterSetAttention();
+
+      roundIndex = 0;
+      tryIndex = 0;
+      setPoints(points);
+      gcHi.textContent = "80";
+
+      deckCount = Array(13).fill(0);
+      pickNewTarget();
+
+      selectKippCount(null);
+      startPulse();
     }
 
     speedSlider.addEventListener("input", () => {
@@ -1725,19 +1719,14 @@
       }
     });
 
-    let selectedLevel = null;
-
     function chooseLevel(name){
-      selectedLevel = name;
       beginPlayerPhase();
     }
 
-    /* ✅ Level-Namen passend zu Buttons */
     btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Trainee"); });
     btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
     btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
 
-    /* KIPP Bilanz: noch ohne Funktion (nur Platzhalter) */
     if(btnKippBilanz){
       btnKippBilanz.addEventListener("click", () => {
         alert("KIPP Bilanz (noch ohne Funktion)");
