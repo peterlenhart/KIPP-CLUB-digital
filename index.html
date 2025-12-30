@@ -79,15 +79,21 @@
     }
 
     .stage{
-      width: min(94vw, 680px);
-      margin-top: 4vh;
-      padding-bottom: 2vh;
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-      justify-content:flex-start;
-      align-items:center;
-    }
+  width: min(94vw, 680px);
+
+  /* ✅ Verschiebung nach unten weg */
+  margin-top: 0;
+
+  /* ✅ kleiner “sicherer” Abstand oben (optional, aber sinnvoll am Handy) */
+  padding-top: 8px;
+
+  padding-bottom: 2vh;
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content:flex-start;
+  align-items:center;
+}
 
     /* ===== HEADER ===== */
     .titleRow{
