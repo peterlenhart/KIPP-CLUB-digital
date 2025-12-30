@@ -43,6 +43,9 @@
 
       --rotSign: 1;
       --rot: 0deg;
+
+      /* ✅ NEU: Fix-Höhe für den Punkteblock, damit unten nix “schiebt” */
+      --gcTop-reserve: 56px;
     }
 
     html, body { height: 100%; }
@@ -592,32 +595,30 @@
     .gameConsole{
       width:100%;
       height:100%;
-      padding: 8px 12px;
+      /* ✅ WICHTIG: oben 0, damit 00P exakt “auf der Zeilenlinie” sitzt */
+      padding: 0 12px 8px 12px;
       box-sizing:border-box;
       display:flex;
       flex-direction: column;
       justify-content: space-between;
       gap: 8px;
 
-      /* ✅ NEU: eigene Stacking-Context + oben drüber */
       position: relative;
       z-index: 9999;
     }
 
+    /* ✅ FIX: 00P/Highscore absolut oben, unabhängig von unteren Texten */
     .gcTop{
+      position: absolute;
+      top: 0;                 /* = untere Linie Zeile 8 / Kante Board->Konsole */
+      right: 12px;
+      left: 12px;
+      height: var(--gcTop-reserve);
       display:flex;
-      align-items:flex-end;
+      align-items: flex-end;  /* Zahlenfuß “auf Linie” */
       justify-content: flex-end;
-      gap: 10px;
-      min-height: 48px;
-
-      /* ✅ NEU: 00P/Highscore 70px nach Norden */
-      position: relative;
-      top: -70px;
-
-      /* ✅ NEU: garantiert über allem */
-      z-index: 99999;
       pointer-events: none;
+      z-index: 99999;
     }
 
     .gcRight{
@@ -626,8 +627,6 @@
       align-items:flex-end;
       gap: 2px;
       user-select:none;
-
-      /* ✅ NEU: extra Absicherung */
       position: relative;
       z-index: 999999;
     }
@@ -640,6 +639,8 @@
       line-height: 0.95;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
+      /* ✅ Baseline-Feintuning (falls du wirklich ~35px wolltest: hier ändern) */
+      /* transform: translateY(0px); */
     }
     .gcHi{
       color: var(--ui-text);
@@ -653,6 +654,8 @@
       display:flex;
       flex-direction: column;
       gap: 8px;
+      /* ✅ Platz reservieren, damit Buttons nie den Punkteblock “schieben” */
+      padding-top: var(--gcTop-reserve);
     }
 
     .gcRow{
@@ -769,10 +772,8 @@
       align-items: center;
       gap: 10px;
 
-      /* ✅ NEU: alles 6px nach Norden */
       transform: translateY(-6px);
 
-      /* (optional) stabiler stacking-context */
       position: relative;
       z-index: 9999;
     }
@@ -934,9 +935,10 @@
               <div id="levelPanel" class="hidden" aria-label="Level wählen">
                 <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
                 <div class="levelRow" aria-label="Level Buttons">
-                  <button id="btnLevelBrainee" class="levelBtn" type="button">Brainee</button>
-                  <button id="btnLevelBrain" class="levelBtn" type="button">Brain</button>
-                  <button id="btnLevelBrainstorm" class="levelBtn" type="button">Brainstorm</button>
+                  <!-- ✅ FIX: Brain/Brainstorm raus -> Trainee/Brainee/Brain -->
+                  <button id="btnLevelBrainee" class="levelBtn" type="button">Trainee</button>
+                  <button id="btnLevelBrain" class="levelBtn" type="button">Brainee</button>
+                  <button id="btnLevelBrainstorm" class="levelBtn" type="button">Brain</button>
                 </div>
               </div>
 
@@ -1661,9 +1663,10 @@
       beginPlayerPhase();
     }
 
-    btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
-    btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
-    btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainstorm"); });
+    /* ✅ FIX: Level-Namen passend zu Trainee/Brainee/Brain */
+    btnLevelBrainee.addEventListener("click", () => { if(busyMove) return; chooseLevel("Trainee"); });
+    btnLevelBrain.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brainee"); });
+    btnLevelBrainstorm.addEventListener("click", () => { if(busyMove) return; chooseLevel("Brain"); });
 
     window.addEventListener("load", () => {
       setBoardSquare();
