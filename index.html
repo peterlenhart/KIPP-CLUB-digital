@@ -50,24 +50,40 @@
 
     html, body { height: 100%; }
 
+    /* ✅ außen wieder "Holz/Tisch", innen (stage) braun */
     body{
       margin:0;
       display:flex;
       justify-content:center;
-      background: #4A2418; /* ✅ Tischfläche ersetzt durch Vollfläche */
+      background:
+        radial-gradient(120% 90% at 20% 10%, rgba(255,255,255,0.08), rgba(255,255,255,0) 55%),
+        radial-gradient(120% 90% at 80% 85%, rgba(0,0,0,0.25), rgba(0,0,0,0) 55%),
+        repeating-linear-gradient(
+          18deg,
+          rgba(0,0,0,0.10) 0px,
+          rgba(0,0,0,0.10) 14px,
+          rgba(255,255,255,0.03) 14px,
+          rgba(255,255,255,0.03) 30px
+        ),
+        linear-gradient(180deg, #6d412d, #513022 60%, #462718);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
+    /* ✅ Braun exakt 688px (oder kleiner am Handy) */
     .stage{
-      width: min(94vw, 680px);
+      width: min(94vw, 688px);
       margin-top: 0;
-      padding-top: 8px;     /* ✅ kein Topstripe-Padding mehr */
+      padding-top: 8px;
       padding-bottom: 2vh;
       display:flex;
       flex-direction: column;
       gap: 12px;
       justify-content:flex-start;
       align-items:center;
+
+      background: var(--ui-panel-bg);
+      min-height: 100vh;
+      box-sizing: border-box;
     }
 
     /* ===== HEADER ===== */
@@ -79,6 +95,8 @@
       gap: 10px;
       user-select:none;
       margin-bottom: 2px;
+      padding: 0 10px;
+      box-sizing: border-box;
     }
 
     /* ✅ Zurück & Schließen: einheitlich, beige */
@@ -135,12 +153,12 @@
       text-overflow: ellipsis;
     }
 
-    /* ===== BOX SHELL (✅ jetzt mit umlaufendem 4px Rahmen) ===== */
+    /* ===== BOX SHELL (✅ Rahmen komplett weg) ===== */
     .boxShell{
       width: 100%;
       box-sizing: border-box;
       background: transparent;
-      border: 4px solid var(--box-black); /* ✅ Boxshell-Rahmen */
+      border: 0;                 /* ✅ kein Rahmen */
       border-radius: var(--box-radius);
       box-shadow: none;
       overflow: hidden;
@@ -552,6 +570,23 @@
         drop-shadow(0 2px 6px rgba(0,0,0,0.25));
     }
 
+    /* ✅ Skala 1–4 unter dem Slider */
+    .speedScale{
+      margin: 0 12px;
+      padding-left: calc(clamp(44px, 10vmin, 62px) + 14px);
+      padding-right: calc(clamp(44px, 10vmin, 62px) + 14px);
+      display:flex;
+      justify-content: space-between;
+      color: var(--ui-text);
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      font-size: 14px;
+      line-height: 1;
+      user-select:none;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      transform: translateY(-2px);
+    }
+
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
@@ -590,6 +625,24 @@
       justify-content: space-between;
       gap: 8px;
       position: relative;
+    }
+
+    /* ✅ Vorschau-Bereich 42px tiefer + Hinweistext fix */
+    .previewBlock{
+      margin-top: 42px; /* ✅ exakt 42px runter */
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .previewHint{
+      text-align:center;
+      font-weight: 1000;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: clamp(14px, 5.2vmin, 20px);
+      user-select:none;
     }
 
     /* ✅ Score-Panel: rotbraun, volle Breite, ohne Rand, ohne Schatten */
@@ -927,12 +980,22 @@
             <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
             <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
           </div>
+
+          <!-- ✅ 1–4 Skala -->
+          <div class="speedScale" aria-label="Kippspeed Stufen">
+            <span>1</span><span>2</span><span>3</span><span>4</span>
+          </div>
         </div>
 
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
             <div class="gcBottom" aria-label="Aktionen">
-              <button id="btnSetNumbers" class="gcBtn set" type="button">ZAHLEN SETZEN</button>
+
+              <!-- ✅ 42px runter + SCHAU GENAU! + Button -->
+              <div class="previewBlock" aria-label="Vorschau-Block">
+                <div class="previewHint">SCHAU GENAU!</div>
+                <button id="btnSetNumbers" class="gcBtn set" type="button">VORSCHAU-KIPPS</button>
+              </div>
 
               <div id="levelPanel" class="hidden" aria-label="Level wählen">
                 <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
@@ -955,6 +1018,7 @@
                   <button class="miniBtn" data-k="6" type="button">6</button>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -1226,7 +1290,10 @@
       btnSetNumbers.classList.remove("hidden");
       decisionPanel.classList.add("hidden");
       levelPanel.classList.add("hidden");
+
+      /* ✅ nach OK blinkt der Vorschau-Kipps Button */
       enterSetAttention();
+
       setPoints(0);
       gcHi.textContent = "80";
     }
@@ -1646,7 +1713,9 @@
       showGameMode();
     });
 
+    /* ✅ Button blinkt NUR bis zum ersten Klick */
     btnSetNumbers.addEventListener("click", async () => {
+      setAttentionSet(false);  /* ✅ Blink AUS ab jetzt */
       await runSetNumbersCycle();
     });
 
