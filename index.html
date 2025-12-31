@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiKipp – 7 Bilder Demo</title>
+  <title>DigiKipp – Raster mit 01/02 + Board 1–8</title>
 
   <style>
     :root{
@@ -12,33 +12,29 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      --cell-gap: 0px;
-      --cell-radius: 0px;
+      /* Typo-Farben bleiben wie gehabt */
+      --ui-text: #ead7be;
+      --btn-bg:  #ead7be;
+      --btn-text:#2a160c;
+      --btn-border: rgba(0,0,0,0.35);
+
+      /* ✅ wird per JS gesetzt: Breite/8 */
+      --cellpx: 60px;
+
+      /* Würfel */
+      --cube-wood-base: #d7c2a4;
+      --cube-wood-deep: #c9b08f;
+      --cube-wood-warm: rgba(155, 70, 110, 0.10);
+      --cube-wood-gold: rgba(249, 150, 30, 0.10);
+      --w1-innerframe: rgba(122, 74, 52, 1);
 
       --slot-border: rgba(0,0,0,0.55);
       --slot-border-w: 2px;
       --slot-fill: #ead7be;
 
-      --box-black: #000;
-      --box-radius: 0px;
-
-      --btn-bg: #ead7be;
-      --btn-text: #2a160c;
-      --btn-border: rgba(0,0,0,0.35);
-
-      --ui-panel-bg: #4a2418;   /* dunkel-rotbraun */
-      --ui-text: #ead7be;       /* ✅ beige wie vorher */
-
-      --kippstrip-h: auto;
-
-      /* ✅ UI-Cell (= Boardbreite/8) wird per JS gesetzt */
-      --ui-cell: 60px;
-
+      /* Rotation */
       --rotSign: 1;
       --rot: 0deg;
-
-      /* ✅ Deine Datei als unterster Background */
-      --bg-img: url("Box_m_Hgr.png");
     }
 
     html, body { height: 100%; }
@@ -47,162 +43,119 @@
       margin:0;
       display:flex;
       justify-content:center;
-      background: #000; /* neutral; deine PNG ist im Board */
+      background: #000; /* nur als "Außenrand" – dein PNG liegt innen komplett */
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
+    /* ✅ Stage bleibt, aber OHNE Hintergrund/Panel */
     .stage{
       width: min(94vw, 688px);
-      margin-top: 0;
-      padding-top: 8px;
-      padding-bottom: 2vh;
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-      justify-content:flex-start;
-      align-items:center;
-
-      background: var(--ui-panel-bg);
       min-height: 100vh;
+      position: relative;
+      padding: 0;
+      margin: 0;
+      background: transparent;
       box-sizing: border-box;
+      overflow: visible;
     }
 
-    /* ===== HEADER ===== */
-    .titleRow{
+    /* ✅ Gesamtraster: 8 Spalten, viele Zeilen (01,02,1..8 + UI-Zeilen) */
+    .layout{
+      position: relative;
       width: 100%;
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      user-select:none;
-      margin-bottom: 2px;
-      padding: 0 10px;
-      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: repeat(8, var(--cellpx));
+      /* 2 Header-Zeilen + 8 Board-Zeilen + 10 UI-Zeilen (bei Bedarf später mehr) */
+      grid-template-rows:
+        repeat(2, var(--cellpx))
+        repeat(8, var(--cellpx))
+        repeat(10, var(--cellpx));
+      justify-content: center; /* zentriert im Stage */
+      align-content: start;
+      gap: 0;
     }
 
+    /* ✅ Unterste Ebene: dein PNG, oben links bei 01A verankert */
+    .bgPNG{
+      position:absolute;
+      left: 0;
+      top: 0;
+      width: calc(8 * var(--cellpx));
+      height: calc((2 + 8 + 10) * var(--cellpx)); /* exakt Rasterhöhe */
+      background-image: url("Box_m_Hgr.png");
+      background-repeat: no-repeat;
+      background-position: left top; /* ✅ 01A */
+      background-size: 100% 100%;   /* ✅ füllt das Raster (nicht 50%) */
+      z-index: 0;
+      pointer-events:none;
+    }
+
+    /* ========= HEADER (Zeile 01–02) ========= */
     .navBtn{
-      width: 46px;
-      height: 46px;
+      width: calc(var(--cellpx) * 0.75);
+      height: calc(var(--cellpx) * 0.75);
       display:flex;
       align-items:center;
       justify-content:center;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
-
       background: transparent;
       border: 2px solid var(--ui-text);
-      box-shadow: none;
       padding:0;
+      box-sizing: border-box;
     }
     .navBtn svg{
-      width: 28px;
-      height: 28px;
+      width: calc(var(--cellpx) * 0.45);
+      height: calc(var(--cellpx) * 0.45);
       stroke: var(--ui-text);
       stroke-width: 5;
       fill: none;
       stroke-linecap: square;
       stroke-linejoin: miter;
     }
-    .navBtn:active{
-      transform: scale(0.98);
-      filter: brightness(1.03);
-    }
+    .navBtn:active{ transform: scale(0.98); filter: brightness(1.03); }
 
-    .titleMain{
-      flex: 1 1 auto;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-width: 0;
+    .headerBack{
+      grid-column: 1 / span 1;
+      grid-row: 1 / span 2; /* zwischen Zeile 01 und 02 */
+      justify-self: start;
+      align-self: center;
+      margin-left: 8px; /* ✅ 8px rein */
+      z-index: 10;
     }
-    .titleMain h1{
-      margin: 0;
-      padding: 0;
+    .headerExit{
+      grid-column: 8 / span 1;
+      grid-row: 1 / span 2;
+      justify-self: end;
+      align-self: center;
+      margin-right: 8px; /* ✅ 8px rein */
+      z-index: 10;
+    }
+    .headerTitle{
+      grid-column: 2 / span 6;
+      grid-row: 1 / span 2;
+      align-self: center;
+      justify-self: center;
+      z-index: 10;
+      color: var(--ui-text);
       font-weight: 1000;
       letter-spacing: 0.08em;
       font-size: clamp(22px, 6.0vmin, 44px);
-      color: var(--ui-text);
-      text-shadow:
-        0 1px 0 rgba(0,0,0,0.28),
-        0 10px 18px rgba(0,0,0,0.18);
       line-height: 1;
       white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.28), 0 10px 18px rgba(0,0,0,0.18);
     }
 
-    /* ===== BOX SHELL ===== */
-    .boxShell{
-      width: 100%;
-      box-sizing: border-box;
-      background: transparent;
-      border: 0;
-      border-radius: var(--box-radius);
-      box-shadow: none;
-      overflow: visible;
-      display:flex;
-      flex-direction: column;
-      gap: 0;
-      position: relative;
-    }
-
-    /* (Optional: Nord/Süd Schatten – wenn du ihn NICHT willst, lösch den Block) */
-    .boxShell::before,
-    .boxShell::after{
-      content:"";
-      position:absolute;
-      left: 0;
-      width: 100%;
-      height: 18px;
-      pointer-events:none;
-      z-index: 50;
-      opacity: 0.95;
-    }
-    .boxShell::before{
-      top: -12px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.00));
-      filter: blur(0.2px);
-    }
-    .boxShell::after{
-      bottom: -12px;
-      background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.00));
-      filter: blur(0.2px);
-    }
-
+    /* ========= BOARD (Zeile 1–8) ========= */
     .board{
-      position:relative;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 1 / 1;
-      box-sizing: border-box;
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      overflow: hidden; /* ✅ wichtig: PNG bleibt sauber im Board */
-
-      box-shadow:
-        10px 18px 42px rgba(0,0,0,0.55),
-        3px 6px 16px rgba(0,0,0,0.35);
-
-      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
-      --step: calc(var(--cell) + var(--cell-gap));
-    }
-
-    /* ✅ Deine PNG ist wirklich die unterste Ebene */
-    .board::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background-image: var(--bg-img);
-      background-repeat: no-repeat;
-      background-position: top left;
-
-      /* ✅ unverzerrt; wenn du "füllend" willst: cover */
-      background-size: contain;
-
-      z-index: 0;
-      pointer-events:none;
+      grid-column: 1 / span 8;
+      grid-row: 3 / span 8; /* ✅ Board ist Zeile 1–8, aber im Gesamtraster nach 01/02 */
+      position: relative;
+      width: calc(8 * var(--cellpx));
+      height: calc(8 * var(--cellpx));
+      z-index: 5;
+      overflow: visible;
     }
 
     .grid{
@@ -211,16 +164,14 @@
       display:grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: var(--cell-gap);
+      gap: 0;
       pointer-events: none;
-      z-index: 10; /* über PNG */
+      z-index: 1;
     }
 
     .cell{
-      background: transparent; /* ✅ keine schwarze Altfläche mehr */
-      border-radius: var(--cell-radius);
+      background: transparent; /* ✅ kein Schwarz */
       box-sizing: border-box;
-      box-shadow: none;
       position: relative;
     }
 
@@ -229,13 +180,12 @@
     .c-violett{ background: var(--violett); }
     .c-blau  { background: var(--blau);   }
 
+    /* ✅ KEIN schwarzer Rahmen mehr */
     .cell.colorCell{
-      box-shadow:
-        inset 0 0 0 2px #000,
-        0 0 0 1px rgba(0,0,0,0.25);
+      box-shadow: none;
     }
 
-    /* ===== Target Zahl auf farbigen Feldern ===== */
+    /* ===== Target Zahl ===== */
     @keyframes targetBreath{
       0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
       50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
@@ -251,10 +201,9 @@
       line-height: 1;
       letter-spacing: 0.01em;
       pointer-events:none;
-      z-index: 30;
+      z-index: 3;
       animation: targetBreath 1.25s ease-in-out infinite;
       transform-origin: 50% 50%;
-      will-change: transform, opacity;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -264,14 +213,13 @@
     .trot-left   { --trot: -90deg; }
     .trot-right  { --trot: 90deg; }
 
-    .goalOverlay{ display:none !important; }
-
+    /* ===== Kugel (bleibt) ===== */
     .ball{
       position:absolute;
-      left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
-      top:  calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
-      width: calc(var(--cell) * 0.55);
-      height: calc(var(--cell) * 0.55);
+      left: 50%;
+      top: 50%;
+      width: calc(var(--cellpx) * 0.55);
+      height: calc(var(--cellpx) * 0.55);
       border-radius: 50%;
       transform: translate(-50%, -50%);
       background:
@@ -279,16 +227,20 @@
         radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
         radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
       box-shadow: 0 3px 6px rgba(0,0,0,0.28);
-      z-index: 40;
+      z-index: 3;
       pointer-events: none;
     }
 
+    /* ===== Würfel-Gruppen ===== */
     .wFaceGroup,
     .kipGroup{
       position:absolute;
       inset:0;
-      z-index: 20;
+      z-index: 4;
       pointer-events:none;
+
+      --cell: var(--cellpx);
+      --step: var(--cellpx);
 
       --pivot-x: calc(4 * var(--step));
       --pivot-y: calc(4 * var(--step));
@@ -304,10 +256,10 @@
 
     .cubeShadow{
       position:absolute;
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      left: calc(1 * var(--cellpx));
+      top:  calc(1 * var(--cellpx));
+      width: calc(3 * var(--cellpx));
+      height: calc(3 * var(--cellpx));
       z-index: 1;
       background: transparent;
       box-shadow:
@@ -317,30 +269,40 @@
 
     .cubeFace{
       position:absolute;
-      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      width: calc(3 * var(--cellpx));
+      height: calc(3 * var(--cellpx));
       box-sizing: border-box;
       border-radius: 0;
       background:
-        linear-gradient(180deg, #d7c2a4, #c9b08f);
+        radial-gradient(120% 90% at 15% 15%, var(--cube-wood-gold), transparent 55%),
+        radial-gradient(120% 90% at 25% 25%, var(--cube-wood-warm), transparent 60%),
+        repeating-linear-gradient(
+          20deg,
+          rgba(0,0,0,0.02) 0px,
+          rgba(0,0,0,0.02) 10px,
+          rgba(255,255,255,0.02) 10px,
+          rgba(255,255,255,0.02) 18px
+        ),
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08)),
+        linear-gradient(180deg, var(--cube-wood-base), var(--cube-wood-deep));
       box-shadow:
-        inset 0 0 0 2px rgba(122, 74, 52, 1),
+        inset 0 0 0 2px var(--w1-innerframe),
         0 0 0 1px rgba(255,255,255,0.08) inset;
       z-index: 2;
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
+      left: calc(1 * var(--cellpx));
+      top:  calc(1 * var(--cellpx));
     }
 
     .slot{
       position:absolute;
-      width: var(--cell);
-      height: var(--cell);
+      width: var(--cellpx);
+      height: var(--cellpx);
       box-sizing: border-box;
       background:
         linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
         var(--slot-fill);
       border: var(--slot-border-w) solid var(--slot-border);
-      border-radius: var(--cell-radius);
+      border-radius: 0;
       z-index: 7;
       box-shadow:
         1px 1px 0 rgba(255,255,255,0.18) inset,
@@ -378,29 +340,29 @@
     .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
     .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
 
-    .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
-    .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
-    .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
-    .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
+    /* Slots W (wie gehabt, aber auf cellpx Basis) */
+    .s-3b{ left: calc(1 * var(--cellpx)); top: calc(2 * var(--cellpx)); }
+    .s-4b{ left: calc(1 * var(--cellpx)); top: calc(3 * var(--cellpx)); }
+    .s-2c{ left: calc(2 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
+    .s-2d{ left: calc(3 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
 
+    /* Kipp-Ansicht */
     .kipScale{
       position:absolute;
       inset:0;
-      --pivot-x: calc(4 * var(--step));
-      --pivot-y: calc(4 * var(--step));
       transform:
-        translate(var(--pivot-x), var(--pivot-y))
+        translate(calc(4 * var(--cellpx)), calc(4 * var(--cellpx)))
         scaleX(0.6666667)
-        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+        translate(calc(-4 * var(--cellpx)), calc(-4 * var(--cellpx)));
       transform-origin: 0 0;
     }
 
     .kipShadow{
       position:absolute;
-      left: calc(1 * var(--step));
-      top:  calc(1 * var(--step));
-      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      left: calc(1 * var(--cellpx));
+      top:  calc(1 * var(--cellpx));
+      width: calc(6 * var(--cellpx));
+      height: calc(3 * var(--cellpx));
       background: transparent;
       z-index: 1;
       box-shadow:
@@ -410,53 +372,42 @@
 
     .kipEdgeCore{
       position:absolute;
-      left: calc(4 * var(--step));
-      top:  calc(1 * var(--step));
+      left: calc(4 * var(--cellpx));
+      top:  calc(1 * var(--cellpx));
       width: 6px;
-      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cellpx));
       transform: translateX(-50%);
       background: linear-gradient(90deg, rgba(0,0,0,0.00), rgba(0,0,0,0.28), rgba(0,0,0,0.00));
       z-index: 1;
       opacity: 0.95;
     }
 
-    .kipFaceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
-    .kipFaceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+    .kipFaceQ0{ left: calc(1 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
+    .kipFaceQ1{ left: calc(4 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
 
-    .k-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
-    .k-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
-    .k-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
-    .k-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+    .k-4d{ left: calc(3 * var(--cellpx)); top: calc(3 * var(--cellpx)); }
+    .k-3d{ left: calc(3 * var(--cellpx)); top: calc(2 * var(--cellpx)); }
+    .k-2b{ left: calc(1 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
+    .k-2c{ left: calc(2 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
 
-    .k-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
-    .k-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
-    .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
-    .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+    .k-3e{ left: calc(4 * var(--cellpx)); top: calc(2 * var(--cellpx)); }
+    .k-4e{ left: calc(4 * var(--cellpx)); top: calc(3 * var(--cellpx)); }
+    .k-2f{ left: calc(5 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
+    .k-2g{ left: calc(6 * var(--cellpx)); top: calc(1 * var(--cellpx)); }
 
-    /* ===== Konsole-Block ===== */
-    .kippspeedBlock{
-      width: 100%;
-      height: var(--kippstrip-h);
-      background: var(--box-black);
-      user-select:none;
+    /* ========= UI-BEREICH (ab Zeile 9 = direkt unter Board-Zeile 8) ========= */
+    .ui{
+      grid-column: 1 / span 8;
+      grid-row: 11 / span 3; /* UI-Start direkt unter Board (nach 01/02 + 1..8) */
+      z-index: 20;
       display:flex;
       flex-direction: column;
+      align-items: center;
       justify-content: center;
-      gap: 6px;
-      position: relative;
-      padding-top: 6px;
-      padding-bottom: 6px;
-    }
-
-    .modeBlock{ width:100%; box-sizing:border-box; }
-    .modeBlock.hidden{ display:none !important; }
-
-    .kippspeedTop{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
-      padding: 0 12px;
+      gap: calc(var(--cellpx) * 0.15);
+      padding: 0 calc(var(--cellpx) * 0.25);
+      box-sizing: border-box;
+      background: transparent; /* ✅ keine Fläche */
     }
 
     .kippspeedLabel{
@@ -491,21 +442,16 @@
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
     }
-    .squareBtn:active{
-      transform: scale(0.985);
-      filter: brightness(0.98);
-    }
+    .squareBtn:active{ transform: scale(0.985); filter: brightness(0.98); }
 
     .playIcon{
-      width: 0;
-      height: 0;
+      width: 0; height: 0;
       border-top: 11px solid transparent;
       border-bottom: 11px solid transparent;
       border-left: 18px solid #7a3f2b;
       filter: drop-shadow(0 1px 0 rgba(255,255,255,0.25));
       transform: translateX(1px);
     }
-
     .pauseIcon{
       width: 18px;
       height: 22px;
@@ -535,10 +481,11 @@
     }
 
     .sliderRow{
+      width: 100%;
       display:flex;
       align-items:center;
       gap: 14px;
-      padding: 0 12px;
+      justify-content: center;
     }
 
     .speedIcon{
@@ -554,31 +501,15 @@
         drop-shadow(0 2px 6px rgba(0,0,0,0.25));
     }
 
-    .speedScale{
-      margin: 0 12px;
-      padding-left: calc(clamp(44px, 10vmin, 62px) + 14px);
-      padding-right: calc(clamp(44px, 10vmin, 62px) + 14px);
-      display:flex;
-      justify-content: space-between;
-      color: var(--ui-text);
-      font-weight: 1000;
-      letter-spacing: 0.08em;
-      font-size: 14px;
-      line-height: 1;
-      user-select:none;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      transform: translateY(-2px);
-    }
-
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
-      width: 100%;
+      width: min(520px, 100%);
       height: 10px;
       border-radius: 999px;
-      background: var(--ui-panel-bg);
+      background: rgba(0,0,0,0.15);
       outline: none;
-      border: 1px solid #000;
+      border: 1px solid rgba(0,0,0,0.35);
       box-shadow:
         0 0 0 1px rgba(255,255,255,0.10) inset,
         0 1px 0 rgba(0,0,0,0.35) inset;
@@ -597,25 +528,24 @@
       cursor: pointer;
     }
 
-    /* ===== Game Console ===== */
-    .gameConsole{
-      width:100%;
-      height:100%;
-      padding: 8px 12px;
-      box-sizing:border-box;
+    .speedTop{
       display:flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-      position: relative;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
     }
 
-    .previewBlock{
-      margin-top: 42px;
+    .modeBlock.hidden{ display:none !important; }
+
+    /* ===== GameMode (ab Zeile 9 Bereich, gleiches UI-Anchor) ===== */
+    .gameConsole{
+      width:100%;
       display:flex;
       flex-direction: column;
-      gap: 8px;
+      align-items:center;
+      gap: 10px;
     }
+
     .previewHint{
       text-align:center;
       font-weight: 1000;
@@ -627,112 +557,8 @@
       user-select:none;
     }
 
-    .miniBtn{
-      flex: 1 1 0;
-      border: 1px solid rgba(0,0,0,0.35);
-      background: rgba(234,215,190,0.95);
-      color: #2a160c;
-      font-weight: 1000;
-
-      font-size: clamp(14px, 5.5vmin, 22px);
-      line-height: 1;
-      padding: 7px 0;
-      border-radius: 10px;
-
-      cursor: pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow:
-        0 10px 18px rgba(0,0,0,0.20),
-        0 0 0 1px rgba(255,255,255,0.12) inset;
-    }
-    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
-
-    .miniBtn.sel{
-      background: var(--ui-panel-bg);
-      color: var(--ui-text);
-      border-color: rgba(0,0,0,0.55);
-    }
-
-    .miniBtn[disabled]{
-      opacity: 0.55;
-      cursor: default;
-      filter: grayscale(0.1);
-    }
-
-    .scorePanel{
-      width: 100%;
-      height: calc(var(--ui-cell) * 2);
-      background: transparent; /* ✅ keine braune Altfläche erzwingen */
-      position: relative;
-      user-select:none;
-      overflow: hidden;
-      border: 0;
-      box-sizing: border-box;
-      box-shadow: none;
-    }
-    .scorePanel.underConsole{ margin-top: 0; }
-    .scoreAnchor{
-      position:absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      display:flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 2px;
-      pointer-events: none;
-      z-index: 5;
-      text-align: right;
-    }
-    .gcPoints{
-      font-weight: 1000;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      font-size: 34px;
-      line-height: 0.95;
-      letter-spacing: 0.02em;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .gcHi{ display:none; }
-    .kippBilanzBtn{
-      position:absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: calc(33.333% - 8px);
-      height: calc(var(--ui-cell) * 0.85);
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.35);
-      background: var(--btn-bg);
-      color: var(--btn-text);
-      font-weight: 1000;
-      letter-spacing: 0.06em;
-      text-transform: none;
-      cursor: pointer;
-      box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 0 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      z-index: 6;
-    }
-    .kippBilanzBtn:active{
-      transform: translateY(-50%) translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
-
-    .gcBottom{ display:flex; flex-direction: column; gap: 8px; }
-    .gcRow{ display:flex; gap: 8px; justify-content: space-between; align-items:center; }
     .gcBtn{
-      flex: 1 1 0;
+      width: min(520px, 100%);
       border: 1px solid rgba(0,0,0,0.35);
       background: var(--btn-bg);
       color: var(--btn-text);
@@ -748,7 +574,33 @@
     }
     .gcBtn:active{ transform: translateY(1px) scale(0.99); filter: brightness(0.97); }
 
-    #decisionPanel{ padding: 0 12px; box-sizing: border-box; transform: translateY(-20px); }
+    .levelRow{
+      width: min(520px, 100%);
+      display:flex;
+      gap: 10px;
+    }
+    .levelBtn{
+      flex: 1 1 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(234,215,190,0.95);
+      color: #2a160c;
+      font-weight: 1000;
+      font-size: clamp(12px, 4vmin, 18px);
+      letter-spacing: 0.04em;
+      line-height: 1.05;
+      padding: 12px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .levelBtn:active{ transform: translateY(1px) scale(0.99); filter: brightness(0.97); }
 
     .kippCountTitle{
       font-weight: 1000;
@@ -757,10 +609,9 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       font-size: clamp(18px, 5.6vmin, 34px);
       line-height: 0.95;
-      text-align: left;
+      text-align: center;
       user-select:none;
-      margin-top: 6px;
-      margin-bottom: 10px;
+      margin: 6px 0 6px 0;
       text-transform: none;
     }
     .kippStatus{
@@ -770,135 +621,120 @@
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       font-size: clamp(12px, 3.9vmin, 16px);
       line-height: 1.05;
-      margin-bottom: 10px;
+      margin: 0 0 6px 0;
       user-select:none;
       text-transform: none;
+      text-align: center;
     }
-
     .kippGoalWord{ font-weight: 1000; }
 
-    @keyframes blinkSoft{ 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-    @keyframes pulseSoft{ 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-
-    .attnSpeed .kippspeedLabel{ animation: blinkSoft 1.4s ease-in-out infinite; }
-    .attnSpeed .speedIcon{ animation: pulseSoft 1.0s ease-in-out infinite; }
-    .attnSpeed input[type="range"]::-webkit-slider-thumb{ animation: pulseSoft 1.0s ease-in-out infinite; }
-    .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
-    .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
-
-    #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
-    #decisionPanel.pulseSeq .miniBtn:nth-child(3){ animation-delay: 0.20s; }
-
-    #levelPanel{
-      width: 100%;
-      box-sizing: border-box;
-      padding: 0 12px;
-      height: 100%;
+    .gcRow{
+      width: min(520px, 100%);
       display:flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-
-      transform: translateY(-6px);
-
-      position: relative;
-      z-index: 9999;
-    }
-    #levelPanel.hidden{ display:none !important; }
-
-    .levelTitle{
-      font-weight: 1000;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      color: var(--ui-text);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      text-align:center;
-      line-height: 1.05;
-
-      font-size: clamp(14px, 6vmin, 22px);
-      max-width: 100%;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      user-select:none;
+      gap: 8px;
+      justify-content: space-between;
+      align-items:center;
     }
 
-    .levelRow{
-      width: 100%;
-      display:flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      max-width: 100%;
-    }
-
-    .levelBtn{
+    .miniBtn{
       flex: 1 1 0;
-      max-width: 33.33%;
-      min-width: 0;
-
       border: 1px solid rgba(0,0,0,0.35);
       background: rgba(234,215,190,0.95);
       color: #2a160c;
       font-weight: 1000;
-
-      font-size: clamp(12px, 4vmin, 18px);
-      letter-spacing: 0.04em;
-      line-height: 1.05;
-
-      padding: 12px 8px;
-      border-radius: 12px;
+      font-size: clamp(14px, 5.5vmin, 22px);
+      line-height: 1;
+      padding: 7px 0;
+      border-radius: 10px;
       cursor: pointer;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
       box-shadow:
         0 10px 18px rgba(0,0,0,0.20),
         0 0 0 1px rgba(255,255,255,0.12) inset;
-
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
-    .levelBtn:active{
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
+    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
+    .miniBtn.sel{
+      background: rgba(0,0,0,0.18);
+      color: var(--ui-text);
+      border-color: rgba(0,0,0,0.55);
+    }
+    .miniBtn[disabled]{ opacity: 0.55; cursor: default; filter: grayscale(0.1); }
+
+    @keyframes blinkSoft{ 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes pulseSoft{ 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+    .attnSpeed .kippspeedLabel{ animation: blinkSoft 1.4s ease-in-out infinite; }
+    .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
+    #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
+    #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
+    #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
+    #decisionPanel.pulseSeq .miniBtn:nth-child(3){ animation-delay: 0.20s; }
+
+    /* ========= SCORE (zwischen Zeile 13 und 14) – KEINE eigene Fläche ========= */
+    .scoreRow{
+      grid-column: 1 / span 8;
+      grid-row: 15 / span 2; /* entspricht "zwischen 13 und 14" im Board+UI-Sinn (unter UI-Start) */
+      z-index: 25;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      padding: 0 calc(var(--cellpx) * 0.25);
+      box-sizing: border-box;
+      background: transparent; /* ✅ keine Fläche */
+    }
+    .kippBilanzBtn{
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      padding: 12px 16px;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .kippBilanzBtn:active{ transform: translateY(1px) scale(0.99); filter: brightness(0.97); }
+
+    .gcPoints{
+      font-weight: 1000;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: 34px;
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
   </style>
 </head>
 
 <body>
   <div class="stage">
+    <div class="layout" id="layout">
+      <div class="bgPNG" aria-hidden="true"></div>
 
-    <div class="titleRow" aria-label="Titelzeile">
-      <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
+      <!-- HEADER (01–02) -->
+      <button id="backBtn" class="navBtn headerBack" aria-label="Zurück zur Speed-Einstellung" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 5L8 12l7 7"></path>
         </svg>
       </button>
 
-      <div class="titleMain"><h1>KIPP COLOR</h1></div>
+      <div class="headerTitle" aria-label="Titel">KIPP COLOR</div>
 
-      <button id="exitBtnTop" class="navBtn" aria-label="Spiel beenden" type="button">
+      <button id="exitBtnTop" class="navBtn headerExit" aria-label="Spiel beenden" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18"></path>
         </svg>
       </button>
-    </div>
 
-    <div class="boxShell" id="boxShell" aria-label="BoxShell">
-
-      <div class="board" id="board">
+      <!-- BOARD (1–8) -->
+      <div class="board" id="board" aria-label="Spielfeld">
         <div id="grid" class="grid" aria-label="8×8 Raster"></div>
-
-        <div id="goalOverlay" class="goalOverlay" aria-hidden="true">
-          <div id="goalCard" class="goalCard">
-            <div id="goalMain" class="goalMain">ERSTES KIPPZIEL</div>
-            <div id="goalSub" class="goalSub">von zehn</div>
-          </div>
-        </div>
 
         <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
           <div class="cubeShadow" aria-hidden="true"></div>
@@ -933,10 +769,10 @@
         <div class="ball" aria-label="Kugel"></div>
       </div>
 
-      <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
-
+      <!-- UI ab Zeile 9 (unterhalb Board) -->
+      <div class="ui" id="ui">
         <div id="speedMode" class="modeBlock">
-          <div class="kippspeedTop">
+          <div class="speedTop">
             <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
 
             <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
@@ -953,118 +789,84 @@
             <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
             <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
           </div>
-
-          <div class="speedScale" aria-label="Kippspeed Stufen">
-            <span>1</span><span>2</span><span>3</span><span>4</span>
-          </div>
         </div>
 
         <div id="gameMode" class="modeBlock hidden">
           <div class="gameConsole">
-            <div class="gcBottom" aria-label="Aktionen">
+            <div id="previewHint" class="previewHint">SCHAU GENAU!</div>
+            <button id="btnSetNumbers" class="gcBtn set" type="button">VORSCHAU-KIPPS</button>
 
-              <div class="previewBlock" aria-label="Vorschau-Block">
-                <div id="previewHint" class="previewHint">SCHAU GENAU!</div>
-                <button id="btnSetNumbers" class="gcBtn set" type="button">VORSCHAU-KIPPS</button>
+            <div id="levelPanel" class="hidden">
+              <div class="previewHint" id="levelTitle">LEVEL WÄHLEN</div>
+              <div class="levelRow">
+                <button id="btnLevelTrainee" class="levelBtn" type="button">Trainee</button>
+                <button id="btnLevelBrainy"  class="levelBtn" type="button">Brainy</button>
+                <button id="btnLevelBrain"   class="levelBtn" type="button">Brain</button>
               </div>
+            </div>
 
-              <div id="levelPanel" class="hidden" aria-label="Level wählen">
-                <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
-                <div class="levelRow" aria-label="Level Buttons">
-                  <button id="btnLevelTrainee" class="levelBtn" type="button">Trainee</button>
-                  <button id="btnLevelBrainy" class="levelBtn" type="button">Brainy</button>
-                  <button id="btnLevelBrain" class="levelBtn" type="button">Brain</button>
-                </div>
+            <div id="decisionPanel" class="hidden">
+              <div class="kippCountTitle" id="kippTitle">KIPP Anzahl wählen</div>
+              <div class="kippStatus" id="kippStatus">Tippe auf eine Taste</div>
+
+              <div class="gcRow" aria-label="Kippanzahl">
+                <button class="miniBtn" data-k="3" type="button">3</button>
+                <button class="miniBtn" data-k="6" type="button">6</button>
+                <button class="miniBtn" data-k="9" type="button">9</button>
               </div>
-
-              <div id="decisionPanel" class="hidden">
-                <div class="kippCountTitle" id="kippTitle">KIPP Anzahl wählen</div>
-                <div class="kippStatus" id="kippStatus">Tippe auf eine Taste</div>
-
-                <div class="gcRow" aria-label="Kippanzahl">
-                  <button class="miniBtn" data-k="3" type="button">3</button>
-                  <button class="miniBtn" data-k="6" type="button">6</button>
-                  <button class="miniBtn" data-k="9" type="button">9</button>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
-
       </div>
 
-      <div id="scorePanel" class="scorePanel underConsole hidden" aria-label="Score Panel">
-        <button id="btnKippBilanz" class="kippBilanzBtn" type="button" aria-label="KIPP Bilanz">
-          KIPP Bilanz
-        </button>
-
-        <div class="scoreAnchor">
-          <div id="gcPoints" class="gcPoints">P00/80</div>
-          <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
-        </div>
+      <!-- SCORE zwischen Zeile 13 und 14 (ohne Fläche) -->
+      <div class="scoreRow" id="scoreRow">
+        <button id="btnKippBilanz" class="kippBilanzBtn" type="button" aria-label="KIPP Bilanz">KIPP Bilanz</button>
+        <div id="gcPoints" class="gcPoints">P00/80</div>
       </div>
 
     </div>
-
   </div>
 
   <script>
+    const layoutEl    = document.getElementById("layout");
     const boardEl     = document.getElementById("board");
     const grid        = document.getElementById("grid");
     const wFace       = document.getElementById("wFaceGroup");
     const kipGroup    = document.getElementById("kipGroup");
     const speedSlider = document.getElementById("speedSlider");
 
-    const kippspeedBlock = document.getElementById("kippspeedBlock");
     const speedMode   = document.getElementById("speedMode");
     const gameMode    = document.getElementById("gameMode");
 
-    const scorePanel  = document.getElementById("scorePanel");
     const btnKippBilanz = document.getElementById("btnKippBilanz");
-
     const btnPlay     = document.getElementById("btnPlay");
     const playGlyph   = document.getElementById("playGlyph");
     const btnOk       = document.getElementById("btnOk");
-
     const backBtn     = document.getElementById("backBtn");
     const exitBtnTop  = document.getElementById("exitBtnTop");
 
-    const btnSetNumbers = document.getElementById("btnSetNumbers");
-    const decisionPanel = document.getElementById("decisionPanel");
-
-    const gcPoints    = document.getElementById("gcPoints");
-    const gcHi        = document.getElementById("gcHi");
-
-    const levelPanel = document.getElementById("levelPanel");
-    const levelTitle = document.getElementById("levelTitle");
+    const btnSetNumbers   = document.getElementById("btnSetNumbers");
+    const decisionPanel   = document.getElementById("decisionPanel");
+    const levelPanel      = document.getElementById("levelPanel");
+    const levelTitle      = document.getElementById("levelTitle");
     const btnLevelTrainee = document.getElementById("btnLevelTrainee");
     const btnLevelBrainy  = document.getElementById("btnLevelBrainy");
     const btnLevelBrain   = document.getElementById("btnLevelBrain");
 
     const previewHintEl = document.getElementById("previewHint");
+    const kippTitleEl   = document.getElementById("kippTitle");
+    const kippStatusEl  = document.getElementById("kippStatus");
 
-    const kippTitleEl  = document.getElementById("kippTitle");
-    const kippStatusEl = document.getElementById("kippStatus");
-
-    const goalOverlayEl = document.getElementById("goalOverlay");
-    const goalMainEl    = document.getElementById("goalMain");
-    const goalSubEl     = document.getElementById("goalSub");
-    const goalCardEl    = document.getElementById("goalCard");
+    const gcPoints = document.getElementById("gcPoints");
 
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-    function setBoardSquare(){
-      const w = Math.round(boardEl.getBoundingClientRect().width);
-      boardEl.style.height = w + "px";
-    }
-
-    function setKippspeedStripHeight(){
-      const w = Math.round(boardEl.getBoundingClientRect().width);
-      const cell = w / 8;
-      const h = Math.round(cell * 3);
-      document.documentElement.style.setProperty("--kippstrip-h", h + "px");
-      document.documentElement.style.setProperty("--ui-cell", Math.round(cell) + "px");
+    /* ✅ ZENTRAL: cellpx = layoutBreite/8 -> damit PNG NICHT 50% wird */
+    function setCellPx(){
+      const w = Math.round(layoutEl.getBoundingClientRect().width);
+      const cell = Math.round(w / 8);
+      document.documentElement.style.setProperty("--cellpx", cell + "px");
     }
 
     function getTiming(){
@@ -1215,25 +1017,6 @@
     let runningSet      = false;
     let setToken        = 0;
 
-    function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
-    function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay", !!on); }
-    function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet", !!on); }
-
-    function enterSpeedAttention(){
-      setAttentionSet(false);
-      setAttentionPlay(false);
-      setAttentionSpeed(true);
-    }
-    function enterPlayAttention(){
-      setAttentionSpeed(false);
-      setAttentionPlay(true);
-    }
-    function enterSetAttention(){
-      setAttentionSpeed(false);
-      setAttentionPlay(false);
-      setAttentionSet(true);
-    }
-
     function setPlayGlyph(isPause){
       playGlyph.className = isPause ? "pauseIcon" : "playIcon";
     }
@@ -1241,16 +1024,13 @@
     function showSpeedMode(){
       speedMode.classList.remove("hidden");
       gameMode.classList.add("hidden");
-      if(scorePanel) scorePanel.classList.add("hidden");
       if(previewHintEl) previewHintEl.classList.remove("hidden");
-      enterSpeedAttention();
       setPlayGlyph(false);
     }
 
     function showGameMode(){
       speedMode.classList.add("hidden");
       gameMode.classList.remove("hidden");
-      if(scorePanel) scorePanel.classList.remove("hidden");
 
       btnSetNumbers.classList.remove("hidden");
       decisionPanel.classList.add("hidden");
@@ -1258,10 +1038,7 @@
 
       if(previewHintEl) previewHintEl.classList.remove("hidden");
 
-      enterSetAttention();
-
       setPoints(0);
-      gcHi.textContent = "80";
     }
 
     async function waitOrPause(ms, myToken){
@@ -1388,11 +1165,6 @@
       levelPanel.classList.remove("hidden");
 
       if(previewHintEl) previewHintEl.classList.add("hidden");
-
-      setAttentionSet(false);
-      setAttentionPlay(false);
-      setAttentionSpeed(false);
-
       levelTitle.textContent = "LEVEL WÄHLEN";
     }
 
@@ -1402,7 +1174,6 @@
       const myToken = ++setToken;
 
       reroll12_keepEmpty();
-
       const T = getTiming();
 
       showW(); renderWEmpty();
@@ -1502,13 +1273,15 @@
     }
 
     function colorRgbForClass(colorClass){
-      if(colorClass === "c-orange")  return getComputedStyle(document.documentElement).getPropertyValue("--orange").trim();
-      if(colorClass === "c-gruen")   return getComputedStyle(document.documentElement).getPropertyValue("--gruen").trim();
-      if(colorClass === "c-violett") return getComputedStyle(document.documentElement).getPropertyValue("--violett").trim();
-      if(colorClass === "c-blau")    return getComputedStyle(document.documentElement).getPropertyValue("--blau").trim();
-      return getComputedStyle(document.documentElement).getPropertyValue("--ui-text").trim();
+      const css = getComputedStyle(document.documentElement);
+      if(colorClass === "c-orange")  return css.getPropertyValue("--orange").trim();
+      if(colorClass === "c-gruen")   return css.getPropertyValue("--gruen").trim();
+      if(colorClass === "c-violett") return css.getPropertyValue("--violett").trim();
+      if(colorClass === "c-blau")    return css.getPropertyValue("--blau").trim();
+      return css.getPropertyValue("--ui-text").trim();
     }
 
+    /* ===== Spielregeln ===== */
     const MAX_ROUNDS = 10;
     const MAX_TRIES  = 3;
     const SCORE_BY_TRY = [8,5,3];
@@ -1526,6 +1299,7 @@
       gcPoints.textContent = "P" + s + "/80";
     }
 
+    // Rotation-Helpers
     const colToX = {A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8};
     const xToCol = ["","A","B","C","D","E","F","G","H"];
 
@@ -1617,10 +1391,7 @@
     }
 
     function ordinalDeTitle(k){
-      const map = [
-        "Erstes","Zweites","Drittes","Viertes","Fünftes",
-        "Sechstes","Siebentes","Achtes","Neuntes","Zehntes"
-      ];
+      const map = ["Erstes","Zweites","Drittes","Viertes","Fünftes","Sechstes","Siebentes","Achtes","Neuntes","Zehntes"];
       if(k >= 1 && k <= 10) return map[k-1];
       return "Nächstes";
     }
@@ -1684,6 +1455,7 @@
         if(sid == null) continue;
 
         if(sid !== fid) continue;
+
         if(inner.get(adj) === targetNumber) return true;
       }
       return false;
@@ -1811,7 +1583,6 @@
       levelPanel.classList.add("hidden");
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
-      enterSetAttention();
 
       roundIndex = 0;
       tryIndex = 0;
@@ -1830,18 +1601,20 @@
 
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
-      if(!runningDemo) enterPlayAttention();
+      if(!runningDemo){
+        // optisch: Play blinkt nicht mehr gesteuert über Klassen – hier minimal
+      }
     });
 
     btnPlay.addEventListener("click", async () => {
-      if(!hasAdjustedOnce) enterPlayAttention();
+      if(!hasAdjustedOnce){
+        // ok
+      }
 
       if(!runningDemo){
-        setAttentionPlay(false);
         setPlayGlyph(true);
         await runDemoCycle();
         setPlayGlyph(false);
-        enterPlayAttention();
         return;
       }
 
@@ -1853,13 +1626,10 @@
       cancelDemo();
       cancelSetNumbers();
       resetToW1Q0_Empty();
-      setAttentionPlay(false);
-      setAttentionSpeed(false);
       showGameMode();
     });
 
     btnSetNumbers.addEventListener("click", async () => {
-      setAttentionSet(false);
       if(previewHintEl) previewHintEl.classList.remove("hidden");
       await runSetNumbersCycle();
     });
@@ -1895,26 +1665,19 @@
     }
 
     window.addEventListener("load", () => {
-      setBoardSquare();
-      requestAnimationFrame(setBoardSquare);
-      setTimeout(setBoardSquare, 80);
+      setCellPx();
+      requestAnimationFrame(setCellPx);
+      setTimeout(setCellPx, 80);
 
       buildGridOnce();
-
-      setKippspeedStripHeight();
-      requestAnimationFrame(setKippspeedStripHeight);
-      setTimeout(setKippspeedStripHeight, 80);
-
       resetToW1Q0_Empty();
       showSpeedMode();
+      setPoints(0);
     });
 
     window.addEventListener("resize", () => {
-      setBoardSquare();
-      requestAnimationFrame(setBoardSquare);
-
-      setKippspeedStripHeight();
-      requestAnimationFrame(setKippspeedStripHeight);
+      setCellPx();
+      requestAnimationFrame(setCellPx);
     });
   </script>
 </body>
