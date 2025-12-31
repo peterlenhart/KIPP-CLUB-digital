@@ -1536,7 +1536,7 @@
     }
 
     // ===== Unsere 4 sichtbaren Slot-Positionen bei rotIndex=0 =====
-    const BASE_SLOT_COORDS = ["3B","4B","2C","2D"]; // Reihenfolge passt zu curr[0..3]
+    const BASE_SLOT_COORDS = ["3B","4B","2C","2D"]; // Reihenfolge passt zu curr[0..3] und S1..S4
 
     function currentInnerMap(){
       const curr = sets[faceIndex] || [];
@@ -1586,11 +1586,34 @@
       return 3;
     }
 
-    // ✅ Für eine Farbe ist genau EIN Ziel-Feld relevant: das im aktuellen Quadranten
-    function relevantTargetCoordForColor(colorClass, quad){
-      const list = TARGET_COORDS.filter(tc => colorMap.get(tc) === colorClass);
-      const inQuad = list.filter(tc => quadrantOfCoord(tc) === quad);
-      return inQuad[0] || null;
+    // ✅ Feldnummern pro Quadrant (deine fixe FI-Definition)
+    // Q0: F1=4A, F2=3A, F3=1C, F4=1D
+    // Q1: F1=1E, F2=1F, F3=3H, F4=4H
+    // Q2: F1=5H, F2=6H, F3=8F, F4=8E
+    // Q3: F1=8D, F2=8C, F3=6A, F4=5A
+    const QUAD_FIELD_COORDS = {
+      0: {1:"4A", 2:"3A", 3:"1C", 4:"1D"},
+      1: {1:"1E", 2:"1F", 3:"3H", 4:"4H"},
+      2: {1:"5H", 2:"6H", 3:"8F", 4:"8E"},
+      3: {1:"8D", 2:"8C", 3:"6A", 4:"5A"},
+    };
+
+    function fieldIdForTargetCoord(coord, quad){
+      const q = QUAD_FIELD_COORDS[quad];
+      if(!q) return null;
+      for(const fid of [1,2,3,4]){
+        if(q[fid] === coord) return fid;
+      }
+      return null;
+    }
+
+    function slotIdAtInnerCoord(innerCoord){
+      // SlotId ergibt sich aus BASE_SLOT_COORDS + Rotation
+      for(let i=0;i<4;i++){
+        const abs = rotateCoordCW(BASE_SLOT_COORDS[i], rotIndex);
+        if(abs === innerCoord) return (i+1); // S1..S4
+      }
+      return null;
     }
 
     function ordinalDeTitle(k){
@@ -1644,20 +1667,36 @@
     let busyMove = false;
 
     /* =========================
-       ✅ FIX: Trefferprüfung exakt nach deiner Regel
-       - Quadrant = rotIndex
-       - relevant ist NUR das Zielfeld dieser Farbe im aktuellen Quadranten
-       - Treffer nur, wenn Adjacent-Innenfeld == Zielzahl
+       ✅ Trefferprüfung nach deiner FI/SI-Regel (robust gegen doppelte Zielfarben)
+       Treffer, wenn:
+       - Im aktuellen Quadranten (rotIndex) gibt es ein Zielfeld in Zielfarbe,
+       - an dessen INNER-Adjazenz ein Slot liegt,
+       - dort steht die Zielzahl,
+       - und SlotID == FeldID (S1=F1, S2=F2, S3=F3, S4=F4).
        ========================= */
     function isHitForTarget(inner, targetColor, targetNumber){
       const quad = getCubeQuadrant();
-      const tc = relevantTargetCoordForColor(targetColor, quad);
-      if(!tc) return false;
 
-      const adj = adjacentInnerCoordForTarget(tc);
-      if(!adj) return false;
+      // Kandidaten: alle Zielfelder dieser Farbe im aktuellen Quadranten
+      const candidates = TARGET_COORDS
+        .filter(tc => colorMap.get(tc) === targetColor)
+        .filter(tc => quadrantOfCoord(tc) === quad);
 
-      return inner.get(adj) === targetNumber;
+      for(const tc of candidates){
+        const fid = fieldIdForTargetCoord(tc, quad);
+        if(fid == null) continue;
+
+        const adj = adjacentInnerCoordForTarget(tc);
+        if(!adj) continue;
+
+        const sid = slotIdAtInnerCoord(adj);
+        if(sid == null) continue;
+
+        if(sid !== fid) continue; // ✅ FI muss SI sein
+
+        if(inner.get(adj) === targetNumber) return true;
+      }
+      return false;
     }
 
     function pickNewTarget(){
@@ -1672,10 +1711,9 @@
         return;
       }
 
-      // mögliche Farben (nur die, die überhaupt existieren)
       const allColors = Array.from(new Set(TARGET_COORDS.map(tc=>colorMap.get(tc)).filter(Boolean)));
 
-      // wir picken (Farbe, Zahl) so, dass es NICHT sofort ein Treffer ist
+      // Pick (Farbe, Zahl) so, dass es NICHT sofort ein Treffer ist
       let guard = 0;
       while(guard < 200){
         const col = allColors[Math.floor(Math.random()*allColors.length)] || "c-orange";
@@ -1690,7 +1728,6 @@
         guard++;
       }
 
-      // Notfall
       currentTargetColor = allColors[Math.floor(Math.random()*allColors.length)] || "c-orange";
       currentTargetNumber = visibleNums[Math.floor(Math.random()*visibleNums.length)];
       showTargetOnAllSameColor(currentTargetColor, currentTargetNumber);
@@ -1742,7 +1779,6 @@
           return;
         }
 
-        // ✅ pickNewTarget NUR bei Treffer
         pickNewTarget();
         setGoalInfoText(roundIndex + 1);
 
@@ -1762,13 +1798,11 @@
             return;
           }
 
-          // ✅ pickNewTarget NUR nach 3 Fehlversuchen
           pickNewTarget();
           setGoalInfoText(roundIndex + 1);
         }
       }
 
-      // UI Reset
       selectKippCount(null);
       setTryText();
       startPulse();
@@ -1802,33 +1836,8 @@
       startPulse();
       setButtonsEnabled(true);
 
-      // ✅ KEINE Einblendung im Boxinneren.
       setGoalInfoText(1);
       setTryText();
-    }
-
-    /* ===== Rest deiner Logik unverändert ===== */
-
-    function renderWEmpty(){
-      setRotationSnap();
-      for(let i=0;i<4;i++) renderNumber(slotTargetsW[i], null);
-    }
-
-    function renderKipEmpty(){
-      setRotationSnap();
-      for(let i=0;i<4;i++){
-        renderNumber(slotTargetsKipRight[i], null);
-        renderNumber(slotTargetsKipLeft[i], null);
-      }
-    }
-
-    function resetToW1Q0_Empty(){
-      rotIndex = 0;
-      faceIndex = 0;
-      setRotationSnap();
-      clearAllNumbers();
-      showW();
-      renderWEmpty();
     }
 
     speedSlider.addEventListener("input", () => {
