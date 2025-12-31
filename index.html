@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiKipp – Clean Grid</title>
+  <title>DigiKipp – 7 Bilder Demo</title>
 
   <style>
     :root{
@@ -12,123 +12,72 @@
       --gruen:   rgb(0, 166, 82);
       --orange:  rgb(249, 150, 30);
 
-      /* Grid-Grundwerte */
-      --gap: 0px;
-      --pad: 8px;
+      --cell-gap: 0px;
+      --cell-radius: 0px;
 
-      /* dynamisch per JS gesetzt */
-      --cell: 60px;
-      --rowH: 60px;
+      --slot-border: rgba(0,0,0,0.55);
+      --slot-border-w: 2px;
+      --slot-fill: #ead7be;
 
-      /* dein Hintergrundbild */
+      --box-black: #000;
+      --box-radius: 0px;
+
+      --btn-bg: #ead7be;
+      --btn-text: #2a160c;
+      --btn-border: rgba(0,0,0,0.35);
+
+      --ui-panel-bg: #4a2418;   /* dunkel-rotbraun */
+      --ui-text: #ead7be;       /* ✅ beige wie vorher */
+
+      --kippstrip-h: auto;
+
+      /* ✅ UI-Cell (= Boardbreite/8) wird per JS gesetzt */
+      --ui-cell: 60px;
+
+      --rotSign: 1;
+      --rot: 0deg;
+
+      /* ✅ Deine Datei als unterster Background */
       --bg-img: url("Box_m_Hgr.png");
     }
 
     html, body { height: 100%; }
+
     body{
       margin:0;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
-      background: #111; /* neutraler Rand – kein Holz, kein Verlauf */
+      background: #000; /* neutral; deine PNG ist im Board */
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* ====== ROOT GRID (NEUER BEZUG FÜR ALLES) ======
-       - 8 Spalten (A..H)
-       - Header-Zeile (0.1/0.2) -> 1 Row
-       - Dann Rows 1..20 -> 20 Rows
-    */
-    #uiGrid{
-      width: min(96vw, 720px);
-      display:grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: var(--rowH) repeat(20, var(--rowH));
-      gap: var(--gap);
-      position: relative;
+    .stage{
+      width: min(94vw, 688px);
+      margin-top: 0;
+      padding-top: 8px;
+      padding-bottom: 2vh;
+      display:flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content:flex-start;
+      align-items:center;
+
+      background: var(--ui-panel-bg);
+      min-height: 100vh;
       box-sizing: border-box;
-      padding: 0; /* keine Alt-Panel-Ränder */
-      background: transparent;
     }
 
-    /* ====== HINTERGRUND (PNG) ======
-       Deine PNG wird oben links bei 01A verankert
-       -> Das entspricht hier: Start bei Row 1 (nach Header), Col A
-       -> spannt über 8x8 (Rows 1..8, Cols A..H)
-    */
-    #bgBox{
-      grid-column: 1 / span 8;
-      grid-row: 2 / span 8; /* Row 1 entspricht grid-row:2 (weil header ist row:1) */
-      position: relative;
-      background-image: var(--bg-img);
-      background-repeat: no-repeat;
-      background-position: top left;
-      background-size: 100% 100%;
+    /* ===== HEADER ===== */
+    .titleRow{
       width: 100%;
-      aspect-ratio: 1 / 1; /* 8x8 bleibt quadratisch */
-      justify-self: stretch;
-      align-self: start;
-      overflow: visible;
-    }
-
-    /* ====== 8x8 LOGIK/OVERLAY GRID (transparent, ohne schwarze Flächen) ====== */
-    #boardOverlay{
-      position:absolute;
-      inset:0;
-      display:grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      gap: 0;
-      pointer-events:none;
-      z-index: 10;
-    }
-    .cell{
-      background: transparent; /* KEIN schwarz */
-      position: relative;
-      box-sizing:border-box;
-    }
-
-    /* Farb-Zielfelder (nur wenn du sie sichtbar willst – sonst transparent lassen) */
-    .cell.colorCell{ background: transparent; } /* PNG liefert Optik */
-    /* Wenn du die Farbfelder als „unsichtbare Trefferzonen“ willst, bleibt das so. */
-
-    /* ===== Target Zahl auf Zielfeldern ===== */
-    @keyframes targetBreath{
-      0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
-      50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
-    }
-    .targetBadge{
-      position:absolute;
-      left:50%;
-      top:50%;
-      font-weight: 900;
-      font-size: clamp(18px, 8vmin, 36px);
-      color: rgba(0,0,0,0.92);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      line-height: 1;
-      pointer-events:none;
-      z-index: 30;
-      animation: targetBreath 1.25s ease-in-out infinite;
-      transform-origin: 50% 50%;
       display:flex;
       align-items:center;
-      justify-content:center;
-    }
-    .trot-top    { --trot: 0deg; }
-    .trot-bottom { --trot: 180deg; }
-    .trot-left   { --trot: -90deg; }
-    .trot-right  { --trot: 90deg; }
-
-    /* ===== HEADER (Zeile 0.1/0.2) ===== */
-    #header{
-      grid-column: 1 / span 8;
-      grid-row: 1;
-      display:grid;
-      grid-template-columns: repeat(8, 1fr);
-      align-items:center;
-      height: var(--rowH);
-      position: relative;
-      z-index: 50;
+      justify-content: space-between;
+      gap: 10px;
+      user-select:none;
+      margin-bottom: 2px;
+      padding: 0 10px;
+      box-sizing: border-box;
     }
 
     .navBtn{
@@ -142,86 +91,399 @@
       cursor: pointer;
 
       background: transparent;
-      border: 2px solid rgba(255,255,255,0.9);
+      border: 2px solid var(--ui-text);
       box-shadow: none;
       padding:0;
     }
     .navBtn svg{
       width: 28px;
       height: 28px;
-      stroke: rgba(255,255,255,0.92);
+      stroke: var(--ui-text);
       stroke-width: 5;
       fill: none;
       stroke-linecap: square;
       stroke-linejoin: miter;
     }
-    .navBtn:active{ transform: scale(0.98); }
-
-    #backBtn{
-      grid-column: 1 / span 2;
-      justify-self:start;
-      margin-left: var(--pad); /* 8px rein */
-    }
-    #exitBtnTop{
-      grid-column: 7 / span 2;
-      justify-self:end;
-      margin-right: var(--pad); /* 8px rein */
+    .navBtn:active{
+      transform: scale(0.98);
+      filter: brightness(1.03);
     }
 
-    #titleMain{
-      grid-column: 3 / span 4;
-      justify-self:center;
-      text-align:center;
-      color: #fff;
+    .titleMain{
+      flex: 1 1 auto;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-width: 0;
+    }
+    .titleMain h1{
+      margin: 0;
+      padding: 0;
       font-weight: 1000;
       letter-spacing: 0.08em;
       font-size: clamp(22px, 6.0vmin, 44px);
+      color: var(--ui-text);
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.28),
+        0 10px 18px rgba(0,0,0,0.18);
       line-height: 1;
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.4);
     }
 
-    /* ===== UI BLOCK (ab Zeile 9/10) =====
-       -> Row 9 entspricht grid-row: (header=1) + 9 => 10? Achtung:
-       Wir haben:
-         grid-row:1 = Header
-         grid-row:2..9 = Rows 1..8 (Spielfeld)
-         grid-row:10 = Row 9
-       Also: Start bei grid-row:10
-    */
-    #uiBlock{
-      grid-column: 1 / span 8;
-      grid-row: 10 / span 4; /* Row 9..12 */
+    /* ===== BOX SHELL ===== */
+    .boxShell{
+      width: 100%;
+      box-sizing: border-box;
+      background: transparent;
+      border: 0;
+      border-radius: var(--box-radius);
+      box-shadow: none;
+      overflow: visible;
       display:flex;
       flex-direction: column;
-      align-items: center;     /* alles mittig */
-      justify-content: flex-start;
-      gap: 14px;
-      z-index: 60;
-      color: #fff;
-      text-align:center;
-      padding-top: 8px;
+      gap: 0;
+      position: relative;
     }
 
-    /* ===== SPEED MODE ===== */
+    /* (Optional: Nord/Süd Schatten – wenn du ihn NICHT willst, lösch den Block) */
+    .boxShell::before,
+    .boxShell::after{
+      content:"";
+      position:absolute;
+      left: 0;
+      width: 100%;
+      height: 18px;
+      pointer-events:none;
+      z-index: 50;
+      opacity: 0.95;
+    }
+    .boxShell::before{
+      top: -12px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.00));
+      filter: blur(0.2px);
+    }
+    .boxShell::after{
+      bottom: -12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.00));
+      filter: blur(0.2px);
+    }
+
+    .board{
+      position:relative;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      box-sizing: border-box;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      overflow: hidden; /* ✅ wichtig: PNG bleibt sauber im Board */
+
+      box-shadow:
+        10px 18px 42px rgba(0,0,0,0.55),
+        3px 6px 16px rgba(0,0,0,0.35);
+
+      --cell: calc((100% - 7 * var(--cell-gap)) / 8);
+      --step: calc(var(--cell) + var(--cell-gap));
+    }
+
+    /* ✅ Deine PNG ist wirklich die unterste Ebene */
+    .board::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image: var(--bg-img);
+      background-repeat: no-repeat;
+      background-position: top left;
+
+      /* ✅ unverzerrt; wenn du "füllend" willst: cover */
+      background-size: contain;
+
+      z-index: 0;
+      pointer-events:none;
+    }
+
+    .grid{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: var(--cell-gap);
+      pointer-events: none;
+      z-index: 10; /* über PNG */
+    }
+
+    .cell{
+      background: transparent; /* ✅ keine schwarze Altfläche mehr */
+      border-radius: var(--cell-radius);
+      box-sizing: border-box;
+      box-shadow: none;
+      position: relative;
+    }
+
+    .c-orange{ background: var(--orange); }
+    .c-gruen { background: var(--gruen);  }
+    .c-violett{ background: var(--violett); }
+    .c-blau  { background: var(--blau);   }
+
+    .cell.colorCell{
+      box-shadow:
+        inset 0 0 0 2px #000,
+        0 0 0 1px rgba(0,0,0,0.25);
+    }
+
+    /* ===== Target Zahl auf farbigen Feldern ===== */
+    @keyframes targetBreath{
+      0%,100%{ transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1); opacity: 0.95; }
+      50%    { transform: translate(-50%, -50%) rotate(var(--trot, 0deg)) scale(1.10); opacity: 1; }
+    }
+    .targetBadge{
+      position:absolute;
+      left:50%;
+      top:50%;
+      font-weight: 900;
+      font-size: clamp(18px, 8vmin, 36px);
+      color: rgba(0,0,0,0.92);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      pointer-events:none;
+      z-index: 30;
+      animation: targetBreath 1.25s ease-in-out infinite;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .trot-top    { --trot: 0deg; }
+    .trot-bottom { --trot: 180deg; }
+    .trot-left   { --trot: -90deg; }
+    .trot-right  { --trot: 90deg; }
+
+    .goalOverlay{ display:none !important; }
+
+    .ball{
+      position:absolute;
+      left: calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
+      top:  calc(var(--step) + ( (6 * var(--cell) + 5 * var(--cell-gap)) / 2 ));
+      width: calc(var(--cell) * 0.55);
+      height: calc(var(--cell) * 0.55);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0.0) 45%),
+        radial-gradient(circle at 55% 60%, rgba(0,0,0,0.18), rgba(0,0,0,0.00) 55%),
+        radial-gradient(circle at 50% 55%, #d6b996, #b88d63 70%);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.28);
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .wFaceGroup,
+    .kipGroup{
+      position:absolute;
+      inset:0;
+      z-index: 20;
+      pointer-events:none;
+
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        rotate(var(--rot))
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+    }
+
+    .hidden{ display:none !important; }
+
+    .cubeShadow{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      z-index: 1;
+      background: transparent;
+      box-shadow:
+        0 22px 26px rgba(0,0,0,0.32),
+        0 10px 16px rgba(0,0,0,0.18);
+    }
+
+    .cubeFace{
+      position:absolute;
+      width: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      box-sizing: border-box;
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, #d7c2a4, #c9b08f);
+      box-shadow:
+        inset 0 0 0 2px rgba(122, 74, 52, 1),
+        0 0 0 1px rgba(255,255,255,0.08) inset;
+      z-index: 2;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+    }
+
+    .slot{
+      position:absolute;
+      width: var(--cell);
+      height: var(--cell);
+      box-sizing: border-box;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
+        var(--slot-fill);
+      border: var(--slot-border-w) solid var(--slot-border);
+      border-radius: var(--cell-radius);
+      z-index: 7;
+      box-shadow:
+        1px 1px 0 rgba(255,255,255,0.18) inset,
+        -1px -1px 0 rgba(0,0,0,0.08) inset,
+        0 3px 5px rgba(0,0,0,0.22),
+        2px 2px 3px -1px rgba(0,0,0,0.20);
+    }
+
+    .slot .num{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      z-index: 9;
+    }
+
+    .slot .num > span{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      color: #111;
+      font-size: clamp(18px, 8vmin, 36px);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      transform: rotate(var(--num-rot, 0deg));
+      transform-origin: 50% 50%;
+      position: relative;
+      line-height: 1;
+    }
+
+    .read-south { --num-rot: calc(var(--rotSign) * 0deg); }
+    .read-west  { --num-rot: calc(var(--rotSign) * 90deg); }
+    .read-east  { --num-rot: calc(var(--rotSign) * -90deg); }
+    .read-north { --num-rot: calc(var(--rotSign) * 180deg); }
+
+    .s-3b{ left: calc(1 * var(--step)); top: calc(2 * var(--step)); }
+    .s-4b{ left: calc(1 * var(--step)); top: calc(3 * var(--step)); }
+    .s-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+    .s-2d{ left: calc(3 * var(--step)); top: calc(1 * var(--step)); }
+
+    .kipScale{
+      position:absolute;
+      inset:0;
+      --pivot-x: calc(4 * var(--step));
+      --pivot-y: calc(4 * var(--step));
+      transform:
+        translate(var(--pivot-x), var(--pivot-y))
+        scaleX(0.6666667)
+        translate(calc(-1 * var(--pivot-x)), calc(-1 * var(--pivot-y)));
+      transform-origin: 0 0;
+    }
+
+    .kipShadow{
+      position:absolute;
+      left: calc(1 * var(--step));
+      top:  calc(1 * var(--step));
+      width: calc(6 * var(--cell) + 5 * var(--cell-gap));
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      background: transparent;
+      z-index: 1;
+      box-shadow:
+        0 22px 26px rgba(0,0,0,0.32),
+        0 10px 16px rgba(0,0,0,0.18);
+    }
+
+    .kipEdgeCore{
+      position:absolute;
+      left: calc(4 * var(--step));
+      top:  calc(1 * var(--step));
+      width: 6px;
+      height: calc(3 * var(--cell) + 2 * var(--cell-gap));
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, rgba(0,0,0,0.00), rgba(0,0,0,0.28), rgba(0,0,0,0.00));
+      z-index: 1;
+      opacity: 0.95;
+    }
+
+    .kipFaceQ0{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .kipFaceQ1{ left: calc(4 * var(--step)); top: calc(1 * var(--step)); }
+
+    .k-4d{ left: calc(3 * var(--step)); top: calc(3 * var(--step)); }
+    .k-3d{ left: calc(3 * var(--step)); top: calc(2 * var(--step)); }
+    .k-2b{ left: calc(1 * var(--step)); top: calc(1 * var(--step)); }
+    .k-2c{ left: calc(2 * var(--step)); top: calc(1 * var(--step)); }
+
+    .k-3e{ left: calc(4 * var(--step)); top: calc(2 * var(--step)); }
+    .k-4e{ left: calc(4 * var(--step)); top: calc(3 * var(--step)); }
+    .k-2f{ left: calc(5 * var(--step)); top: calc(1 * var(--step)); }
+    .k-2g{ left: calc(6 * var(--step)); top: calc(1 * var(--step)); }
+
+    /* ===== Konsole-Block ===== */
+    .kippspeedBlock{
+      width: 100%;
+      height: var(--kippstrip-h);
+      background: var(--box-black);
+      user-select:none;
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      position: relative;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    .modeBlock{ width:100%; box-sizing:border-box; }
+    .modeBlock.hidden{ display:none !important; }
+
+    .kippspeedTop{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      padding: 0 12px;
+    }
+
     .kippspeedLabel{
       font-weight: 1000;
       letter-spacing: 0.10em;
       text-transform: uppercase;
-      color: #fff;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
       font-size: 16px;
       line-height: 1.05;
+      text-align: center;
       user-select:none;
+      white-space: nowrap;
     }
 
     .squareBtn{
       width: 44px;
       height: 44px;
       border-radius: 0;
-      border: 2px solid rgba(255,255,255,0.7);
-      background: rgba(0,0,0,0.20);
+      border: 2px solid rgba(0,0,0,0.55);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0.05)),
+        var(--btn-bg);
+      box-shadow:
+        0 18px 22px rgba(0,0,0,0.35),
+        0 8px 14px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -229,14 +491,18 @@
       -webkit-tap-highlight-color: transparent;
       cursor: pointer;
     }
-    .squareBtn:active{ transform: scale(0.985); }
+    .squareBtn:active{
+      transform: scale(0.985);
+      filter: brightness(0.98);
+    }
 
     .playIcon{
       width: 0;
       height: 0;
       border-top: 11px solid transparent;
       border-bottom: 11px solid transparent;
-      border-left: 18px solid rgba(255,255,255,0.92);
+      border-left: 18px solid #7a3f2b;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.25));
       transform: translateX(1px);
     }
 
@@ -244,6 +510,7 @@
       width: 18px;
       height: 22px;
       position: relative;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,0.25));
     }
     .pauseIcon::before,
     .pauseIcon::after{
@@ -252,7 +519,8 @@
       top:0;
       width: 6px;
       height: 22px;
-      background: rgba(255,255,255,0.92);
+      background: #7a3f2b;
+      border-radius: 1px;
     }
     .pauseIcon::before{ left: 0; }
     .pauseIcon::after { right: 0; }
@@ -260,7 +528,8 @@
     .okText{
       font-weight: 1000;
       letter-spacing: 0.06em;
-      color: rgba(255,255,255,0.92);
+      color: #7a3f2b;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       font-size: 16px;
       line-height: 1;
     }
@@ -269,26 +538,50 @@
       display:flex;
       align-items:center;
       gap: 14px;
-      justify-content:center;
-      width: 100%;
+      padding: 0 12px;
     }
 
     .speedIcon{
       width: clamp(44px, 10vmin, 62px);
       height: clamp(44px, 10vmin, 62px);
       opacity: 0.98;
-      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.35));
+      flex: 0 0 auto;
+      filter:
+        brightness(0) saturate(100%)
+        invert(90%) sepia(16%) saturate(330%)
+        hue-rotate(355deg) brightness(105%) contrast(95%)
+        drop-shadow(0 1px 0 rgba(0,0,0,0.35))
+        drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+    }
+
+    .speedScale{
+      margin: 0 12px;
+      padding-left: calc(clamp(44px, 10vmin, 62px) + 14px);
+      padding-right: calc(clamp(44px, 10vmin, 62px) + 14px);
+      display:flex;
+      justify-content: space-between;
+      color: var(--ui-text);
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      font-size: 14px;
+      line-height: 1;
+      user-select:none;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      transform: translateY(-2px);
     }
 
     input[type="range"]{
       -webkit-appearance: none;
       appearance: none;
-      width: min(420px, 78vw);
+      width: 100%;
       height: 10px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.16);
+      background: var(--ui-panel-bg);
       outline: none;
-      border: 1px solid rgba(255,255,255,0.35);
+      border: 1px solid #000;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.10) inset,
+        0 1px 0 rgba(0,0,0,0.35) inset;
     }
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance: none;
@@ -296,318 +589,439 @@
       width: 22px;
       height: 22px;
       border-radius: 6px;
-      background: rgba(255,255,255,0.85);
+      background: var(--btn-bg);
       border: 2px solid rgba(0,0,0,0.35);
+      box-shadow:
+        0 8px 14px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
       cursor: pointer;
     }
 
-    .speedTop{
+    /* ===== Game Console ===== */
+    .gameConsole{
+      width:100%;
+      height:100%;
+      padding: 8px 12px;
+      box-sizing:border-box;
       display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 12px;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      position: relative;
     }
 
-    /* ===== GAME TEXT / BUTTONS (alles mittig) ===== */
-    .gcBtn{
-      border: 1px solid rgba(255,255,255,0.35);
-      background: rgba(0,0,0,0.20);
-      color: rgba(255,255,255,0.92);
-      font-weight: 1000;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 12px 14px;
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+    .previewBlock{
+      margin-top: 42px;
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .previewHint{
       text-align:center;
-      width: min(420px, 78vw);
-    }
-    .gcBtn:active{ transform: translateY(1px) scale(0.99); }
-
-    .kippCountTitle{
       font-weight: 1000;
       letter-spacing: 0.10em;
-      color: rgba(255,255,255,0.92);
-      font-size: clamp(18px, 5.6vmin, 34px);
-      line-height: 1.0;
-      margin: 0;
-      text-transform: none;
-      text-align:center;
-    }
-    .kippStatus{
-      font-weight: 1000;
-      letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.92);
-      font-size: clamp(12px, 3.9vmin, 16px);
-      line-height: 1.05;
-      margin: 0;
-      text-transform: none;
-      text-align:center;
-    }
-
-    .gcRow{
-      display:flex;
-      gap: 10px;
-      justify-content:center;
-      width: min(420px, 78vw);
+      text-transform: uppercase;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: clamp(14px, 5.2vmin, 20px);
+      user-select:none;
     }
 
     .miniBtn{
       flex: 1 1 0;
-      border: 1px solid rgba(255,255,255,0.35);
-      background: rgba(0,0,0,0.20);
-      color: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(234,215,190,0.95);
+      color: #2a160c;
       font-weight: 1000;
+
       font-size: clamp(14px, 5.5vmin, 22px);
       line-height: 1;
-      padding: 10px 0;
+      padding: 7px 0;
+      border-radius: 10px;
+
       cursor: pointer;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
-      text-align:center;
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
     }
     .miniBtn:active{ transform: translateY(1px) scale(0.99); }
-    .miniBtn.sel{ background: rgba(255,255,255,0.18); }
 
-    .hidden{ display:none !important; }
+    .miniBtn.sel{
+      background: var(--ui-panel-bg);
+      color: var(--ui-text);
+      border-color: rgba(0,0,0,0.55);
+    }
 
-    /* ===== SCORE (Zeile 13/14) =====
-       Row 13 entspricht grid-row: (header=1) + 13 => 14
-       wir setzen Scoreblock auf grid-row:14
-    */
-    #scoreRow{
-      grid-column: 1 / span 8;
-      grid-row: 14;
+    .miniBtn[disabled]{
+      opacity: 0.55;
+      cursor: default;
+      filter: grayscale(0.1);
+    }
+
+    .scorePanel{
+      width: 100%;
+      height: calc(var(--ui-cell) * 2);
+      background: transparent; /* ✅ keine braune Altfläche erzwingen */
+      position: relative;
+      user-select:none;
+      overflow: hidden;
+      border: 0;
+      box-sizing: border-box;
+      box-shadow: none;
+    }
+    .scorePanel.underConsole{ margin-top: 0; }
+    .scoreAnchor{
+      position:absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display:flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      pointer-events: none;
+      z-index: 5;
+      text-align: right;
+    }
+    .gcPoints{
+      font-weight: 1000;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: 34px;
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .gcHi{ display:none; }
+    .kippBilanzBtn{
+      position:absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: calc(33.333% - 8px);
+      height: calc(var(--ui-cell) * 0.85);
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap: 14px;
-      z-index: 70;
-      color: rgba(255,255,255,0.92);
-      padding-top: 6px;
+      padding: 0 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 6;
+    }
+    .kippBilanzBtn:active{
+      transform: translateY(-50%) translateY(1px) scale(0.99);
+      filter: brightness(0.97);
     }
 
-    #btnKippBilanz{
-      border: 1px solid rgba(255,255,255,0.35);
-      background: rgba(0,0,0,0.20);
-      color: rgba(255,255,255,0.92);
+    .gcBottom{ display:flex; flex-direction: column; gap: 8px; }
+    .gcRow{ display:flex; gap: 8px; justify-content: space-between; align-items:center; }
+    .gcBtn{
+      flex: 1 1 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: var(--btn-bg);
+      color: var(--btn-text);
       font-weight: 1000;
       letter-spacing: 0.06em;
-      padding: 12px 14px;
+      text-transform: uppercase;
+      padding: 12px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .gcBtn:active{ transform: translateY(1px) scale(0.99); filter: brightness(0.97); }
+
+    #decisionPanel{ padding: 0 12px; box-sizing: border-box; transform: translateY(-20px); }
+
+    .kippCountTitle{
+      font-weight: 1000;
+      letter-spacing: 0.10em;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: clamp(18px, 5.6vmin, 34px);
+      line-height: 0.95;
+      text-align: left;
+      user-select:none;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      text-transform: none;
+    }
+    .kippStatus{
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      font-size: clamp(12px, 3.9vmin, 16px);
+      line-height: 1.05;
+      margin-bottom: 10px;
+      user-select:none;
+      text-transform: none;
+    }
+
+    .kippGoalWord{ font-weight: 1000; }
+
+    @keyframes blinkSoft{ 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes pulseSoft{ 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+    .attnSpeed .kippspeedLabel{ animation: blinkSoft 1.4s ease-in-out infinite; }
+    .attnSpeed .speedIcon{ animation: pulseSoft 1.0s ease-in-out infinite; }
+    .attnSpeed input[type="range"]::-webkit-slider-thumb{ animation: pulseSoft 1.0s ease-in-out infinite; }
+    .attnPlay #btnPlay{ animation: blinkSoft 0.9s ease-in-out infinite; }
+    .attnSet .gcBtn.set{ animation: blinkSoft 0.85s ease-in-out infinite; }
+
+    #decisionPanel.pulseSeq .miniBtn{ animation: pulseSoft 1.15s ease-in-out infinite; }
+    #decisionPanel.pulseSeq .miniBtn:nth-child(1){ animation-delay: 0.00s; }
+    #decisionPanel.pulseSeq .miniBtn:nth-child(2){ animation-delay: 0.10s; }
+    #decisionPanel.pulseSeq .miniBtn:nth-child(3){ animation-delay: 0.20s; }
+
+    #levelPanel{
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 12px;
+      height: 100%;
+      display:flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+
+      transform: translateY(-6px);
+
+      position: relative;
+      z-index: 9999;
+    }
+    #levelPanel.hidden{ display:none !important; }
+
+    .levelTitle{
+      font-weight: 1000;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--ui-text);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      text-align:center;
+      line-height: 1.05;
+
+      font-size: clamp(14px, 6vmin, 22px);
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select:none;
+    }
+
+    .levelRow{
+      width: 100%;
+      display:flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    .levelBtn{
+      flex: 1 1 0;
+      max-width: 33.33%;
+      min-width: 0;
+
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(234,215,190,0.95);
+      color: #2a160c;
+      font-weight: 1000;
+
+      font-size: clamp(12px, 4vmin, 18px);
+      letter-spacing: 0.04em;
+      line-height: 1.05;
+
+      padding: 12px 8px;
+      border-radius: 12px;
       cursor: pointer;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
-      width: min(240px, 42vw);
-      text-align:center;
-    }
-    #btnKippBilanz:active{ transform: translateY(1px) scale(0.99); }
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.20),
+        0 0 0 1px rgba(255,255,255,0.12) inset;
 
-    #gcPoints{
-      font-weight: 1000;
-      font-size: 34px;
-      letter-spacing: 0.02em;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-
-    /* ====== (WÜRFELOBJEKTE) ======
-       Wir behalten deine Slots (Logik), aber ohne „Holzfläche“.
-       Die Slots liegen über der PNG (bgBox).
-    */
-    .wFaceGroup,
-    .kipGroup{
-      position:absolute;
-      inset:0;
-      z-index: 40;
-      pointer-events:none;
-
-      --pivot-x: 50%;
-      --pivot-y: 50%;
-      transform-origin: 50% 50%;
-      transform: rotate(var(--rot, 0deg));
+    .levelBtn:active{
+      transform: translateY(1px) scale(0.99);
+      filter: brightness(0.97);
     }
-
-    .slot{
-      position:absolute;
-      width: 12.5%;
-      height: 12.5%;
-      box-sizing: border-box;
-      background: rgba(255,255,255,0.72);
-      border: 2px solid rgba(0,0,0,0.55);
-      border-radius: 0;
-      z-index: 45;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .slot .num > span{
-      font-weight: 900;
-      color: #111;
-      font-size: clamp(18px, 8vmin, 36px);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-      transform: rotate(var(--num-rot, 0deg));
-      transform-origin: 50% 50%;
-      line-height: 1;
-    }
-
-    /* Lesbarkeit (wie bei dir) */
-    .read-south { --num-rot: 0deg; }
-    .read-west  { --num-rot: 90deg; }
-    .read-east  { --num-rot: -90deg; }
-    .read-north { --num-rot: 180deg; }
-
-    /* Positionen (als Prozent im 8x8) – entspricht deinen Slots:
-       BASE_SLOT_COORDS = 3B,4B,2C,2D (im INNER 6x6 Bereich).
-       Wir legen sie hier direkt „optisch“ passend (du kannst später feinjustieren).
-    */
-    .s-3b{ left: 12.5%; top: 25%; }
-    .s-4b{ left: 12.5%; top: 37.5%; }
-    .s-2c{ left: 25%;   top: 12.5%; }
-    .s-2d{ left: 37.5%; top: 12.5%; }
-
-    /* KIP Preview (zwei Hälften) – ebenfalls grob, feinjustieren später */
-    .kipScale{
-      position:absolute;
-      inset:0;
-      transform: scaleX(0.6666667);
-      transform-origin: 50% 50%;
-    }
-    .kipFaceQ0{ left: 12.5%; top: 12.5%; }
-    .kipFaceQ1{ left: 50%;   top: 12.5%; }
-
-    .k-4d{ left: 37.5%; top: 37.5%; }
-    .k-3d{ left: 37.5%; top: 25%; }
-    .k-2b{ left: 12.5%; top: 12.5%; }
-    .k-2c{ left: 25%;   top: 12.5%; }
-
-    .k-3e{ left: 50%;   top: 25%; }
-    .k-4e{ left: 50%;   top: 37.5%; }
-    .k-2f{ left: 62.5%; top: 12.5%; }
-    .k-2g{ left: 75%;   top: 12.5%; }
-
   </style>
 </head>
 
 <body>
+  <div class="stage">
 
-  <div id="uiGrid">
-
-    <!-- HEADER: Zeile 0.1/0.2 -->
-    <div id="header" aria-label="Header">
-      <button id="backBtn" class="navBtn" aria-label="Zurück" type="button">
+    <div class="titleRow" aria-label="Titelzeile">
+      <button id="backBtn" class="navBtn" aria-label="Zurück zur Speed-Einstellung" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 5L8 12l7 7"></path>
         </svg>
       </button>
 
-      <div id="titleMain">KIPP COLOR</div>
+      <div class="titleMain"><h1>KIPP COLOR</h1></div>
 
-      <button id="exitBtnTop" class="navBtn" aria-label="Schließen" type="button">
+      <button id="exitBtnTop" class="navBtn" aria-label="Spiel beenden" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18"></path>
         </svg>
       </button>
     </div>
 
-    <!-- SPIELFLÄCHE 8x8 (Rows 1..8) mit PNG -->
-    <div id="bgBox" aria-label="Box Hintergrund">
-      <div id="boardOverlay" aria-label="8×8 Raster"></div>
+    <div class="boxShell" id="boxShell" aria-label="BoxShell">
 
-      <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
-        <div class="slot s-3b read-west"  data-slot="S1"><div class="num"><span></span></div></div>
-        <div class="slot s-4b read-west"  data-slot="S2"><div class="num"><span></span></div></div>
-        <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
-        <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
-      </div>
+      <div class="board" id="board">
+        <div id="grid" class="grid" aria-label="8×8 Raster"></div>
 
-      <div id="kipGroup" class="kipGroup hidden" aria-label="KIP Gruppe">
-        <div class="kipScale">
-          <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
-          <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
-          <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
-          <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
-
-          <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
-          <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
-          <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
-          <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- UI ab Zeile 9/10 (alles mittig) -->
-    <div id="uiBlock" aria-label="UI Block">
-
-      <!-- SPEED MODE -->
-      <div id="speedMode">
-        <div class="speedTop">
-          <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
-
-          <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
-            <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
-          </button>
-
-          <button id="btnOk" class="squareBtn" aria-label="OK" type="button">
-            <span class="okText">OK</span>
-          </button>
-        </div>
-
-        <div class="sliderRow">
-          <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
-          <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
-          <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
-        </div>
-      </div>
-
-      <!-- GAME MODE -->
-      <div id="gameMode" class="hidden" aria-label="Game Mode">
-        <div id="previewHint" class="kippStatus">SCHAU GENAU!</div>
-        <button id="btnSetNumbers" class="gcBtn" type="button">VORSCHAU-KIPPS</button>
-
-        <div id="levelPanel" class="hidden" aria-label="Level wählen">
-          <div class="kippCountTitle" id="levelTitle">LEVEL WÄHLEN</div>
-          <div class="gcRow">
-            <button id="btnLevelTrainee" class="miniBtn" type="button">Trainee</button>
-            <button id="btnLevelBrainy"  class="miniBtn" type="button">Brainy</button>
-            <button id="btnLevelBrain"   class="miniBtn" type="button">Brain</button>
+        <div id="goalOverlay" class="goalOverlay" aria-hidden="true">
+          <div id="goalCard" class="goalCard">
+            <div id="goalMain" class="goalMain">ERSTES KIPPZIEL</div>
+            <div id="goalSub" class="goalSub">von zehn</div>
           </div>
         </div>
 
-        <div id="decisionPanel" class="hidden" aria-label="Decision Panel">
-          <div class="kippCountTitle" id="kippTitle">KIPP Anzahl wählen</div>
-          <div class="kippStatus" id="kippStatus">Tippe auf eine Taste</div>
+        <div id="wFaceGroup" class="wFaceGroup" aria-label="W Paket">
+          <div class="cubeShadow" aria-hidden="true"></div>
+          <div class="cubeFace" aria-label="Würfelfläche"></div>
 
-          <div class="gcRow" aria-label="Kippanzahl">
-            <button class="miniBtn" data-k="3" type="button">3</button>
-            <button class="miniBtn" data-k="6" type="button">6</button>
-            <button class="miniBtn" data-k="9" type="button">9</button>
+          <div class="slot s-3b read-west"  data-slot="S1"><div class="num"><span></span></div></div>
+          <div class="slot s-4b read-west"  data-slot="S2"><div class="num"><span></span></div></div>
+          <div class="slot s-2c read-north" data-slot="S3"><div class="num"><span></span></div></div>
+          <div class="slot s-2d read-north" data-slot="S4"><div class="num"><span></span></div></div>
+        </div>
+
+        <div id="kipGroup" class="kipGroup hidden" aria-label="KIP Gruppe">
+          <div class="kipScale">
+            <div class="kipShadow" aria-hidden="true"></div>
+            <div class="kipEdgeCore" aria-hidden="true"></div>
+
+            <div class="cubeFace kipFaceQ0" aria-label="Würfelfläche Q0"></div>
+            <div class="cubeFace kipFaceQ1" aria-label="Würfelfläche Q1"></div>
+
+            <div class="slot k-4d read-east"  data-slot="W2_A"><div class="num"><span></span></div></div>
+            <div class="slot k-3d read-east"  data-slot="W2_B"><div class="num"><span></span></div></div>
+            <div class="slot k-2b read-north" data-slot="W2_C"><div class="num"><span></span></div></div>
+            <div class="slot k-2c read-north" data-slot="W2_D"><div class="num"><span></span></div></div>
+
+            <div class="slot k-3e read-west"  data-slot="W1_1"><div class="num"><span></span></div></div>
+            <div class="slot k-4e read-west"  data-slot="W1_2"><div class="num"><span></span></div></div>
+            <div class="slot k-2f read-north" data-slot="W1_3"><div class="num"><span></span></div></div>
+            <div class="slot k-2g read-north" data-slot="W1_4"><div class="num"><span></span></div></div>
           </div>
+        </div>
+
+        <div class="ball" aria-label="Kugel"></div>
+      </div>
+
+      <div class="kippspeedBlock attnSpeed" id="kippspeedBlock" aria-label="Konsole">
+
+        <div id="speedMode" class="modeBlock">
+          <div class="kippspeedTop">
+            <div class="kippspeedLabel" id="kippspeedLabel">KIPP SPEED (KSP)</div>
+
+            <button id="btnPlay" class="squareBtn" aria-label="Demo starten/pausieren" type="button">
+              <span id="playGlyph" class="playIcon" aria-hidden="true"></span>
+            </button>
+
+            <button id="btnOk" class="squareBtn" aria-label="Geschwindigkeit bestätigen" type="button">
+              <span class="okText">OK</span>
+            </button>
+          </div>
+
+          <div class="sliderRow">
+            <img class="speedIcon" src="kippspeed_snail_tight.png" alt="langsam">
+            <input id="speedSlider" type="range" min="0" max="9" value="3" step="1" aria-label="Speed Slider">
+            <img class="speedIcon" src="kippspeed_hase_tight.png" alt="schnell">
+          </div>
+
+          <div class="speedScale" aria-label="Kippspeed Stufen">
+            <span>1</span><span>2</span><span>3</span><span>4</span>
+          </div>
+        </div>
+
+        <div id="gameMode" class="modeBlock hidden">
+          <div class="gameConsole">
+            <div class="gcBottom" aria-label="Aktionen">
+
+              <div class="previewBlock" aria-label="Vorschau-Block">
+                <div id="previewHint" class="previewHint">SCHAU GENAU!</div>
+                <button id="btnSetNumbers" class="gcBtn set" type="button">VORSCHAU-KIPPS</button>
+              </div>
+
+              <div id="levelPanel" class="hidden" aria-label="Level wählen">
+                <div class="levelTitle" id="levelTitle">LEVEL WÄHLEN</div>
+                <div class="levelRow" aria-label="Level Buttons">
+                  <button id="btnLevelTrainee" class="levelBtn" type="button">Trainee</button>
+                  <button id="btnLevelBrainy" class="levelBtn" type="button">Brainy</button>
+                  <button id="btnLevelBrain" class="levelBtn" type="button">Brain</button>
+                </div>
+              </div>
+
+              <div id="decisionPanel" class="hidden">
+                <div class="kippCountTitle" id="kippTitle">KIPP Anzahl wählen</div>
+                <div class="kippStatus" id="kippStatus">Tippe auf eine Taste</div>
+
+                <div class="gcRow" aria-label="Kippanzahl">
+                  <button class="miniBtn" data-k="3" type="button">3</button>
+                  <button class="miniBtn" data-k="6" type="button">6</button>
+                  <button class="miniBtn" data-k="9" type="button">9</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="scorePanel" class="scorePanel underConsole hidden" aria-label="Score Panel">
+        <button id="btnKippBilanz" class="kippBilanzBtn" type="button" aria-label="KIPP Bilanz">
+          KIPP Bilanz
+        </button>
+
+        <div class="scoreAnchor">
+          <div id="gcPoints" class="gcPoints">P00/80</div>
+          <div class="gcHi">Highscore: <span id="gcHi">80</span></div>
         </div>
       </div>
 
-    </div>
-
-    <!-- Score Zeile 13/14 -->
-    <div id="scoreRow" aria-label="Score Row">
-      <button id="btnKippBilanz" type="button">KIPP Bilanz</button>
-      <div id="gcPoints">P00/80</div>
     </div>
 
   </div>
 
   <script>
-    /* ========= ELEMENTE ========= */
-    const bgBox      = document.getElementById("bgBox");
-    const grid       = document.getElementById("boardOverlay");
-
-    const wFace      = document.getElementById("wFaceGroup");
-    const kipGroup   = document.getElementById("kipGroup");
-
+    const boardEl     = document.getElementById("board");
+    const grid        = document.getElementById("grid");
+    const wFace       = document.getElementById("wFaceGroup");
+    const kipGroup    = document.getElementById("kipGroup");
     const speedSlider = document.getElementById("speedSlider");
 
+    const kippspeedBlock = document.getElementById("kippspeedBlock");
     const speedMode   = document.getElementById("speedMode");
     const gameMode    = document.getElementById("gameMode");
+
+    const scorePanel  = document.getElementById("scorePanel");
+    const btnKippBilanz = document.getElementById("btnKippBilanz");
 
     const btnPlay     = document.getElementById("btnPlay");
     const playGlyph   = document.getElementById("playGlyph");
@@ -620,6 +1034,7 @@
     const decisionPanel = document.getElementById("decisionPanel");
 
     const gcPoints    = document.getElementById("gcPoints");
+    const gcHi        = document.getElementById("gcHi");
 
     const levelPanel = document.getElementById("levelPanel");
     const levelTitle = document.getElementById("levelTitle");
@@ -628,20 +1043,38 @@
     const btnLevelBrain   = document.getElementById("btnLevelBrain");
 
     const previewHintEl = document.getElementById("previewHint");
+
     const kippTitleEl  = document.getElementById("kippTitle");
     const kippStatusEl = document.getElementById("kippStatus");
 
+    const goalOverlayEl = document.getElementById("goalOverlay");
+    const goalMainEl    = document.getElementById("goalMain");
+    const goalSubEl     = document.getElementById("goalSub");
+    const goalCardEl    = document.getElementById("goalCard");
+
     function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
-    /* ========= GRID / SIZE ========= */
-    function setCellFromBox(){
-      const w = Math.round(bgBox.getBoundingClientRect().width);
-      const cell = Math.max(32, Math.round(w / 8));
-      document.documentElement.style.setProperty("--cell", cell + "px");
-      document.documentElement.style.setProperty("--rowH", cell + "px");
+    function setBoardSquare(){
+      const w = Math.round(boardEl.getBoundingClientRect().width);
+      boardEl.style.height = w + "px";
     }
 
-    /* ========= 8x8 Raster Logik ========= */
+    function setKippspeedStripHeight(){
+      const w = Math.round(boardEl.getBoundingClientRect().width);
+      const cell = w / 8;
+      const h = Math.round(cell * 3);
+      document.documentElement.style.setProperty("--kippstrip-h", h + "px");
+      document.documentElement.style.setProperty("--ui-cell", Math.round(cell) + "px");
+    }
+
+    function getTiming(){
+      const v = Number(speedSlider.value || 3);
+      const hold = Math.max(520, Math.round(2200 - v * 186));
+      const kip = Math.max(160, Math.round(hold * 0.50));
+      const wfull = hold;
+      return { holdMs: hold, kipMs: kip, wMs: wfull };
+    }
+
     const cols = ["A","B","C","D","E","F","G","H"];
     function key(r, cLetter){ return `${r}${cLetter}`; }
 
@@ -676,8 +1109,9 @@
           const coord = key(r, cols[c]);
           cell.dataset.coord = coord;
           if(colorMap.has(coord)){
+            const cls = colorMap.get(coord);
+            cell.classList.add(cls);
             cell.classList.add("colorCell");
-            cell.classList.add(colorMap.get(coord));
           }
           grid.appendChild(cell);
         }
@@ -685,35 +1119,6 @@
       grid.dataset.built = "1";
     }
 
-    function clearTargets(){
-      Array.from(grid.querySelectorAll(".targetBadge")).forEach(el => el.remove());
-    }
-
-    function sideClassForCoord(coord){
-      const r = parseInt(coord, 10);
-      const c = coord.replace(String(r), "");
-      if(r === 1) return "trot-top";
-      if(r === 8) return "trot-bottom";
-      if(c === "A") return "trot-left";
-      if(c === "H") return "trot-right";
-      return "trot-bottom";
-    }
-
-    function showTargetOnAllSameColor(colorClass, n){
-      clearTargets();
-      Array.from(grid.children).forEach(cell=>{
-        if(!cell.classList.contains("colorCell")) return;
-        if(!cell.classList.contains(colorClass)) return;
-
-        const coord = cell.dataset.coord;
-        const badge = document.createElement("div");
-        badge.className = "targetBadge " + sideClassForCoord(coord);
-        badge.textContent = String(n);
-        cell.appendChild(badge);
-      });
-    }
-
-    /* ========= W/KIP Anzeige ========= */
     function renderNumber(span, n){
       if(!span) return;
       span.textContent = (n === null || n === undefined) ? "" : String(n);
@@ -801,12 +1206,32 @@
       renderWEmpty();
     }
 
-    function getTiming(){
-      const v = Number(speedSlider.value || 3);
-      const hold = Math.max(520, Math.round(2200 - v * 186));
-      const kip = Math.max(160, Math.round(hold * 0.50));
-      const wfull = hold;
-      return { holdMs: hold, kipMs: kip, wMs: wfull };
+    let hasAdjustedOnce = false;
+
+    let runningDemo     = false;
+    let demoPaused      = false;
+    let demoToken       = 0;
+
+    let runningSet      = false;
+    let setToken        = 0;
+
+    function setAttentionSpeed(on){ kippspeedBlock.classList.toggle("attnSpeed", !!on); }
+    function setAttentionPlay(on){  kippspeedBlock.classList.toggle("attnPlay", !!on); }
+    function setAttentionSet(on){   kippspeedBlock.classList.toggle("attnSet", !!on); }
+
+    function enterSpeedAttention(){
+      setAttentionSet(false);
+      setAttentionPlay(false);
+      setAttentionSpeed(true);
+    }
+    function enterPlayAttention(){
+      setAttentionSpeed(false);
+      setAttentionPlay(true);
+    }
+    function enterSetAttention(){
+      setAttentionSpeed(false);
+      setAttentionPlay(false);
+      setAttentionSet(true);
     }
 
     function setPlayGlyph(isPause){
@@ -816,13 +1241,16 @@
     function showSpeedMode(){
       speedMode.classList.remove("hidden");
       gameMode.classList.add("hidden");
+      if(scorePanel) scorePanel.classList.add("hidden");
       if(previewHintEl) previewHintEl.classList.remove("hidden");
+      enterSpeedAttention();
       setPlayGlyph(false);
     }
 
     function showGameMode(){
       speedMode.classList.add("hidden");
       gameMode.classList.remove("hidden");
+      if(scorePanel) scorePanel.classList.remove("hidden");
 
       btnSetNumbers.classList.remove("hidden");
       decisionPanel.classList.add("hidden");
@@ -830,14 +1258,11 @@
 
       if(previewHintEl) previewHintEl.classList.remove("hidden");
 
-      setPoints(0);
-    }
+      enterSetAttention();
 
-    /* ========= DEMO ========= */
-    let hasAdjustedOnce = false;
-    let runningDemo     = false;
-    let demoPaused      = false;
-    let demoToken       = 0;
+      setPoints(0);
+      gcHi.textContent = "80";
+    }
 
     async function waitOrPause(ms, myToken){
       const slice = 40;
@@ -897,7 +1322,6 @@
       setPlayGlyph(false);
     }
 
-    /* ========= SET NUMBERS / SPIEL ========= */
     let planned = [
       [null,null,null,null],
       [null,null,null,null],
@@ -958,8 +1382,19 @@
       setRotationSnap();
     }
 
-    let runningSet = false;
-    let setToken = 0;
+    function beginLevelChoice(){
+      btnSetNumbers.classList.add("hidden");
+      decisionPanel.classList.add("hidden");
+      levelPanel.classList.remove("hidden");
+
+      if(previewHintEl) previewHintEl.classList.add("hidden");
+
+      setAttentionSet(false);
+      setAttentionPlay(false);
+      setAttentionSpeed(false);
+
+      levelTitle.textContent = "LEVEL WÄHLEN";
+    }
 
     async function runSetNumbersCycle(){
       if(runningSet) return;
@@ -1010,14 +1445,27 @@
       showW();
       renderW();
 
-      runningSet = false;
+      const EXTRA_KIPPS_AFTER_END = 3;
 
-      // Level Auswahl zeigen
-      btnSetNumbers.classList.add("hidden");
-      decisionPanel.classList.add("hidden");
-      levelPanel.classList.remove("hidden");
-      if(previewHintEl) previewHintEl.classList.add("hidden");
-      levelTitle.textContent = "LEVEL WÄHLEN";
+      await sleep(T.wMs);
+      if(myToken!==setToken){ runningSet=false; return; }
+
+      for(let j=0; j<EXTRA_KIPPS_AFTER_END; j++){
+        showKip();
+        renderKip();
+        await sleep(T.kipMs);
+        if(myToken!==setToken){ runningSet=false; return; }
+
+        advanceFullCW();
+
+        showW();
+        renderW();
+        await sleep(T.wMs);
+        if(myToken!==setToken){ runningSet=false; return; }
+      }
+
+      runningSet = false;
+      beginLevelChoice();
     }
 
     function cancelSetNumbers(){
@@ -1025,7 +1473,42 @@
       runningSet = false;
     }
 
-    /* ========= SPIELREGELN (gleich wie vorher) ========= */
+    function clearTargets(){
+      Array.from(grid.querySelectorAll(".targetBadge")).forEach(el => el.remove());
+    }
+
+    function sideClassForCoord(coord){
+      const r = parseInt(coord, 10);
+      const c = coord.replace(String(r), "");
+      if(r === 1) return "trot-top";
+      if(r === 8) return "trot-bottom";
+      if(c === "A") return "trot-left";
+      if(c === "H") return "trot-right";
+      return "trot-bottom";
+    }
+
+    function showTargetOnAllSameColor(colorClass, n){
+      clearTargets();
+      Array.from(grid.children).forEach(cell=>{
+        if(!cell.classList.contains("colorCell")) return;
+        if(!cell.classList.contains(colorClass)) return;
+
+        const coord = cell.dataset.coord;
+        const badge = document.createElement("div");
+        badge.className = "targetBadge " + sideClassForCoord(coord);
+        badge.textContent = String(n);
+        cell.appendChild(badge);
+      });
+    }
+
+    function colorRgbForClass(colorClass){
+      if(colorClass === "c-orange")  return getComputedStyle(document.documentElement).getPropertyValue("--orange").trim();
+      if(colorClass === "c-gruen")   return getComputedStyle(document.documentElement).getPropertyValue("--gruen").trim();
+      if(colorClass === "c-violett") return getComputedStyle(document.documentElement).getPropertyValue("--violett").trim();
+      if(colorClass === "c-blau")    return getComputedStyle(document.documentElement).getPropertyValue("--blau").trim();
+      return getComputedStyle(document.documentElement).getPropertyValue("--ui-text").trim();
+    }
+
     const MAX_ROUNDS = 10;
     const MAX_TRIES  = 3;
     const SCORE_BY_TRY = [8,5,3];
@@ -1133,17 +1616,11 @@
       return null;
     }
 
-    function colorRgbForClass(colorClass){
-      const root = getComputedStyle(document.documentElement);
-      if(colorClass === "c-orange")  return root.getPropertyValue("--orange").trim();
-      if(colorClass === "c-gruen")   return root.getPropertyValue("--gruen").trim();
-      if(colorClass === "c-violett") return root.getPropertyValue("--violett").trim();
-      if(colorClass === "c-blau")    return root.getPropertyValue("--blau").trim();
-      return "#fff";
-    }
-
     function ordinalDeTitle(k){
-      const map = ["Erstes","Zweites","Drittes","Viertes","Fünftes","Sechstes","Siebentes","Achtes","Neuntes","Zehntes"];
+      const map = [
+        "Erstes","Zweites","Drittes","Viertes","Fünftes",
+        "Sechstes","Siebentes","Achtes","Neuntes","Zehntes"
+      ];
       if(k >= 1 && k <= 10) return map[k-1];
       return "Nächstes";
     }
@@ -1151,7 +1628,7 @@
     function setGoalInfoText(roundOneBased){
       const ord = ordinalDeTitle(roundOneBased);
       const rgb = colorRgbForClass(currentTargetColor);
-      kippTitleEl.innerHTML = `${ord} <span style="color:${rgb}; font-weight:1000;">KIPP-ZIEL</span> (von zehn)`;
+      kippTitleEl.innerHTML = `${ord} <span class="kippGoalWord" style="color:${rgb};">KIPP-ZIEL</span> (von zehn)`;
       kippStatusEl.textContent = "Wähle deine KIPP Anzahl";
     }
 
@@ -1167,6 +1644,27 @@
         kippStatusEl.textContent = "KIPPANZAHL WÄHLEN";
       }
     }
+
+    function startPulse(){ decisionPanel.classList.add("pulseSeq"); }
+    function stopPulse(){ decisionPanel.classList.remove("pulseSeq"); }
+
+    let selectedKippCount = null;
+
+    function setButtonsEnabled(enabled){
+      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+        btn.disabled = !enabled;
+      });
+    }
+
+    function selectKippCount(k){
+      selectedKippCount = (k == null) ? null : Number(k);
+      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
+        btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
+      });
+      if(selectedKippCount != null) stopPulse();
+    }
+
+    let busyMove = false;
 
     function isHitForTarget(inner, targetColor, targetNumber){
       const quad = getCubeQuadrant();
@@ -1186,7 +1684,6 @@
         if(sid == null) continue;
 
         if(sid !== fid) continue;
-
         if(inner.get(adj) === targetNumber) return true;
       }
       return false;
@@ -1228,22 +1725,6 @@
       if(!currentTargetColor || currentTargetNumber == null) return false;
       const inner = currentInnerMap();
       return isHitForTarget(inner, currentTargetColor, currentTargetNumber);
-    }
-
-    let selectedKippCount = null;
-    let busyMove = false;
-
-    function setButtonsEnabled(enabled){
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-        btn.disabled = !enabled;
-      });
-    }
-
-    function selectKippCount(k){
-      selectedKippCount = (k == null) ? null : Number(k);
-      document.querySelectorAll('.miniBtn[data-k]').forEach(btn=>{
-        btn.classList.toggle("sel", Number(btn.dataset.k) === selectedKippCount);
-      });
     }
 
     async function performKippCW(count){
@@ -1312,6 +1793,7 @@
 
       selectKippCount(null);
       setTryText();
+      startPulse();
       setButtonsEnabled(true);
 
       busyMove = false;
@@ -1329,32 +1811,40 @@
       levelPanel.classList.add("hidden");
       btnSetNumbers.classList.add("hidden");
       decisionPanel.classList.remove("hidden");
+      enterSetAttention();
 
       roundIndex = 0;
       tryIndex = 0;
       setPoints(points);
 
       pickNewTarget();
-      setGoalInfoText(1);
       setTryText();
 
       selectKippCount(null);
+      startPulse();
       setButtonsEnabled(true);
+
+      setGoalInfoText(1);
+      setTryText();
     }
 
-    /* ========= EVENTS ========= */
     speedSlider.addEventListener("input", () => {
       hasAdjustedOnce = true;
+      if(!runningDemo) enterPlayAttention();
     });
 
     btnPlay.addEventListener("click", async () => {
-      if(!hasAdjustedOnce) {}
+      if(!hasAdjustedOnce) enterPlayAttention();
+
       if(!runningDemo){
+        setAttentionPlay(false);
         setPlayGlyph(true);
         await runDemoCycle();
         setPlayGlyph(false);
+        enterPlayAttention();
         return;
       }
+
       demoPaused = !demoPaused;
       setPlayGlyph(demoPaused ? false : true);
     });
@@ -1363,10 +1853,13 @@
       cancelDemo();
       cancelSetNumbers();
       resetToW1Q0_Empty();
+      setAttentionPlay(false);
+      setAttentionSpeed(false);
       showGameMode();
     });
 
     btnSetNumbers.addEventListener("click", async () => {
+      setAttentionSet(false);
       if(previewHintEl) previewHintEl.classList.remove("hidden");
       await runSetNumbersCycle();
     });
@@ -1395,20 +1888,33 @@
     btnLevelBrainy.addEventListener("click", () => { if(busyMove) return; beginPlayerPhase(); });
     btnLevelBrain.addEventListener("click", () => { if(busyMove) return; beginPlayerPhase(); });
 
-    document.getElementById("btnKippBilanz").addEventListener("click", () => {
-      alert("KIPP Bilanz (noch ohne Funktion)");
-    });
+    if(btnKippBilanz){
+      btnKippBilanz.addEventListener("click", () => {
+        alert("KIPP Bilanz (noch ohne Funktion)");
+      });
+    }
 
     window.addEventListener("load", () => {
-      setCellFromBox();
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+      setTimeout(setBoardSquare, 80);
+
       buildGridOnce();
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
+      setTimeout(setKippspeedStripHeight, 80);
+
       resetToW1Q0_Empty();
       showSpeedMode();
-      setPoints(0);
     });
 
     window.addEventListener("resize", () => {
-      setCellFromBox();
+      setBoardSquare();
+      requestAnimationFrame(setBoardSquare);
+
+      setKippspeedStripHeight();
+      requestAnimationFrame(setKippspeedStripHeight);
     });
   </script>
 </body>
