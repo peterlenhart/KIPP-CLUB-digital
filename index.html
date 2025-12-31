@@ -1568,6 +1568,31 @@
       return null;
     }
 
+    // ===== Quadrant-Logik (Q0..Q3) =====
+    // ✅ Quadrant ist bei dir rotIndex (0..3)
+    function getCubeQuadrant(){
+      return rotIndex; // 0=Q0, 1=Q1, 2=Q2, 3=Q3
+    }
+
+    // Quadrant eines Koordinatenpunkts relativ zum Zentrum (4.5,4.5)
+    // Q0: oben-links, Q1: oben-rechts, Q2: unten-rechts, Q3: unten-links
+    function quadrantOfCoord(coord){
+      const {x,y} = parseCoord(coord);
+      const left  = (x <= 4);
+      const top   = (y <= 4);
+      if(top && left) return 0;
+      if(top && !left) return 1;
+      if(!top && !left) return 2;
+      return 3;
+    }
+
+    // ✅ Für eine Farbe ist genau EIN Ziel-Feld relevant: das im aktuellen Quadranten
+    function relevantTargetCoordForColor(colorClass, quad){
+      const list = TARGET_COORDS.filter(tc => colorMap.get(tc) === colorClass);
+      const inQuad = list.filter(tc => quadrantOfCoord(tc) === quad);
+      return inQuad[0] || null;
+    }
+
     function ordinalDeTitle(k){
       const map = [
         "Erstes","Zweites","Drittes","Viertes","Fünftes",
@@ -1619,29 +1644,20 @@
     let busyMove = false;
 
     /* =========================
-       ✅ FIX: Trefferprüfung robust (inkl. Punktsymmetrie)
-       - Wir prüfen nicht nur die direkte Adjacent-Zelle,
-         sondern auch die punktsymmetrische (180°) dazu.
-       - Damit wird dein Beispiel erkannt, wenn die Zielzahl
-         "punktsymmetrisch" korrekt liegt.
+       ✅ FIX: Trefferprüfung exakt nach deiner Regel
+       - Quadrant = rotIndex
+       - relevant ist NUR das Zielfeld dieser Farbe im aktuellen Quadranten
+       - Treffer nur, wenn Adjacent-Innenfeld == Zielzahl
        ========================= */
-
     function isHitForTarget(inner, targetColor, targetNumber){
-      for(const tc of TARGET_COORDS){
-        const col = colorMap.get(tc);
-        if(col !== targetColor) continue;
+      const quad = getCubeQuadrant();
+      const tc = relevantTargetCoordForColor(targetColor, quad);
+      if(!tc) return false;
 
-        const adj = adjacentInnerCoordForTarget(tc);
-        if(!adj) continue;
+      const adj = adjacentInnerCoordForTarget(tc);
+      if(!adj) return false;
 
-        // direkt daneben
-        if(inner.get(adj) === targetNumber) return true;
-
-        // punktsymmetrisch (180°)
-        const adj180 = rotateCoordCW(adj, 2);
-        if(inner.get(adj180) === targetNumber) return true;
-      }
-      return false;
+      return inner.get(adj) === targetNumber;
     }
 
     function pickNewTarget(){
@@ -1656,39 +1672,27 @@
         return;
       }
 
-      // Kandidaten: Zielfelder, die aktuell im colorMap sind UND deren Adjacent im inner-map existiert
-      const candidates = TARGET_COORDS
-        .map(tc => ({ tc, adj: adjacentInnerCoordForTarget(tc), col: colorMap.get(tc) }))
-        .filter(o => o.col && o.adj); // ✅ nicht mehr auf inner.has(adj) filtern, weil wir auch 180° prüfen
+      // mögliche Farben (nur die, die überhaupt existieren)
+      const allColors = Array.from(new Set(TARGET_COORDS.map(tc=>colorMap.get(tc)).filter(Boolean)));
 
-      if(candidates.length === 0){
-        const any = Array.from(new Set(TARGET_COORDS.map(tc=>colorMap.get(tc)).filter(Boolean)));
-        currentTargetColor = any[Math.floor(Math.random()*any.length)] || "c-orange";
-        currentTargetNumber = visibleNums[Math.floor(Math.random()*visibleNums.length)];
-        showTargetOnAllSameColor(currentTargetColor, currentTargetNumber);
-        return;
-      }
-
-      // Wähle so, dass NICHT sofort Treffer ist (mit neuer Hit-Logik)
-      let tries = 0;
-      while(tries < 120){
-        const n = visibleNums[Math.floor(Math.random() * visibleNums.length)];
-        const c = candidates[Math.floor(Math.random() * candidates.length)];
-        const hitNow = isHitForTarget(inner, c.col, n);
+      // wir picken (Farbe, Zahl) so, dass es NICHT sofort ein Treffer ist
+      let guard = 0;
+      while(guard < 200){
+        const col = allColors[Math.floor(Math.random()*allColors.length)] || "c-orange";
+        const n   = visibleNums[Math.floor(Math.random()*visibleNums.length)];
+        const hitNow = isHitForTarget(inner, col, n);
         if(!hitNow){
-          currentTargetColor = c.col;
+          currentTargetColor = col;
           currentTargetNumber = n;
           showTargetOnAllSameColor(currentTargetColor, currentTargetNumber);
           return;
         }
-        tries++;
+        guard++;
       }
 
       // Notfall
-      const n = visibleNums[Math.floor(Math.random() * visibleNums.length)];
-      const c = candidates[Math.floor(Math.random() * candidates.length)];
-      currentTargetColor = c.col;
-      currentTargetNumber = n;
+      currentTargetColor = allColors[Math.floor(Math.random()*allColors.length)] || "c-orange";
+      currentTargetNumber = visibleNums[Math.floor(Math.random()*visibleNums.length)];
       showTargetOnAllSameColor(currentTargetColor, currentTargetNumber);
     }
 
@@ -1738,6 +1742,7 @@
           return;
         }
 
+        // ✅ pickNewTarget NUR bei Treffer
         pickNewTarget();
         setGoalInfoText(roundIndex + 1);
 
@@ -1757,6 +1762,7 @@
             return;
           }
 
+          // ✅ pickNewTarget NUR nach 3 Fehlversuchen
           pickNewTarget();
           setGoalInfoText(roundIndex + 1);
         }
@@ -1797,7 +1803,6 @@
       setButtonsEnabled(true);
 
       // ✅ KEINE Einblendung im Boxinneren.
-      // Nach Treffer / nach drittem gescheiterten Versuch kommt die Info in den zwei Zeilen.
       setGoalInfoText(1);
       setTryText();
     }
